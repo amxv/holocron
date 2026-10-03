@@ -15,6 +15,7 @@ Final checks:
 
 ```sh
 npm --prefix site run validate
+npm --prefix site audit --audit-level=low
 npm run check
 git diff --check
 ```
