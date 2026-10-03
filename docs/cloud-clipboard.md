@@ -11,6 +11,15 @@ The independent helper works with [private STDIO tunnel](secure-mcp-tunnel.md) o
 
 ## Install and probe explicitly
 
+With existing authenticated `gh` read access to the private Board repository, the [one-command installer](operations.md#one-command-cli-installation) also runs in supported Linux helper contexts. It requires Node `24.21.0`, downloads the verified private production bundle, and needs no Mac/operator/tunnel config. After publication and installer deployment:
+
+```sh
+curl -fsSL https://clipboard.ashray.xyz/install.sh | sh
+"$HOME/.local/bin/board" cloud probe
+```
+
+Use `board cloud read` or `board cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE` for the same literal formats and foreground ownership contract below. `board cloud` never reads the CLI profile or Mac config. A helper install provides no automatic pairing, share download or clipboard delivery. If this computer has no private repository access, the operator can explicitly provide the verified private artifact through an already-authorized private transfer; do not export Mac tunnel credentials or make the source public. The source/tarball route remains available:
+
 Use the same built package artifact as the Mac companion, with Node `24.21.0` and npm `11.19.0`. For a local artifact named `shared-clipboard-dots-probe-0.1.0.tgz`, install it explicitly on the cloud computer:
 
 ```sh

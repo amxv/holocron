@@ -9,6 +9,46 @@ For the primary private tunnel path, follow [Secure MCP Tunnel](secure-mcp-tunne
 
 Actual Dots/plugin discovery, tunnel and viewed Mac/cloud clipboard compatibility remain **deferred and unverified** until tested in the intended installation. Use [STDIO setup](secure-mcp-tunnel.md) for the private tunnel, or [OAuth HTTP setup](phase1-setup.md) for the separate provider-protected connection.
 
+## One-command CLI installation
+
+On macOS or Linux, activate **Node 24.21.0** using your existing Node manager. Install GitHub CLI (`gh`) and authenticate it yourself with read access to the **private** `amxv/shared-clipboard` repository. No public npm package or anonymous release download is available. The bootstrap is public-safe; the implementation bundle remains private. After the operator publishes `board-v0.1.0` and deploys this installer:
+
+```sh
+curl -fsSL https://clipboard.ashray.xyz/install.sh | sh
+```
+
+Do not use sudo. The installer requires `node`, `gh`, `tar` and `mktemp`; it reports missing prerequisites or unavailable releases. It downloads the fixed-version `board-0.1.0.tgz` through your existing authenticated `gh`, checks its bytes against the SHA-256 and size recorded by GitHub's authenticated release API, rejects unsafe archive paths/types and installs its already-built production dependencies. It runs no npm installation scripts and collects no credentials. Missing digests, failed downloads or mismatched bytes fail before installation. This verifies authenticated GitHub origin and content integrity, not an independent publisher signature. A mutable release can still be changed by a repository maintainer; an already-installed version with different bytes is refused.
+
+The default dedicated prefix is `~/.local/share/board-cli`; the executable is `~/.local/bin/board`. It pins the actual absolute Node executable. Keep that Node installation available. Add `~/.local/bin` to your shell PATH if necessary, or invoke the absolute executable from shortcuts. The installer does not edit shell files, config, tunnel profiles, plugin mappings, state, login jobs or clipboards; it starts/stops nothing. Existing custom installations are preserved, and an unrelated/edited `board` executable or nonempty unrecognized prefix is refused.
+
+To inspect the public bootstrap first or select custom canonical absolute paths:
+
+```sh
+curl -fsSL https://clipboard.ashray.xyz/install.sh -o /tmp/board-install.sh
+sh /tmp/board-install.sh --help
+sh /tmp/board-install.sh --version 0.1.0 \
+  --prefix "$HOME/.local/share/board-cli" --bin-dir "$HOME/.local/bin"
+rm /tmp/board-install.sh
+```
+
+Repeating an identical install is a no-op. To upgrade, explicitly select a newly published version with `--version X.Y.Z`. The executable switches after complete staging; previous release directories remain for running processes and pinned tunnel commands. No live runtime is restarted or reconfigured. Reconnect your own tunnel deliberately if you want its next subprocess to use the new CLI. Concurrent installations are refused; inspect a stale `.install-lock` only after verifying no installer is running. On failure, temporary downloads and owned staging files are removed. An interrupted installation may leave a lock or unreferenced release for inspection; there is no force-overwrite or automatic recursive cleanup of existing data.
+
+An optional `--attestation` additionally requires `gh release verify-asset` to validate a signed immutable-release attestation. It fails if no attestation is available. Normal installation works with the repository's existing mutable-release settings; changing repository settings is not required.
+
+For an **existing private STDIO setup**, explicitly link its actual local config:
+
+```sh
+"$HOME/.local/bin/board" link --local-config /absolute/private/Board/local.json
+"$HOME/.local/bin/board" copy --name "Copied text"
+"$HOME/.local/bin/board" list
+```
+
+`link` validates only the owner-only local config and saves its absolute path in `~/.config/board/cli.json`; it never opens state or starts a runtime. It does not adopt an OAuth HTTP config. `BOARD_CLI_HOME` selects a custom canonical absolute private profile directory; `BOARD_LOCAL_CONFIG` or a command's `--local-config` overrides the saved link. Config permissions and fixed-owner separation remain enforced.
+
+For a **new setup**, `board init` creates a new private `~/.config/board/local.json`, state reference and CLI link, refusing existing config/link files. State is created only by a later explicit state command. Use the absolute `board stdio` command in [tunnel setup](secure-mcp-tunnel.md); initialization alone connects nothing. The wrapper runs from its installed code directory, resolving selected relative file paths before changing directory. Normal `board` use works from your home, `/` or the state directory without weakening the private-state guard. Historical `shared-clipboard` commands keep their original working-directory requirement.
+
+`board copy` shares an immutable text snapshot. It does **not** fill the connected computer's OS clipboard. Connected ChatGPT must read the share, preserve and verify exact bytes, then explicitly operate the [Wayland helper](cloud-clipboard.md) in that computer's intended graphical session while the user pastes. A standalone receiver has no credential-free tunnel pull API here. Ordinary Paste on another personal computer is not implemented by snapshot sharing.
+
 ## Pack and install the Mac companion
 
 Use exactly Node `24.21.0` and npm `11.19.0`; check both versions in the activated runtime. Install/activate that runtime through your existing Node manager. Keep its absolute Node path available for the optional login job. The private package is `@shared-clipboard/dots-probe` version `0.1.0`; the historical name and `shared-clipboard-probe` alias are retained. Public registry publication is outside scope.
@@ -34,7 +74,7 @@ SC_CONFIG="$SC_PRIVATE/operator.json"
 "$SC_NODE" "$SC_CLI" --help
 ```
 
-If the parent `Library/Application Support` is missing, create it first. With another manager, use its actual absolute Node executable after confirming the exact version. The dedicated prefix avoids changing global npm/Codex settings. Three bins are installed in its `node_modules/.bin`: `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`. The last is independently usable on Linux without Mac/operator credentials. Absolute Node/CLI invocation avoids an interactive shell PATH. The tarball contains built `dist`, docs, README and the unmapped plugin scaffold; it contains no tests, shared state or secrets.
+If the parent `Library/Application Support` is missing, create it first. With another manager, use its actual absolute Node executable after confirming the exact version. The dedicated prefix avoids changing global npm/Codex settings. Four bins are installed in its `node_modules/.bin`: `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`. The last is independently usable on Linux without Mac/operator credentials. Absolute Node/CLI invocation avoids an interactive shell PATH. The tarball contains built `dist`, docs, README and the unmapped plugin scaffold; it contains no tests, shared state or secrets.
 
 Create `operator.json` in the private directory using the complete public-input example in [Connection setup](phase1-setup.md), replacing all placeholders with your actual provider/connection values. Keep mode `0600` and parent mode `0700`. It contains public issuer/JWKS/resource/owner/scopes, not tokens or client secrets. An optional `stateDirectory` must be canonical absolute and private, outside the checkout; the default is `~/Library/Application Support/shared-clipboard`. Schema validation makes no provider/clipboard/network calls.
 
@@ -53,6 +93,41 @@ Launch the companion or tunnel, and run local sharing/status/stop commands, from
 ```
 
 Status checks the owner-only local control socket and retained-share counts. `available` means the local service responded; tunnel/dot/live OS capabilities remain unverified. It never infers remote delivery from a PID or launch job. Start again after stop for a deliberate restart. Stop cancels in-flight work and leaves snapshots, durable receipts and the current clipboard intact. A reused/unknown runtime PID is conservatively treated as running; do not kill it or delete the database to bypass the lease.
+
+## Publish the private CLI release and installer
+
+These are operator-run publication steps, not installer side effects. Keep `amxv/shared-clipboard` private. Build from the final approved clean commit with Node `24.21.0` and npm `11.19.0`:
+
+```sh
+npm ci
+npm run check
+npm --prefix site ci
+npm --prefix site run validate
+npm --prefix site audit --audit-level=low
+git diff --check
+npm run release:bundle -- "$PWD/tmp/gg/release-0.1.0"
+```
+
+The root gate includes clean npm tarball installation and a complete production-bundle/installer smoke with injected GitHub transport, isolated config/state and literal digest checks. `release:bundle` writes `board-0.1.0.tgz` and `SHA256SUMS` into the selected fresh output directory. It uses the committed dependency lockfile, production-only `npm ci --ignore-scripts`, rejects symlinks/special files and includes no Node runtime or development dependencies. It runs installed help/version checks without touching any clipboard. Do not copy private configs, plugin mappings, tunnel profiles or state into the artifact. The separate pinned Node prerequisite is deliberate.
+
+Before publication, prepare concise release notes at `tmp/gg/release-notes.md`, tag the exact approved commit and upload the bundle through authenticated GitHub CLI:
+
+```sh
+git tag -a board-v0.1.0 APPROVED_COMMIT_SHA -m "Board CLI 0.1.0"
+git push origin board-v0.1.0
+gh release create board-v0.1.0 \
+  tmp/gg/release-0.1.0/board-0.1.0.tgz tmp/gg/release-0.1.0/SHA256SUMS \
+  --repo amxv/shared-clipboard --verify-tag --title "Board CLI 0.1.0" \
+  --notes-file tmp/gg/release-notes.md
+gh api repos/amxv/shared-clipboard/releases/tags/board-v0.1.0 \
+  --jq '.assets[] | {name,digest,size}'
+```
+
+Replace placeholders and choose a new version/tag/output directory for later releases; do not overwrite a published version. Verify the API digest matches `SHA256SUMS`, then exercise the installer against the actual published release in a fresh dedicated private prefix/bin. That proves private access and hosted asset readiness beyond the injected smoke. Existing mutable-release settings are supported. Signed release attestation verification is an optional stronger path only when an operator has deliberately enabled/published immutable releases; no Actions artifact-attestation plan is required for normal installation.
+
+Deploy the static docs project from the same approved repository content with Root Directory `site`, outside-root source files enabled, Node `24.x`, install command `npm ci`, build command `npm run build` and output `dist`. The checkout's `site/README.md` carries the complete project settings. `site/public/install.sh` becomes `https://clipboard.ashray.xyz/install.sh`; site validation checks identical served bytes, shell syntax and public-safe content. The Vercel project serves only public docs and this bootstrap, never the private bundle/source. After deployment, fetch `install.sh`, compare it with the maintained file, and run `--help`. Only describe the one-command URL as ready once the private release and deployed bootstrap both pass these checks. Publication, DNS, repository settings and the user's actual CLI installation remain explicit operator actions.
+
+Sources checked October 4, 2026: [GitHub release downloads](https://cli.github.com/manual/gh_release_download), [release-asset API and digest](https://docs.github.com/en/rest/releases/assets), [release creation](https://cli.github.com/manual/gh_release_create), [optional signed asset verification](https://cli.github.com/manual/gh_release_verify-asset).
 
 ## Optional startup at login
 
@@ -95,6 +170,8 @@ Sleep/shutdown/offline companion or stopped/expired tunnel fails calls. The brid
 Disconnect the connection/disable the plugin in ChatGPT to stop its remote availability. Stop the Mac companion/tunnel for a local endpoint/transport cutoff. Local stop does not revoke issued provider JWTs or external tunnel keys. No introspection/revocation endpoint exists; valid JWTs can remain acceptable until expiry (at most one hour) while the server runs. Separately revoke the provider OAuth grant/client/access or refresh credentials and the tunnel runtime key/association in their owner controls. Never infer external revocation from local status. Use `fidelius` and its help for concrete credential requirements, never chat/source/logs. No credentials reach the Linux helper.
 
 ## Clear and remove
+
+For an installer-managed CLI, first disconnect/stop its explicitly managed runtime through your recorded tunnel controls if removing the code it uses. Inspect `~/.local/share/board-cli/.board-install.json` to identify its exact managed executable and retained release directories. Remove only the unchanged managed `board` wrapper and those dedicated code releases after all users of their paths have exited. Do not automatically delete `~/.config/board`, linked external local configs, private state/receipts, original selected files or a custom installation. Remove an unused `cli.json` link explicitly if desired. Old releases are deliberately retained through upgrades so installing a CLI never breaks a running subprocess. The installer has no destructive uninstall/force flag. The source/npm-prefix route's removal steps below remain separate.
 
 `revoke SHARE_ID` and `clear` remove the current owner's retained shares, leaving retry receipts/current clipboard alone. They cannot erase copies in dot context, task files, another application or clipboard manager. Owner-only local snapshots are **plaintext**, not encryption at rest. SQLite DELETE journals, FULL commits and secure deletion do not erase backups or guarantee forensic removal from SSD storage. Protect the OS account/backups. Receipt fingerprints/metadata persist seven days; deleting receipts alone is not normal cleanup.
 

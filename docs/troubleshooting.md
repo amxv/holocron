@@ -9,6 +9,8 @@ Start with local service health, then transport, then authorization. Each layer 
 
 ## The companion is unavailable
 
+With the friendly CLI, run `board check-config` and `board status` from any directory. If configuration is unavailable, explicitly select the existing private STDIO config with `board link --local-config /absolute/private/local.json`. Do not run `board init` to replace a running setup. The executable pins its installed absolute Node path; if you remove that Node installation, reactivate Node `24.21.0` and repeat the installer. For installation failures, check existing `gh` private-repository access, the published version, asset SHA-256 and conflicting/edited executable/prefix errors in [installation](operations.md#one-command-cli-installation).
+
 Restore the absolute paths recorded in [Mac installation](operations.md), then run:
 
 ```sh
@@ -25,7 +27,7 @@ Do not kill an unknown/reused PID or delete the database to bypass the runtime l
 
 The JSON must be a regular non-symlink file, mode `0600`, in a private owner-only directory outside the checkout. Use an absolute path and a normal unprivileged OS user. For STDIO, the strict JSON contains only `transport: "stdio"` and your canonical absolute private `stateDirectory`. See [private tunnel setup](secure-mcp-tunnel.md). For the alternative HTTP route, follow its [OAuth configuration](phase1-setup.md), including exact HTTPS values, three distinct scopes, token type/algorithm and canonical resource path `/mcp`.
 
-Board also rejects state beneath or equal to the process's working directory. Run the tunnel and local commands from the dedicated installed package prefix, using `cd "$SC_INSTALL"`, with state in a separate sibling directory. Launching from the state directory or a shared private parent that contains it fails this guard even when that parent is outside the Git checkout. Set the same safe working directory in any native supervisor. `check-config` does not open state, so it alone cannot detect this launch problem.
+Board also rejects state beneath or equal to the process's working directory. The friendly `board` executable anchors to installed code, keeping normal invocation independent of terminal cwd. For historical direct `shared-clipboard` commands, run the tunnel and local commands from the dedicated installed package prefix, using `cd "$SC_INSTALL"`, with state in a separate sibling directory. Launching the direct command from the state directory or a shared private parent that contains it fails this guard even when that parent is outside the Git checkout. Set the same safe working directory in any native supervisor. `check-config` does not open state, so it alone cannot detect this launch problem.
 
 `check-config` makes no network calls. A valid schema does not establish tunnel access or intended-dot compatibility. HTTP additionally needs a compatible provider, correct callback and actual access-token contract.
 

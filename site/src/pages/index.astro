@@ -55,9 +55,7 @@ const paths = [
 
   <section class="board-tools shell" aria-labelledby="tools-title">
     <div class="board-tools__copy"><p class="section-label">Your everyday workflow</p><h2 id="tools-title">One selection.<br /><em>One snapshot.</em></h2><p>Capture the clipboard once or pick a context file. Ask your dot to read it, summarize it or copy a reply. Clipboard text stays literal until you decide what to do with it.</p><a class="board-text-link" href="/docs/text-bridge">Share your first text <span aria-hidden="true">→</span></a></div>
-    <div class="board-tools__example"><p class="board-code-label">After installing and configuring the companion</p><div class="docs-copy"><pre><code class="language-sh">shared-clipboard capture \
-  --local-config /absolute/private/local.json \
-  --name "Project notes"</code></pre></div><p class="board-code-caption">Explicitly capture once. The dot can read that snapshot.</p><a href="/docs/cloud-clipboard">Need the cloud clipboard too? <span aria-hidden="true">→</span></a></div>
+    <div class="board-tools__example"><p class="board-code-label">After installing Board and linking your config</p><div class="docs-copy"><pre><code class="language-sh">board copy --name "Project notes"</code></pre></div><p class="board-code-caption">Share once. Your dot can read the snapshot; its clipboard needs an explicit receiving operation.</p><a href="/docs/cloud-clipboard">Need the cloud clipboard too? <span aria-hidden="true">→</span></a></div>
   </section>
 
   <section class="board-readiness shell" aria-label="Connection readiness"><span class="board-readiness__label">Before you rely on it</span><p>Local implementation checks are in place. Your intended account, tunnel and viewed clipboard still need live verification.</p><a class="board-text-link" href="/docs/secure-mcp-tunnel">Connection checklist <span aria-hidden="true">↗</span></a></section>

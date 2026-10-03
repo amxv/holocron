@@ -49,12 +49,13 @@ try {
   for (const path of paths) assert.deepEqual(await readFile(join(installed, path)), await readFile(path));
   for (const developmentOnly of ['typescript', '@types/node']) await assert.rejects(stat(join(clean, 'node_modules', developmentOnly)));
   const cli = join(installed, 'dist/cli.js');
+  const board = join(installed, 'dist/board.js');
   const cliRun = (args, input) => execFileSync(process.execPath, [cli, ...args], { env: environment, encoding: 'utf8', ...(input !== undefined ? { input } : {}) });
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard-cloud'), ['--help'], { encoding: 'utf8' }), /foreground owner|foreground ownership/);
   assert.match(cliRun(['--help']), /capture explicitly reads the Mac clipboard/);
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard'), ['--help'], { encoding: 'utf8' }), /share-text/);
   assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.0');
-  for (const name of ['shared-clipboard', 'shared-clipboard-probe', 'shared-clipboard-cloud']) {
+  for (const name of ['board', 'shared-clipboard', 'shared-clipboard-probe', 'shared-clipboard-cloud']) {
     const bin = join(clean, 'node_modules/.bin', name);
     assert.match(execFileSync(bin, ['--help'], { env: environment, encoding: 'utf8' }), /Usage:/);
     assert.equal(execFileSync(bin, ['--version'], { env: environment, encoding: 'utf8' }).trim(), '0.1.0');
@@ -123,11 +124,14 @@ try {
   const localConfigPath = join(temporary, 'local.json');
   await writeFile(localConfigPath, JSON.stringify({ transport: 'stdio', stateDirectory: join(temporary, 'stdio-state') }), { mode: 0o600 });
   const localArgs = (name, ...extra) => [name, ...extra, '--local-config', localConfigPath];
-  const localItem = JSON.parse(cliRun(localArgs('share-text'), text));
+  const boardRun = (args, input) => execFileSync(process.execPath, [board, ...args], {
+    cwd: '/', env: environment, encoding: 'utf8', ...(input !== undefined ? { input } : {}),
+  });
+  const localItem = JSON.parse(boardRun(localArgs('share'), text));
   const localSelected = join(temporary, 'stdio-selected-context');
   await writeFile(localSelected, text);
   const localDigest = createHash('sha256').update(text).digest('hex');
-  const localFile = JSON.parse(cliRun(localArgs('share-file', localSelected)));
+  const localFile = JSON.parse(boardRun(localArgs('share-file', localSelected)));
   const writeLog = join(temporary, 'stdio-write-events');
   const fixture = join(temporary, 'stdio-injected-adapter.mjs');
   await writeFile(fixture, `import { appendFile } from 'node:fs/promises';
@@ -139,7 +143,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
   let localReceipt;
   const localRequest = { request_id: 'installed_stdio_receipt_01', text, expected_sha256: localDigest,
     valid_until: new Date(Date.now() + 60000).toISOString() };
-  for (const entry of [cli, fixture, fixture]) {
+  for (const entry of [cli, board, fixture, fixture]) {
     const transport = new StdioClientTransport({ command: process.execPath,
       args: [entry, ...localArgs('stdio')], env: environment, stderr: 'pipe' });
     let errors = ''; transport.stderr.on('data', (bytes) => { errors += bytes.toString(); });

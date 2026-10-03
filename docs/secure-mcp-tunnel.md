@@ -15,6 +15,18 @@ STDIO tool metadata declares `noauth` because this subprocess has no separate ap
 
 The distinct `--config` HTTP transport retains its OAuth JWT owner/resource/scope checks on every request. A local config cannot start HTTP, and an HTTP config cannot start STDIO. There is no unauthenticated HTTP option. The local owner is separate from an OAuth owner; use a separate private state directory. Existing OAuth snapshots do not silently become local STDIO shares.
 
+## Install the Board CLI
+
+The [one-command installer](operations.md#one-command-cli-installation) downloads a fixed private release with your existing authenticated `gh` access and verifies its GitHub-recorded SHA-256. It installs `~/.local/bin/board`, with an absolute pinned Node executable, without inspecting config/state or changing a live runtime. Explicitly select an existing configuration with `board link --local-config /absolute/private/Board/local.json`, or use `board init` for a new setup. New config/link files live in the private `~/.config/board` directory. Do not run `init` to replace an existing setup.
+
+For an installer-managed CLI, the tunnel's direct command can be:
+
+```text
+"/absolute/home/.local/bin/board" stdio
+```
+
+You can instead supply `--local-config "/absolute/private/Board/local.json"` explicitly. The `board` wrapper changes into installed code before opening state and resolves selected file paths against the caller's directory. The private-state guard and config ownership requirements still apply. You do not need to change terminal directories for normal `board copy`, `board share-file`, `board list` or `board status` commands. Leave an already-running tunnel on its existing paths until an intentional operator reconnect; installation never restarts it.
+
 ## Install the private package
 
 Activate Node `24.21.0` and npm `11.19.0`. From a checked-out Board repository:
@@ -122,7 +134,19 @@ This writes private `plugin.json` and `.app.json` files, mode `0600`, in a new `
 
 Install/enable the generated plugin in the actual product surface that the intended dot can use. For supported local marketplaces, follow [private local marketplace installation](phase1-setup.md#private-local-marketplace-where-supported), using the registered STDIO connection's ID and the same `prepare-plugin` command. Those packaging steps do not require an OAuth provider for STDIO. Surface availability varies: a Codex-local marketplace does not establish cloud-dot access. Refresh the custom MCP server's tools after updates, enable the plugin and start a fresh conversation to verify discovery. Private tunnels are not a public plugin-submission path.
 
-Use the same installed CLI and local config for explicit sharing:
+The friendly CLI uses the explicitly saved link or `--local-config` override:
+
+```sh
+board copy --name "Copied text"
+printf 'Literal stdin\n' | board share --name "Shared text"
+board share-file ./context.txt --name "Project context"
+board list
+board revoke SHARE_ID
+board clear
+board status
+```
+
+`board copy` shares once; it does not populate the connected computer's OS clipboard. That requires an explicitly authorized [receiving helper write](cloud-clipboard.md#mac-to-cloud) with verified original bytes and a supported graphical session. The historical installed CLI and explicit local config remain supported:
 
 ```sh
 shared-clipboard capture --local-config /absolute/private/Board/local.json --name "Copied text"

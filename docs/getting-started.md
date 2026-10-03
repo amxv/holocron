@@ -1,98 +1,81 @@
 ---
 title: "Get started"
-description: "Install the Mac companion, connect a private MCP tunnel and share your first item."
+description: "Install the Board CLI, link your private MCP setup and share your first item."
 order: 2
 category: "Start"
 ---
 
-Set up Board in three stages: install on your Mac, connect Secure MCP Tunnel, then explicitly share context. The companion stays on the Mac; this documentation site is static.
+Board runs on your Mac and shares selected immutable snapshots with connected ChatGPT. `board copy` explicitly captures clipboard text for sharing. It does not automatically fill another computer's clipboard. For normal Paste in a connected ChatGPT computer, that computer must also have the [supported Wayland helper and an explicitly authorized transfer](cloud-clipboard.md#mac-to-cloud).
 
-## Before you begin
+## 1. Install the CLI
 
-You need a Mac, a source checkout or privately supplied package artifact, **Node 24.21.0 and npm 11.19.0**, access to the intended ChatGPT account/workspace, developer-mode eligibility and Secure MCP Tunnel permissions.
-
-The primary private STDIO route has no public listener and needs no external OAuth provider. All authorized tunnel/workspace callers share the companion's fixed local OS-owner authority. Restrict who can use the tunnel and registered connection; this route does not isolate remote users from one another.
-
-Board is distributed as a **private tarball**, not a public npm install. The package name remains `@shared-clipboard/dots-probe`; the commands remain `shared-clipboard` and `shared-clipboard-cloud`.
-
-## 1. Install on your Mac
-
-Follow [Mac companion installation](operations.md#pack-and-install-the-mac-companion). It builds and installs into a dedicated prefix outside your checkout. Record the absolute paths, using your existing Node manager. With mise:
+Activate **Node 24.21.0** with your existing Node manager. Install GitHub CLI (`gh`) and use your existing authenticated access to the **private** `amxv/shared-clipboard` repository. After the operator publishes the release and deploys the installer:
 
 ```sh
-SC_INSTALL="$HOME/Library/Application Support/shared-clipboard-package"
-SC_PRIVATE="$HOME/Library/Application Support/shared-clipboard-operator"
-SC_NODE="$(mise where node@24.21.0)/bin/node"
-SC_CLI="$SC_INSTALL/node_modules/@shared-clipboard/dots-probe/dist/cli.js"
-SC_LOCAL="$SC_PRIVATE/local.json"
+curl -fsSL https://clipboard.ashray.xyz/install.sh | sh
+"$HOME/.local/bin/board" --help
 ```
 
-These variables assume the dedicated directories already exist from the full install guide. In a fresh terminal, restore them before using the following commands. With another manager, use its absolute Node executable after confirming the pinned version.
+The installer checks the fixed release's GitHub SHA-256, installs into `~/.local/share/board-cli` and pins your absolute Node executable in `~/.local/bin/board`. It reads no existing Board config/state, touches no clipboard and starts nothing. Add `~/.local/bin` to PATH if needed; the following commands assume it is available. [Installation details](operations.md#one-command-cli-installation) cover prerequisites, inspection, custom paths, repeat installs, upgrade and failure recovery. A [source tarball installation](operations.md#pack-and-install-the-mac-companion) remains supported. No public npm publishing or anonymous private-release access is assumed.
 
-## 2. Connect the private tunnel
+## 2. Link your connection
 
-Follow [Secure MCP Tunnel setup](secure-mcp-tunnel.md). Create the private local JSON, mode `0600` in an owner-only `0700` directory outside the checkout:
-
-```json
-{
-  "transport": "stdio",
-  "stateDirectory": "/absolute/private/shared-clipboard-state"
-}
-```
-
-Choose your actual canonical absolute private state directory. The placeholder above is not an installation-specific path. Check the configuration:
+If your private Secure MCP Tunnel is **already connected**, select its actual existing local config explicitly:
 
 ```sh
-"$SC_NODE" "$SC_CLI" check-config --local-config "$SC_LOCAL"
+board link --local-config /absolute/private/Board/local.json
+board status
 ```
 
-Bind the official tunnel client to the **installed absolute STDIO command**:
+`link` saves only an owner-only path reference. It validates config without opening state or restarting your tunnel. Your configuration must be a canonical absolute, non-symlink file, mode `0600`, in a private `0700` directory. `board` then works from any invocation directory. Keep your installed Node path and running tunnel available.
+
+For a **new connection**, use:
+
+```sh
+board init
+board check-config
+```
+
+This creates `~/.config/board/local.json` and a link, refusing existing files. Its fixed-owner STDIO state is `~/.config/board/state`. No HTTP listener, clipboard operation or runtime starts. Follow [Secure MCP Tunnel setup](secure-mcp-tunnel.md), binding the official tunnel client to your actual absolute executable:
 
 ```text
-ABS_NODE ABS_INSTALLED_CLI stdio --local-config ABS_PRIVATE_JSON
+"/absolute/home/.local/bin/board" stdio
 ```
 
-The tunnel client launches this command and carries MCP over stdin/stdout. Before running it, change into the dedicated installed package prefix, which is separate from the private state directory:
+The wrapper selects your private config and anchors the subprocess to its installed code directory. Existing historical direct `shared-clipboard stdio --local-config ...` mappings remain valid and keep their documented working-directory requirements. Do not start a second runtime while a tunnel owns your state.
 
-```sh
-cd "$SC_INSTALL"
-```
-
-Do not launch the tunnel from the private state directory or any ancestor of it. Board rejects state beneath or equal to the process's working directory, including a shared private parent. Keep the package prefix and state as separate sibling directories. Follow the full guide's `tunnel-client run` command from this package directory. Set this same working directory when configuring a native supervisor.
-
-Do not separately launch the companion as an HTTP service or pass a server URL for this route. Keep the tunnel client running, the Mac awake and the installed paths stable. The complete guide covers the exact tunnel profile, permissions and lifecycle.
-
-In the intended ChatGPT account, use **Plugins → Add (+) → Create custom MCP server**, choose **Connection: Tunnel**, then select the actual tunnel or enter its ID. Generate and install the private plugin using the actual registration ID as described in the tunnel guide. A package installation or local status does not establish actual Dots access.
+In the intended ChatGPT account/workspace, create or use the private Tunnel connection, then generate and install the private plugin using the actual registration ID as described in the full guide. Your account/workspace needs the relevant developer-mode and Tunnels Read + Use permissions. Every authorized private tunnel caller acts as the same fixed local owner. A local status result does not prove remote tool discovery.
 
 ## 3. Share your first item
 
-In a second terminal, restore the recorded variables, change into the package prefix again and select a harmless UTF-8 text file. Every local command that opens state needs this safe working directory:
+Copy a harmless text marker yourself, then share it once:
 
 ```sh
-cd "$SC_INSTALL"
-"$SC_NODE" "$SC_CLI" share-file /absolute/path/to/context.txt \
-  --local-config "$SC_LOCAL" --name "Project context"
-"$SC_NODE" "$SC_CLI" list --local-config "$SC_LOCAL"
+board copy --name "First marker"
+board list
 ```
 
-Ask your connected dot: “List the items I shared, then read Project context and summarize it.” It uses `list_shared_items` and `read_shared_item`, following UTF-8 byte offsets until complete. It cannot select new Mac paths remotely.
-
-For clipboard text, copy a harmless marker yourself, then run:
+Ask connected ChatGPT to list and read that snapshot using `list_shared_items` and `read_shared_item`. Sharing emits only safe metadata locally, never the copied text. It leaves your Mac clipboard alone. For stdin or a selected UTF-8 context file:
 
 ```sh
-"$SC_NODE" "$SC_CLI" capture --local-config "$SC_LOCAL" --name "First marker"
+printf 'Hello from Board\n' | board share --name "Greeting"
+board share-file ./context.txt --name "Project context"
+board revoke SHARE_ID
+board clear
 ```
 
-Ask the dot to read that snapshot. On a separate explicit request, it can copy literal text back through `copy_text_to_mac`. Paste into a benign editor to verify it before deciding to execute anything.
+Relative selected paths are resolved from your terminal's directory. Files are immutable captures with SHA-256; they grant no ongoing path access. Text remains exact, including Unicode, BOM and trailing newlines. Text is limited to 256 KiB, files to 10 MiB, total snapshots to 100 MiB, with 24-hour expiry. [Context files](context-files.md) explain bounded read pages and digest verification.
+
+On a separate explicit request, ChatGPT can copy a literal reply to this Mac through `copy_text_to_mac`, with a unique request ID, deadline and durable receipt. Paste into a benign editor yourself. To paste the shared marker on the connected ChatGPT computer, ask ChatGPT to preserve the original digest, verify materialized bytes and explicitly run `board cloud write` in the intended supported Wayland session. Clipboard delivery requires that receiving operation; a snapshot or MCP connection alone does not establish it. No personal-computer receiver, hosted relay or automatic clipboard watcher is included.
 
 ## Other routes and next steps
 
-The separate [HTTP OAuth setup](phase1-setup.md) uses `--config`, a compatible external provider and per-tool scopes. Its `start` and optional login commands remain available. Keep HTTP and STDIO state/config separate; they use different owner identities. Use the route's matching config flag consistently.
+The separate [HTTP OAuth setup](phase1-setup.md) retains the historical `shared-clipboard --config` route and an external provider. The friendly `board` sharing commands accept only the private STDIO local config. Keep their state/config separate; they use different owner identities.
 
 - [Share text](text-bridge.md): explicit captures, stdin and Mac copy receipts.
-- [Context files](context-files.md): immutable captures, bounded paging and digest-verified materialization.
 - [Cloud helper](cloud-clipboard.md): optional Linux clipboard transfers with original SHA-256 verification.
-- [Troubleshooting](troubleshooting.md): service health, connection failures and interrupted writes.
-- [Commands and limits](reference.md): both transport contracts and exact bounds.
+- [Operations](operations.md): upgrades, private release publication, removal and live acceptance.
+- [Troubleshooting](troubleshooting.md): config, transport and session failures.
+- [Reference](reference.md): CLI and MCP contracts, exact limits and retained aliases.
 
-Actual intended account, tunnel, plugin and viewed clipboard checks remain **deferred and unverified** until you complete the live steps in the [private tunnel guide](secure-mcp-tunnel.md).
+Actual intended Dots/tool discovery and viewed Mac/cloud clipboard outcomes remain **deferred and unverified** until observed in the real installation. Tests use isolated state and injected clipboard adapters.

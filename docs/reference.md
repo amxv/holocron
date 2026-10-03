@@ -5,13 +5,13 @@ order: 10
 category: "Reference"
 ---
 
-Board is the public product name. Package and protocol identifiers remain compatible with the existing CLI: `@shared-clipboard/dots-probe` `0.1.0`, `shared-clipboard`, its `shared-clipboard-probe` alias, and `shared-clipboard-cloud`.
+Board is the public product name. Package and protocol identifiers remain compatible with the existing CLI: `@shared-clipboard/dots-probe` `0.1.0`, `shared-clipboard`, its `shared-clipboard-probe` alias, and `shared-clipboard-cloud`. The new friendly executable is `board`.
 
 ## Mac CLI
 
 Run with Node `24.21.0` and npm `11.19.0`. For the primary private STDIO route, explicit local management uses `--local-config` with the strict private `{ "transport": "stdio", "stateDirectory": "/absolute/private/state" }` JSON. The alternative OAuth HTTP route uses `--config` with its separate operator JSON. Do not mix identities/state or config flags. With a dedicated install, use the recorded absolute `"$SC_NODE" "$SC_CLI"` invocation.
 
-For commands that open state, the working directory must not be the state directory or any ancestor of it. Use `cd "$SC_INSTALL"` with the installed package prefix separate from state, and set the same directory for tunnel/native supervision. `check-config` validates configuration without opening state. See [setup](getting-started.md).
+For historical `shared-clipboard` commands that open state, the working directory must not be the state directory or any ancestor of it. Use `cd "$SC_INSTALL"` with the installed package prefix separate from state, and set the same directory for tunnel/native supervision. The friendly `board` wrapper anchors to installed code automatically. `check-config` validates configuration without opening state. See [setup](getting-started.md).
 
 | Command | Purpose |
 | --- | --- |
@@ -74,6 +74,28 @@ The pinned MCP SDK `1.32.0` uses the legacy `initialize` / `notifications/initia
 | Default HTTP listener | Loopback port 4317, MCP path `/mcp` |
 
 The read limit covers decoded UTF-8 bytes, with JSON/MCP overhead separate. Pages may end early to preserve Unicode boundaries. Do not use character indexes as offsets. Unsupported/binary/oversize data fails without truncation or normalization.
+
+## Friendly Board CLI
+
+The private package also installs `board`. The [one-command installer](operations.md#one-command-cli-installation) places its absolute pinned-Node wrapper at `~/.local/bin/board`; custom bin/prefix paths are supported. CLI sharing uses only private STDIO config, preserving the old commands and OAuth HTTP boundary.
+
+| Command | Explicit action |
+| --- | --- |
+| `board link --local-config ABS_JSON` | Validate local config only and save its private path reference |
+| `board init` | Create a new private config/link, refusing existing files; start nothing |
+| `board copy [--name LABEL]` | Capture Mac clipboard text once into a snapshot |
+| `board share [--name LABEL]` | Capture exact UTF-8 stdin to EOF |
+| `board share-file PATH [--name LABEL]` | Snapshot the one selected UTF-8 file |
+| `board list`, `board revoke ID`, `board clear` | List/revoke/clear retained snapshots; leave clipboards/receipts alone |
+| `board status`, `board check-config` | Query local state/control or validate config only |
+| `board stdio` | Protocol-only MCP subprocess; let the existing tunnel launch it |
+| `board cloud probe`, `board cloud read`, `board cloud write --sha256 DIGEST [--file FILE]` | Delegate the independent Wayland helper |
+
+For sharing/status/STDIO commands, `--local-config ABS_JSON` overrides `BOARD_LOCAL_CONFIG`, which overrides the saved `~/.config/board/cli.json` link. `BOARD_CLI_HOME` selects a canonical absolute private profile directory. Cloud operations do not read this link or Mac config. Relative selected data paths are resolved from the invoking directory before the executable anchors to installed code. The original state guard still rejects state beneath that code directory.
+
+Shortcut contract: invoke an **absolute executable with literal argv**, e.g. `board copy --name "Raycast clipboard" --local-config ABS_JSON`. `copy`, `share` and `share-file` emit one JSON line with exactly `id`, `name`, `kind`, `byteCount`, `sha256`, `createdAt`, `expiresAt`. IDs are UUIDv4, digest is 64 lowercase hexadecimal SHA-256, times are canonical UTC with milliseconds, and expiry is 24 hours after capture. `copy`/`share` always return `kind: "text"`; `share-file` returns `"file"`. Empty text/files are valid. Labels are 1–80 ASCII characters: first alphanumeric, subsequent alphanumeric, spaces, dot, underscore or hyphen, with no trailing space. Output contains metadata only, never snapshot contents, source paths or credentials.
+
+Exit codes are `0` for success, `2` for invalid arguments and `1` for operational failure. Errors use stderr; do not expose captured stdout/stderr wholesale in a shortcut UI. There is no `board exec`, HTTP start, login job or stop command. Use historical commands for their explicit lifecycle operations. `board copy` reports a shared snapshot, **not** remote clipboard delivery. Use the [original-digest receiving workflow](cloud-clipboard.md#mac-to-cloud) for a supported connected graphical computer.
 
 ## Cloud CLI
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { TEXT_LIMIT, FILE_LIMIT, AGGREGATE_LIMIT, READ_LIMIT, SHARE_TTL_MS, REQUEST_TTL_MS, RECEIPT_TTL_MS } from '../../src/text.ts';
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -87,6 +88,8 @@ const sitemap = await readFile(join(output, 'sitemap.xml'), 'utf8');
 for (const name of names) assert.ok(sitemap.includes(`${origin}/docs/${name.slice(0, -3)}`), `${name}: missing sitemap route`);
 assert.ok((await readFile(join(output, 'robots.txt'), 'utf8')).includes(`${origin}/sitemap.xml`));
 assert.match(await readFile(join(output, 'font-notices.txt'), 'utf8'), /SIL OPEN FONT LICENSE/);
+assert.deepEqual(await readFile(join(output, 'install.sh')), await readFile(join(site, 'public', 'install.sh')), 'Published bootstrap must match maintained source');
+execFileSync('sh', ['-n', join(output, 'install.sh')]);
 
 // Cover both maintained source and public text bundles. Never scan/copy private runtime state.
 const maintained = [
@@ -95,7 +98,7 @@ const maintained = [
   ...['package.json', 'package-lock.json', 'astro.config.mjs', 'vercel.json', 'README.md'].map((name) => join(site, name)),
   ...names.map((name) => join(content, name)), join(site, '..', 'README.md')
 ];
-const bundles = (await files(output)).filter((path) => /\.(?:html|md|js|css|json|xml|txt|svg)$/.test(path));
+const bundles = (await files(output)).filter((path) => /\.(?:html|md|js|css|json|xml|txt|svg|sh)$/.test(path));
 const sensitive = /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|plugin_asdk_app_[A-Za-z0-9]+|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/;
 for (const path of new Set([...maintained, ...bundles])) {
   const text = await readFile(path, 'utf8');
