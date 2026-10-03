@@ -2,17 +2,17 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "shared-clipboard-probe",
   "version": "0.1.0",
-  "description": "Private authenticated synthetic Dots compatibility probe. No clipboard or file sharing is implemented.",
+  "description": "Private owner-authenticated explicit text snapshots and literal Mac clipboard writes. Live provider, tunnel, Dots and OS verification is deferred.",
   "extensions": {
     "com.openai": {
       "apps": "./.app.json",
       "interface": {
-        "displayName": "Shared Clipboard Probe",
-        "shortDescription": "Synthetic private connection test",
-        "longDescription": "Checks owner authorization and reads a fixed harmless marker. Tunnel, Dots, and cloud clipboard compatibility require live evidence.",
+        "displayName": "Shared Clipboard",
+        "shortDescription": "Explicit text sharing and copying",
+        "longDescription": "Read only explicitly shared immutable text and copy literal text to the Mac on request. No execution, automatic capture or remote file paths. Actual OAuth provider, tunnel, intended dot and OS clipboards remain unverified.",
         "category": "Productivity",
-        "capabilities": ["Read"],
-        "defaultPrompt": ["Check my authenticated synthetic bridge probe", "Read the fixed phase1-marker"]
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": ["List text I explicitly shared", "Copy this literal text to my Mac clipboard"]
       }
     }
   }

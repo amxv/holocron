@@ -1,11 +1,11 @@
 # Shared Clipboard for Local and Cloud Computers
 
 ## Current implementation
-Phase 1 local preparation only. The TypeScript MCP service authenticates a single configured owner and exposes `get_bridge_status` and `read_synthetic_probe`, which return synthetic status and one fixed harmless marker. It cannot access personal files, clipboards, shell commands, or arbitrary URLs.
+The TypeScript Mac companion now supports explicit clipboard capture or UTF-8 stdin sharing, immutable text snapshots, bounded MCP list/read, and literal Mac clipboard writes with durable retry receipts. A local CLI manages shares and starts/stops the foreground service. There is no clipboard watcher, automatic paste, command execution, remote clipboard read, or arbitrary filesystem access.
 
-The private plugin scaffold has an empty registered-connection mapping. No identity provider, OAuth callback/resource settings, tunnel, intended dot, or viewed cloud clipboard session has been verified. Phase 1 is incomplete until the live gates pass. Later clipboard and selected-file features remain proposed.
+The private plugin scaffold still has an empty registered-connection mapping. Actual OAuth provider/callback/resource compatibility, tunnel forwarding, intended Dots installation/calls, real Mac editor paste, and viewed cloud clipboard tests are **deferred and unverified** by the user's instruction. Local tests use injected clipboard adapters and establish no live compatibility. Selected-file sharing and the cloud helper are later phases.
 
-Use Node `24.21.0` and npm `11.19.0`. Run `npm ci`, then `npm run check`. See [Phase 1 setup and live evidence gates](docs/phase1-setup.md) for configuration, tunnel/plugin registration, and the required actual Dots and desktop tests. Local synthetic authentication tests do not prove live compatibility.
+Use Node `24.21.0` and npm `11.19.0`. Run `npm ci`, then `npm run check`. See [Text bridge usage](docs/text-bridge.md) for local commands, limits and retry behavior, and [Connection setup](docs/phase1-setup.md) for the existing configurable provider/tunnel/plugin boundary and deferred live installation checks.
 
 ## Idea
 A lightweight companion app installed on both my local computer and my AI assistant’s cloud computer, providing a shared clipboard between their operating systems.

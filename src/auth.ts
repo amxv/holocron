@@ -17,6 +17,10 @@ export class AuthFailure extends Error {
 
 export type AuthVerifier = (header: string | undefined) => Promise<AuthInfo>;
 
+export function ownerId(config: ProbeConfig): string {
+  return createHash('sha256').update(JSON.stringify([config.issuer, config.ownerSubject])).digest('hex');
+}
+
 export function makeVerifier(config: ProbeConfig, resolver?: JWTVerifyGetKey): AuthVerifier {
   const keys = resolver ?? createRemoteJWKSet(new URL(config.jwksUrl), {
     timeoutDuration: 3000, cooldownDuration: 30000, cacheMaxAge: 300000,
@@ -52,7 +56,7 @@ export function makeVerifier(config: ProbeConfig, resolver?: JWTVerifyGetKey): A
       const scopes = payload.scope.split(' ');
       if (!scopes.includes(config.statusScope)) throw new AuthFailure(403, 'insufficient_scope');
       // No names, emails, subject, issuer, or JWT are returned to the model.
-      const principalId = createHash('sha256').update(JSON.stringify([payload.iss, payload.sub])).digest('hex');
+      const principalId = ownerId(config);
       return {
         token, clientId: 'validated-owner', scopes, expiresAt: payload.exp!,
         resource: new URL(config.resource), extra: { principalId, ownerMatched: true },
@@ -65,11 +69,11 @@ export function makeVerifier(config: ProbeConfig, resolver?: JWTVerifyGetKey): A
 }
 
 export function hasPermission(auth: AuthInfo | undefined, config: ProbeConfig, scope: string): boolean {
-  return auth?.extra?.ownerMatched === true && typeof auth.extra.principalId === 'string' &&
+  return auth?.extra?.ownerMatched === true && auth.extra.principalId === ownerId(config) &&
     auth.resource?.href === config.resource && auth.expiresAt !== undefined &&
     auth.expiresAt > Date.now() / 1000 && auth.scopes.includes(config.statusScope) && auth.scopes.includes(scope);
 }
 
 export function challenge(config: ProbeConfig, reason: 'invalid_token' | 'insufficient_scope', scopes: string[]): string {
-  return `Bearer resource_metadata="${metadataUrl(config)}", scope="${scopes.join(' ')}", error="${reason}", error_description="Authorize the configured owner with the required probe scopes"`;
+  return `Bearer resource_metadata="${metadataUrl(config)}", scope="${scopes.join(' ')}", error="${reason}", error_description="Authorize the configured owner with the required bridge scopes"`;
 }

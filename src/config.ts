@@ -1,5 +1,6 @@
-import { readFile } from 'node:fs/promises';
+import { isAbsolute, resolve } from 'node:path';
 import { z } from 'zod';
+import { readPrivateConfig } from './private-state.ts';
 
 function urlMatches(value: string, predicate: (url: URL) => boolean): boolean {
   try { return predicate(new URL(value)); } catch { return false; }
@@ -22,14 +23,16 @@ export const configSchema = z.strictObject({
   algorithm: z.enum(['RS256', 'ES256', 'EdDSA']),
   statusScope: z.string().min(1).max(128).regex(/^[A-Za-z0-9:._-]+$/),
   readScope: z.string().min(1).max(128).regex(/^[A-Za-z0-9:._-]+$/),
+  writeScope: z.string().min(1).max(128).regex(/^[A-Za-z0-9:._-]+$/),
+  stateDirectory: z.string().max(1024).refine((value) => isAbsolute(value) && resolve(value) === value).optional(),
   port: z.number().int().min(1024).max(65535).default(4317),
   allowedOrigins: z.array(httpsUrl.refine((value) => urlMatches(value, (url) => url.origin === value))).max(8).default([]),
-}).refine((config) => config.statusScope !== config.readScope, 'Probe scopes must differ');
+}).refine((config) => new Set([config.statusScope, config.readScope, config.writeScope]).size === 3, 'All three scopes must differ');
 
 export type ProbeConfig = z.infer<typeof configSchema>;
 
 export async function loadConfig(path: string): Promise<ProbeConfig> {
-  const bytes = await readFile(path);
+  const bytes = await readPrivateConfig(path);
   if (bytes.byteLength > 16384) throw new Error('Configuration exceeds limit');
   return configSchema.parse(JSON.parse(bytes.toString('utf8')));
 }
@@ -42,8 +45,8 @@ export function protectedResourceMetadata(config: ProbeConfig) {
   return {
     resource: config.resource,
     authorization_servers: [config.issuer],
-    scopes_supported: [config.statusScope, config.readScope],
+    scopes_supported: [config.statusScope, config.readScope, config.writeScope],
     bearer_methods_supported: ['header'],
-    resource_name: 'Shared Clipboard synthetic compatibility probe',
+    resource_name: 'Shared Clipboard explicit text bridge',
   };
 }

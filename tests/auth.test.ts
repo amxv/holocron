@@ -15,6 +15,7 @@ test('signed owner token is resource-bound with distinct probe scopes', async ()
   assert.equal(hasPermission({ ...auth, expiresAt: 0 }, config, config.readScope), false);
   assert.equal(hasPermission({ ...auth, resource: new URL('https://different.invalid/mcp') }, config, config.readScope), false);
   assert.equal(hasPermission({ ...auth, extra: { ownerMatched: false } }, config, config.readScope), false);
+  assert.equal(hasPermission({ ...auth, extra: { ownerMatched: true, principalId: 'a'.repeat(64) } }, config, config.readScope), false);
 });
 
 const now = Math.floor(Date.now() / 1000);
@@ -74,8 +75,8 @@ test('status permission does not authorize synthetic reads', async () => {
 test('provider input is constrained, metadata advertises resource and actual scopes only', () => {
   assert.deepEqual(protectedResourceMetadata(config), {
     resource: config.resource, authorization_servers: [config.issuer],
-    scopes_supported: [config.statusScope, config.readScope], bearer_methods_supported: ['header'],
-    resource_name: 'Shared Clipboard synthetic compatibility probe',
+    scopes_supported: [config.statusScope, config.readScope, config.writeScope], bearer_methods_supported: ['header'],
+    resource_name: 'Shared Clipboard explicit text bridge',
   });
   assert.equal(metadataUrl(config), 'https://synthetic-resource.invalid/.well-known/oauth-protected-resource/mcp');
   assert.ok(challenge(config, 'invalid_token', [config.statusScope]).includes(`resource_metadata="${metadataUrl(config)}"`));
@@ -83,7 +84,7 @@ test('provider input is constrained, metadata advertises resource and actual sco
     { issuer: 'http://issuer.invalid' }, { jwksUrl: 'file:///private/key' },
     { resource: 'https://resource.invalid/not-mcp' }, { resource: 'https://resource.invalid/mcp?token=secret' },
     { issuer: 'https://username:password@issuer.invalid' }, { jwksUrl: 'https://issuer.invalid/jwks#fragment' },
-    { statusScope: 'probe:status"' }, { readScope: config.statusScope }, { ownerSubject: '' },
+    { statusScope: 'probe:status"' }, { readScope: config.statusScope }, { writeScope: config.readScope }, { ownerSubject: '' },
     { tokenType: 'none' }, { algorithm: 'HS256' }, { allowedOrigins: ['*'] },
     { allowedOrigins: ['https://client.invalid/path'] }, { clientSecret: 'secret-sentinel' },
   ]) assert.equal(configSchema.safeParse({ ...config, ...patch }).success, false);

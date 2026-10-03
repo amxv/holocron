@@ -25,10 +25,10 @@ test('registered mapping is opt-in and never overwrites another plugin or config
   assert.ok((await readFile(join(output, '.app.json'), 'utf8')).includes(syntheticId));
 });
 
-test('committed scaffold has accurate read-only metadata and no invented connection', async () => {
+test('committed scaffold has accurate explicit Read/Write metadata and no invented connection', async () => {
   const manifest = JSON.parse(await readFile(new URL('../plugins/shared-clipboard/plugin.json', import.meta.url), 'utf8'));
   assert.equal(manifest.$schema, 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
   assert.equal(manifest.name, 'shared-clipboard-probe');
-  assert.deepEqual(manifest.extensions['com.openai'].interface.capabilities, ['Read']);
+  assert.deepEqual(manifest.extensions['com.openai'].interface.capabilities, ['Read', 'Write']);
   assert.deepEqual(JSON.parse(await readFile(new URL('../plugins/shared-clipboard/.app.json', import.meta.url), 'utf8')), { apps: {} });
 });

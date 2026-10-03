@@ -8,8 +8,11 @@ import type { AuthVerifier } from './auth.ts';
 import { protectedResourceMetadata } from './config.ts';
 import type { ProbeConfig } from './config.ts';
 import { makeMcpServer } from './mcp.ts';
+import type { ClipboardBridge } from './bridge.ts';
+import { TEXT_LIMIT } from './text.ts';
 
-export const BODY_LIMIT = 16384;
+// JSON escaping can expand one text byte to six ASCII bytes, plus bounded envelope overhead.
+export const BODY_LIMIT = TEXT_LIMIT * 6 + 16384;
 export const REQUEST_DEADLINE_MS = 10000;
 export const MAX_CONCURRENT = 16;
 const METADATA_ROUTES = new Set(['/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/mcp']);
@@ -68,18 +71,21 @@ async function readJson(req: IncomingMessage): Promise<unknown> {
   });
 }
 
-export function createProbeHttp(config: ProbeConfig, verify: AuthVerifier, options: { deadlineMs?: number } = {}) {
+export function createProbeHttp(config: ProbeConfig, verify: AuthVerifier, options: { deadlineMs?: number; bridge?: ClipboardBridge } = {}) {
   let active = 0;
   const deadlineMs = options.deadlineMs ?? REQUEST_DEADLINE_MS;
   const server = createServer({ maxHeaderSize: 8192 }, (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    const operation = new AbortController();
+    req.once('aborted', () => operation.abort());
     const deadline = setTimeout(() => {
+      operation.abort();
       reject(res, 408);
       req.destroy();
     }, deadlineMs);
     let release = () => {};
-    res.once('close', () => { clearTimeout(deadline); release(); });
+    res.once('close', () => { operation.abort(); clearTimeout(deadline); release(); });
     void (async () => {
       const address = server.address();
       const port = address && typeof address === 'object' ? address.port : config.port;
@@ -129,7 +135,7 @@ export function createProbeHttp(config: ProbeConfig, verify: AuthVerifier, optio
       const body = await readJson(req);
       if (res.destroyed || res.writableEnded) return;
       const transport = new StreamableHTTPServerTransport({ enableJsonResponse: true, maxRequestBodySize: BODY_LIMIT });
-      const mcp = makeMcpServer(config);
+      const mcp = makeMcpServer(config, options.bridge, operation.signal);
       res.once('close', () => { void mcp.close().catch(() => {}); });
       await mcp.connect(transport);
       const authenticatedRequest: IncomingMessage & { auth?: AuthInfo } = req;

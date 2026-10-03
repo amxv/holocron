@@ -1,6 +1,6 @@
 # Phase 1 synthetic probe and live gates
 
-Status as of 2026-10-04: local preparation only. No provider is selected or verified. No real connection, OAuth callback/resource setting, intended dot call, or viewed cloud clipboard paste/capture has passed. Do not advance to personal context or clipboard features on the basis of local tests.
+Status as of 2026-10-04: the user instructed "skip live make it", so implementation continues with live gates deferred. Phase 2 adds explicit text sharing and Mac clipboard writes; see [Text bridge usage](text-bridge.md). No provider is selected or verified. No real connection, OAuth callback/resource setting, intended dot call, real Mac editor test, or viewed cloud clipboard paste/capture has passed. Local tests do not establish these facts.
 
 ## Install and check
 
@@ -11,7 +11,7 @@ mise exec node@24.21.0 -- npm ci
 mise exec node@24.21.0 -- npm run check
 ```
 
-Without mise, activate exactly the pinned runtime first. `check` performs typecheck, build, security/protocol tests, and a clean temporary package installation with authenticated/unauthorized synthetic smoke calls. The package has an explicit distribution allowlist. Synthetic signing keys exist only in memory during tests; no test authorization server or production authentication bypass is shipped.
+Without mise, activate exactly the pinned runtime first. `check` performs typecheck, build, security/protocol/text/lifecycle tests, and a clean temporary package installation with authenticated/unauthorized text-flow smoke calls using injected clipboard adapters. No actual clipboard operations occur in checks. The package has an explicit distribution allowlist. Synthetic signing keys exist only in memory during tests; no test authorization server or production authentication bypass is shipped.
 
 ## Provider configuration boundary
 
@@ -29,6 +29,7 @@ Example of the required shape, using deliberately nonfunctional `.invalid` place
   "algorithm": "RS256",
   "statusScope": "probe:status",
   "readScope": "probe:read",
+  "writeScope": "clipboard:write",
   "port": 4317,
   "allowedOrigins": []
 }
@@ -43,9 +44,9 @@ node dist/cli.js start --config /absolute/path/to/operator-config.json
 
 The provider must publish its own publicly reachable OAuth/OIDC discovery metadata, authorization and token endpoints, authorization-code with PKCE `S256`, and supported client registration (CIMD, DCR, or a predefined client supported by the actual connection surface). The resource server does not create, proxy, or fabricate authorization-server metadata. Confirm it issues access tokens with the exact resource as the **only audience**, `iss`, `sub`, integer `iat`/`exp`, a space-delimited `scope`, and lifetime at most one hour. Optional `nbf` is verified; optional `resource` must match too. Select its actual access-token `typ` (`at+jwt` or `JWT`) and algorithm (`RS256`, `ES256`, or `EdDSA`). A `JWT` provider must issue API access tokens with a distinct resource audience and required scopes; never use ID tokens or widen the audience to a client ID. Opaque tokens/introspection and other scope claim formats are outside this preparatory contract and require an explicit implementation decision if the chosen provider needs them.
 
-Every protected HTTP message verifies signature, exact issuer, audience/resource, expiry/not-before/issued-at, owner, and the status scope. The read tool additionally requires the read scope. Token-directed keys/URLs and symmetric/unsigned algorithms are rejected. JWKS retrieval uses only the configured HTTPS URL with a three-second timeout, bounded caching, and no redirect following. There is no token pass-through to another service.
+Every protected HTTP message verifies signature, exact issuer, audience/resource, expiry/not-before/issued-at, owner, and the status scope. Read/list tools additionally require the read scope; copy requires its distinct write scope. All three names must differ and must exist in the selected provider. The sample names do not establish provider compatibility. Token-directed keys/URLs and symmetric/unsigned algorithms are rejected. JWKS retrieval uses only the configured HTTPS URL with a three-second timeout, bounded caching, and no redirect following. There is no token pass-through to another service.
 
-GET `/.well-known/oauth-protected-resource/mcp` and the root discovery alias return the canonical resource, provider issuer, both required scopes, and header bearer transport. A rejected transport returns `WWW-Authenticate` referencing the path-specific discovery URL; read-scope failures also return MCP `_meta["mcp/www_authenticate"]`. Tool descriptors publish OAuth scopes at the top level and in `_meta.securitySchemes`. SDK 1.32 does not accept top-level `securitySchemes` in `registerTool`, so the SDK `tools/list` handler is explicitly supplied while registered tool handlers retain schema enforcement.
+GET `/.well-known/oauth-protected-resource/mcp` and the root discovery alias return the canonical resource, provider issuer, all three configured scopes, and header bearer transport. A rejected transport returns `WWW-Authenticate` referencing the path-specific discovery URL; tool-scope failures also return MCP `_meta["mcp/www_authenticate"]`. Tool descriptors publish OAuth scopes at the top level and in `_meta.securitySchemes`. SDK 1.32 does not accept top-level `securitySchemes` in `registerTool`, so the SDK `tools/list` handler is explicitly supplied while registered tool handlers retain schema enforcement.
 
 Published tool JSON schemas use Draft 7, which matches the pinned SDK client's default validator. Zod 4 otherwise emits Draft 2020-12 tuple syntax that this client cannot validate. Both the wire metadata and the official SDK client's successful structured-result validation are checked locally.
 
@@ -80,11 +81,11 @@ This creates an owner-only directory with root `plugin.json` and `.app.json` con
 
 Install and enable the private plugin in the actual product surface that the intended dot can access. Local marketplace availability varies by surface. A Codex-local plugin installation does not prove that the cloud dot sees it. Refresh the connection after metadata changes and repeat the calls in a fresh actual dot conversation.
 
-The listener binds only IPv4 loopback. Host must exactly equal `127.0.0.1:<actual-port>`; forwarded-host headers are ignored. Missing Origin is accepted for nonbrowser tunnel traffic; present Origin requires an exact configured HTTPS origin. No wildcard CORS, cookie auth, query tokens, session authority, arbitrary path, generic fetch, shell, or clipboard operation is exposed. `/mcp` accepts one bounded UTF-8 JSON-RPC POST, with JSON responses through the official Streamable HTTP transport. GET/DELETE streaming sessions are disabled because the probe is stateless. Body limit is 16 KiB, headers 8 KiB, active authorized/verification requests 16, sockets 64, and full-request deadline ten seconds. Preflight is restricted to POST and known MCP headers. The actual tunnel must preserve bearer authorization and supported MCP protocol/Accept headers and forward a loopback Host (or the boundary must be deliberately adapted and retested based on observed evidence).
+The listener binds only IPv4 loopback. Host must exactly equal `127.0.0.1:<actual-port>`; forwarded-host headers are ignored. Missing Origin is accepted for nonbrowser tunnel traffic; present Origin requires an exact configured HTTPS origin. No wildcard CORS, cookie auth, query tokens, session authority, arbitrary path, generic fetch, shell, or remote clipboard capture is exposed. `/mcp` accepts one bounded UTF-8 JSON-RPC POST, with JSON responses through the official Streamable HTTP transport. GET/DELETE streaming sessions are disabled because the service is stateless. Phase 2's body limit is `6 × 256 KiB + 16 KiB` for worst-case escaped text; decoded text is still limited to 256 KiB. Headers remain 8 KiB, active authorized/verification requests 16, sockets 64, and full-request deadline ten seconds. Preflight is restricted to POST and known MCP headers. The actual tunnel must preserve bearer authorization and supported MCP protocol/Accept headers and forward a loopback Host (or the boundary must be deliberately adapted and retested based on observed evidence).
 
 When a user-supplied secret is needed, use `fidelius ask --help`, then `fidelius ask -m "..." CONTROL_PLANE_API_KEY` or the specific established-provider credential name. Fidelius returns a private temporary directory path, not the secret. Consume the file directly into the necessary local secret store/client configuration without printing it or putting the value in a shell command, repository, plugin manifest, model-visible output, or logs. A tunnel ID and OAuth client ID are identifiers, not substitutes for app-level authorization. Never ask for credentials in chat. No credential prompt was opened during preparation because no provider/tunnel connection was selected or available to test.
 
-## Actual dot acceptance before personal data
+## Deferred actual dot acceptance
 
 In the user's intended dot, call `get_bridge_status` and `read_synthetic_probe` with `{ "id": "phase1-marker" }` using the configured owner. Verify the result's owner-bound principal ID matches the authorized provider identity independently. The fixed text and SHA-256 digest must match. Status intentionally continues to report external capabilities as unverified: the running server cannot infer those outcomes.
 
@@ -99,8 +100,8 @@ After access is provided, inspect the desktop the user actually sees and choose 
 - Ask the authorized helper to write literal `shared-clipboard-phase1-paste-2026-10-04` to that graphical session's clipboard. Take over the same viewed desktop and paste into a benign text field. Record the visible exact result without submitting or executing it.
 - In that same viewed session, copy `shared-clipboard-phase1-capture-2026-10-04` from a benign field. Capture it through the authorized helper and compare exact bytes. Record the visible session identity and helper result without reading unrelated existing clipboard content.
 
-Do not declare a backend from `DISPLAY`, an OS name, installed commands, or a helper's exit status alone. Record the actual paste and capture, task/session, date, helper invocation and backend, access restrictions, and ownership constraints. No speculative cloud helper is shipped before these facts are available.
+Do not declare viewed-session compatibility from `DISPLAY`, an OS name, installed commands, or a helper's exit status alone. Record the actual paste and capture, task/session, date, helper invocation and backend, access restrictions, and ownership constraints. A later helper may support documented standard backends under the user's amended scope; backend detection does not complete these live checks.
 
-## Stop condition and evidence
+## Deferred evidence
 
-Phase 1 is complete only after both actual Dots authorization/connection/plugin gates and actual viewed cloud paste/capture pass, plus final local checks. Keep the private compatibility record in the primary checkout's ignored `tmp/gg/` folder. Unknown values must remain explicitly unknown. If developer access, workspace/tunnel permissions, a compatible existing provider, a surface that installs the private plugin for this dot, or a cloud task/viewed-session handoff is unavailable, report the exact prerequisite to the supervisor and stop dependent phases. Do not substitute a relay or local mock evidence.
+Phase 1's live acceptance remains incomplete until actual Dots authorization/connection/plugin and viewed cloud paste/capture pass. The latest user amendment defers these installation tests and authorizes subsequent implementation with local checks. Keep private compatibility records in the primary checkout's ignored `tmp/gg/` folder. Unknown values remain explicitly unknown, and real use requires the unavailable provider, callback/resource, developer access, workspace/tunnel permissions, actual registered-plugin surface and graphical session to be established. No relay, invented credentials or local mock evidence substitutes for those facts.

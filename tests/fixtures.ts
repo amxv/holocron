@@ -5,7 +5,7 @@ import { configSchema } from '../src/config.ts';
 export const config = configSchema.parse({
   issuer: 'https://synthetic-issuer.invalid', jwksUrl: 'https://synthetic-issuer.invalid/jwks',
   resource: 'https://synthetic-resource.invalid/mcp', ownerSubject: 'synthetic-owner',
-  tokenType: 'at+jwt', algorithm: 'ES256', statusScope: 'probe:status', readScope: 'probe:read',
+  tokenType: 'at+jwt', algorithm: 'ES256', statusScope: 'probe:status', readScope: 'probe:read', writeScope: 'clipboard:write',
   allowedOrigins: ['https://synthetic-client.invalid'],
 });
 export const keyPair = await generateKeyPair('ES256');
