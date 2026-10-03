@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import { chmod, mkdir, readFile, stat, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, stat, symlink, unlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -14,6 +14,61 @@ import { ownerId, makeVerifier } from '../src/auth.ts';
 import { ClipboardBridge } from '../src/bridge.ts';
 import { temporary, memoryClipboard, literal } from './bridge-fixtures.ts';
 import { config, localKeys } from './fixtures.ts';
+
+test('share-file CLI selects exactly one file and emits only safe metadata without stdin/clipboard access', async (t) => {
+  const directory = await temporary(t);
+  const state = join(directory, 'state');
+  const configPath = join(directory, 'operator.json');
+  await writeFile(configPath, JSON.stringify({ ...config, stateDirectory: state }), { mode: 0o600 });
+  const selected = join(directory, 'PRIVATE_SELECTED_FILE'); await writeFile(selected, literal);
+  const unselected = join(directory, 'unselected'); await writeFile(unselected, 'unselected');
+  const link = join(directory, 'link'); await symlink(selected, link);
+  const outputs: string[] = []; const errors: string[] = [];
+  const adapter = memoryClipboard();
+  const io = { out: (value: string) => outputs.push(value), error: (value: string) => errors.push(value),
+    stdin: { async *[Symbol.asyncIterator]() { throw new Error('File sharing must not read stdin'); } } };
+  const run = (args: string[]) => runCli([...args, '--config', configPath], io, adapter);
+  assert.equal(await run(['share-file', selected, '--name', 'Selected context']), 0);
+  const item = JSON.parse(outputs.at(-1)!); assert.equal(item.kind, 'file'); assert.equal(item.name, 'Selected context');
+  assert.equal(await run(['share-file', link]), 0); assert.equal(JSON.parse(outputs.at(-1)!).name, 'Context file');
+  await writeFile(selected, 'changed'); await unlink(selected);
+  const store = await ShareStore.open(state, ownerId(config));
+  try {
+    assert.equal(store.read(item.id).text, literal); assert.equal(store.counts().sharedItems, 2);
+    assert.throws(() => store.read(unselected), /share_unavailable/);
+  } finally { store.close(); }
+  assert.equal(await run(['share-file']), 2);
+  assert.equal(await run(['share-file', unselected, selected]), 2);
+  assert.equal(await run(['share-file', unselected, '--recursive']), 2);
+  assert.equal(await run(['share-file', directory]), 1);
+  assert.equal(await run(['share-file', selected]), 1);
+  assert.equal(await run(['share-file', selected, '--name', '../unsafe']), 1);
+  for (const secret of [selected, unselected, 'PRIVATE_SELECTED_FILE', literal, config.ownerSubject]) {
+    assert.equal([...outputs, ...errors].join('\n').includes(secret), false);
+  }
+  assert.equal(adapter.reads, 0); assert.equal(adapter.writes, 0);
+});
+
+test('concurrent file-share and revoke CLI processes preserve immutable owner-scoped aggregate accounting', async (t) => {
+  const directory = await temporary(t);
+  const state = join(directory, 'state');
+  const configPath = join(directory, 'operator.json');
+  await writeFile(configPath, JSON.stringify({ ...config, stateDirectory: state }), { mode: 0o600 });
+  const selected = join(directory, 'selected'); await writeFile(selected, literal);
+  const cli = resolve('src/cli.ts'); const run = promisify(execFile);
+  const outputs = await Promise.all(Array.from({ length: 6 }, (_, index) => run(process.execPath,
+    [cli, 'share-file', selected, '--name', 'File ' + index, '--config', configPath])));
+  const ids = outputs.map((output) => JSON.parse(output.stdout).id);
+  assert.equal(new Set(ids).size, 6);
+  const store = await ShareStore.open(state, ownerId(config));
+  try {
+    assert.deepEqual(store.counts(), { sharedItems: 6, sharedBytes: Buffer.byteLength(literal) * 6 });
+    for (const id of ids) assert.equal(store.read(id).text, literal);
+    await Promise.all(ids.slice(0, 3).map((id) => run(process.execPath, [cli, 'revoke', id, '--config', configPath])));
+    for (const id of ids.slice(0, 3)) assert.throws(() => store.read(id), /share_unavailable/);
+    assert.deepEqual(store.counts(), { sharedItems: 3, sharedBytes: Buffer.byteLength(literal) * 3 });
+  } finally { store.close(); }
+});
 
 test('local CLI reads clipboard only on capture; share/list/revoke/clear/status never mutate clipboard', async (t) => {
   const directory = await temporary(t);

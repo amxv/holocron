@@ -167,7 +167,11 @@ test('CORS preflight requires an exact configured origin and bounded header/meth
 test('reject declared and chunked oversized bodies, invalid JSON, batches and invalid UTF-8', async (t) => {
   const { base, port } = await fixture(t);
   const bearer = await token();
-  assert.equal((await request(base, bearer, ' '.repeat(BODY_LIMIT + 1))).status, 413);
+  // Send an oversized declared length without uploading the body. The server
+  // rejects headers immediately; fetch can race that close with its large write
+  // and report EPIPE instead of exposing the already-sent 413 response.
+  const declared = await rawRequest(port, `POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nAuthorization: Bearer ${bearer}\r\nContent-Type: application/json\r\nContent-Length: ${BODY_LIMIT + 1}\r\nConnection: close\r\n\r\n`);
+  assert.match(declared, /HTTP\/1.1 413/);
   for (const body of ['{', '[]', 'null', JSON.stringify([initialize, initialize])]) {
     assert.equal((await request(base, bearer, body)).status, 400);
   }

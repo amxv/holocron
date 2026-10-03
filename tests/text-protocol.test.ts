@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { once } from 'node:events';
+import { writeFile, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import type { TestContext } from 'node:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -7,6 +10,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { makeVerifier } from '../src/auth.ts';
 import { createProbeHttp } from '../src/http.ts';
 import { ClipboardFailure } from '../src/clipboard.ts';
+import { readSelectedFile } from '../src/file-snapshot.ts';
 import { READ_LIMIT, TEXT_LIMIT } from '../src/text.ts';
 import { bridgeFixture, literal } from './bridge-fixtures.ts';
 import { config, localKeys, token } from './fixtures.ts';
@@ -26,6 +30,49 @@ async function post(base: string, body: unknown, bearer?: string, abort?: AbortS
 }
 const write = (text = literal) => ({ request_id: 'protocol_request_001', text, valid_until: new Date(Date.now() + 60000).toISOString() });
 const structured = (result: unknown) => (result as { structuredContent: Record<string, unknown> }).structuredContent;
+
+test('authenticated file schemas and bounded MCP pages reconstruct exact bytes with no source path grant', async (t) => {
+  const { base, store, directory, adapter } = await fixture(t);
+  const original = Buffer.from('\ufeff' + 'a'.repeat(READ_LIMIT - 5) + '🚀雪é\r\n' + literal.repeat(4000));
+  const selected = join(directory, 'PRIVATE_CONTEXT_SOURCE'); await writeFile(selected, original);
+  const item = store.captureFile(await readSelectedFile(selected));
+  await unlink(selected);
+  const bearer = await token();
+  const client = new Client({ name: 'synthetic-local-file-client', version: '0.0.0' });
+  t.after(() => client.close());
+  await client.connect(new StreamableHTTPClientTransport(new URL(base + '/mcp'), { requestInit: { headers: { Authorization: `Bearer ${bearer}` } } }));
+  const { tools } = await client.listTools();
+  const descriptor = tools.find((tool) => tool.name === 'read_shared_item')!;
+  assert.match(descriptor.description!, /existing execution\/file tools/);
+  assert.match(descriptor.description!, /SHA-256/); assert.match(descriptor.description!, /BOM/);
+  const listing = structured(await client.callTool({ name: 'list_shared_items', arguments: { limit: 1 } }));
+  assert.equal((listing.items as { kind: string }[])[0]!.kind, 'file');
+  const parts: Buffer[] = [];
+  let offset = 0;
+  while (true) {
+    const page = structured(await client.callTool({ name: 'read_shared_item', arguments: { id: item.id, offset } }));
+    assert.equal(page.kind, 'file'); assert.equal(page.sha256, item.sha256);
+    const bytes = Buffer.from(page.text as string); assert.ok(bytes.length <= READ_LIMIT);
+    assert.deepEqual(bytes, original.subarray(offset, page.nextOffset as number));
+    assert.equal(JSON.stringify(page).includes(selected), false);
+    parts.push(bytes); offset = page.nextOffset as number;
+    if (page.complete) break;
+  }
+  const reconstructed = Buffer.concat(parts);
+  assert.deepEqual(reconstructed, original);
+  assert.equal(createHash('sha256').update(reconstructed).digest('hex'), item.sha256);
+  for (const unauthorized of [undefined, await token({ sub: 'other-owner' }), await token({ iat: 1, exp: 2 })]) {
+    assert.ok([401, 403].includes((await post(base, rpc('read_shared_item', { id: item.id }), unauthorized)).status));
+  }
+  assert.equal((await (await post(base, rpc('read_shared_item', { id: item.id }), await token({ scope: config.statusScope }))).json()).result.isError, true);
+  for (const args of [{ id: item.id, offset: 1 }, { id: selected }, { id: item.id, path: selected }, { id: item.id, max_bytes: READ_LIMIT + 1 }]) {
+    const data = await (await post(base, rpc('read_shared_item', args), bearer)).json();
+    assert.ok(data.error || data.result?.isError); assert.equal(data.result?.structuredContent, undefined);
+  }
+  store.revoke(item.id);
+  assert.equal((await client.callTool({ name: 'read_shared_item', arguments: { id: item.id, offset: 3 } })).isError, true);
+  assert.equal(adapter.reads, 0); assert.equal(adapter.writes, 0);
+});
 
 test('official SDK text flow validates structured results, scoped metadata and literal byte preservation', async (t) => {
   const { base, bridge, adapter, directory } = await fixture(t);

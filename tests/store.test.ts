@@ -120,6 +120,12 @@ test('private state refuses unsafe permissions, symlinks, hardlinks and reposito
   const journalDir = join(directory, 'journal'); await mkdir(journalDir, { mode: 0o700 });
   await symlink(target, join(journalDir, 'bridge.sqlite-journal'));
   await assert.rejects(ShareStore.open(journalDir, ownerId(config)));
+  const hardJournalDir = join(directory, 'hard-journal'); await mkdir(hardJournalDir, { mode: 0o700 });
+  await link(target, join(hardJournalDir, 'bridge.sqlite-journal'));
+  await assert.rejects(ShareStore.open(hardJournalDir, ownerId(config)));
+  const sharedJournalDir = join(directory, 'shared-journal'); await mkdir(sharedJournalDir, { mode: 0o700 });
+  await writeFile(join(sharedJournalDir, 'bridge.sqlite-journal'), '', { mode: 0o644 });
+  await assert.rejects(ShareStore.open(sharedJournalDir, ownerId(config)));
   const safe = join(directory, 'safe');
   const store = await ShareStore.open(safe, ownerId(config));
   store.close();

@@ -1,6 +1,6 @@
 # Phase 1 synthetic probe and live gates
 
-Status as of 2026-10-04: the user instructed "skip live make it", so implementation continues with live gates deferred. Phase 2 adds explicit text sharing and Mac clipboard writes; see [Text bridge usage](text-bridge.md). No provider is selected or verified. No real connection, OAuth callback/resource setting, intended dot call, real Mac editor test, or viewed cloud clipboard paste/capture has passed. Local tests do not establish these facts.
+Status as of 2026-10-04: the user instructed "skip live make it", so implementation continues with live gates deferred. Explicit text sharing, Mac clipboard writes and selected UTF-8 context file snapshots are implemented; see [Text bridge usage](text-bridge.md) and [Selected context files](context-files.md). No provider is selected or verified. No real connection, OAuth callback/resource setting, intended dot call/file reconstruction, real Mac editor test, or viewed cloud clipboard paste/capture has passed. Local tests do not establish these facts.
 
 ## Install and check
 
@@ -11,7 +11,7 @@ mise exec node@24.21.0 -- npm ci
 mise exec node@24.21.0 -- npm run check
 ```
 
-Without mise, activate exactly the pinned runtime first. `check` performs typecheck, build, security/protocol/text/lifecycle tests, and a clean temporary package installation with authenticated/unauthorized text-flow smoke calls using injected clipboard adapters. No actual clipboard operations occur in checks. The package has an explicit distribution allowlist. Synthetic signing keys exist only in memory during tests; no test authorization server or production authentication bypass is shipped.
+Without mise, activate exactly the pinned runtime first. `check` performs typecheck, build, security/protocol/text/file/lifecycle tests, and a clean temporary package installation with authenticated/unauthorized text and bounded file reconstruction/digest smoke calls using injected clipboard adapters. No actual clipboard operations occur in checks. The package has an explicit distribution allowlist. Synthetic signing keys exist only in memory during tests; no test authorization server or production authentication bypass is shipped.
 
 ## Provider configuration boundary
 

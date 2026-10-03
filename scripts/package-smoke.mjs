@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, writeFile, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, unlink, symlink, rm, realpath } from 'node:fs/promises';
 import { once } from 'node:events';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -15,6 +15,8 @@ try {
   }))[0];
   const paths = packed.files.map((file) => file.path);
   assert.ok(paths.includes('dist/cli.js'));
+  assert.ok(paths.includes('dist/file-snapshot.js'));
+  assert.ok(paths.includes('docs/context-files.md'));
   assert.ok(paths.includes('plugins/shared-clipboard/plugin.json'));
   assert.ok(paths.includes('plugins/shared-clipboard/.app.json'));
   for (const path of paths) {
@@ -56,6 +58,20 @@ try {
   const snapshot = JSON.parse(cliRun(command('share-text'), text));
   assert.equal(snapshot.sha256, createHash('sha256').update(text).digest('hex'));
   assert.equal(JSON.parse(cliRun(command('list'))).items[0].id, snapshot.id);
+  const fileBytes = Buffer.from('\ufeff' + 'a'.repeat(65531) + '🚀雪é\r\n' + text.repeat(4000));
+  const selected = join(temporary, 'PRIVATE_CONTEXT_SOURCE');
+  const selectedLink = join(temporary, 'selected-link');
+  await writeFile(selected, fileBytes); await symlink(selected, selectedLink);
+  const fileSnapshot = JSON.parse(cliRun(command('share-file', selectedLink, '--name', 'Packaged context')));
+  assert.equal(fileSnapshot.kind, 'file');
+  assert.equal(fileSnapshot.byteCount, fileBytes.length);
+  assert.equal(fileSnapshot.sha256, createHash('sha256').update(fileBytes).digest('hex'));
+  assert.equal(JSON.stringify(fileSnapshot).includes(selected), false);
+  await writeFile(selected, 'modified'); await unlink(selected);
+  await writeFile(selected, Buffer.from([0xff]));
+  assert.throws(() => cliRun(command('share-file', selected)), /invalid_utf8/);
+  assert.throws(() => cliRun(command('share-file', temporary)), /unsupported_file/);
+  await unlink(selected);
   assert.equal(JSON.parse(cliRun(command('status'))).localTransport, 'stopped');
   // A clean installed foreground service, controlled locally, performs no actual clipboard operation.
   const child = spawn(process.execPath, [cli, ...command('start')], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -111,8 +127,32 @@ try {
       assert.equal(response.status, 200); return (await response.json()).result;
     };
     assert.equal((await call('get_bridge_status', {})).structuredContent.liveMacClipboard, 'unverified');
-    assert.equal((await call('list_shared_items', { limit: 1 })).structuredContent.items[0].id, snapshot.id);
+    const listed = [];
+    let cursor;
+    do {
+      const page = (await call('list_shared_items', { limit: 1, ...(cursor ? { cursor } : {}) })).structuredContent;
+      listed.push(...page.items); cursor = page.nextCursor;
+    } while (cursor);
+    assert.deepEqual(new Set(listed.map((item) => item.id)), new Set([snapshot.id, fileSnapshot.id]));
     assert.equal((await call('read_shared_item', { id: snapshot.id })).structuredContent.text, text);
+    const fileParts = [];
+    let offset = 0;
+    while (true) {
+      const page = (await call('read_shared_item', { id: fileSnapshot.id, offset })).structuredContent;
+      const part = Buffer.from(page.text, 'utf8');
+      assert.equal(page.kind, 'file'); assert.ok(part.length <= 65536);
+      assert.equal(page.nextOffset, offset + part.length); assert.equal(page.sha256, fileSnapshot.sha256);
+      assert.equal(JSON.stringify(page).includes(selected), false);
+      fileParts.push(part); offset = page.nextOffset;
+      if (page.complete) break;
+    }
+    const reconstructed = Buffer.concat(fileParts);
+    assert.deepEqual(reconstructed, fileBytes);
+    assert.equal(createHash('sha256').update(reconstructed).digest('hex'), fileSnapshot.sha256);
+    const materialized = join(temporary, 'reconstructed-context'); await writeFile(materialized, reconstructed);
+    assert.equal(createHash('sha256').update(await readFile(materialized)).digest('hex'), fileSnapshot.sha256);
+    assert.equal((await call('read_shared_item', { id: selected })).isError, true);
+    assert.equal((await call('read_shared_item', { id: fileSnapshot.id, offset: 1 })).isError, true);
     const input = { request_id: 'package_smoke_request_01', text, valid_until: new Date(Date.now() + 60000).toISOString() };
     const receipt = (await call('copy_text_to_mac', input)).structuredContent;
     assert.equal(receipt.state, 'completed'); assert.deepEqual(adapter.value, Buffer.from(text));
@@ -123,6 +163,11 @@ try {
     const readJwt = await new SignJWT({ iss: operatorConfig.issuer, sub: operatorConfig.ownerSubject, aud: operatorConfig.resource,
       iat: now, exp: now + 60, scope: 'probe:status probe:read' }).setProtectedHeader({ alg: 'ES256', typ: 'at+jwt' }).sign(keys.privateKey);
     assert.equal((await call('copy_text_to_mac', input, readJwt)).isError, true);
+    const statusJwt = await new SignJWT({ iss: operatorConfig.issuer, sub: operatorConfig.ownerSubject, aud: operatorConfig.resource,
+      iat: now, exp: now + 60, scope: 'probe:status' }).setProtectedHeader({ alg: 'ES256', typ: 'at+jwt' }).sign(keys.privateKey);
+    assert.equal((await call('read_shared_item', { id: fileSnapshot.id }, statusJwt)).isError, true);
+    assert.equal(JSON.parse(cliRun(command('revoke', fileSnapshot.id))).revoked, true);
+    assert.equal((await call('read_shared_item', { id: fileSnapshot.id, offset: 3 })).isError, true);
     assert.equal(JSON.parse(cliRun(command('revoke', snapshot.id))).revoked, true);
     assert.equal((await call('read_shared_item', { id: snapshot.id })).isError, true);
     cliRun(command('share-text'), 'clear this');
@@ -133,7 +178,7 @@ try {
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Clean package install, CLI lifecycle/text sharing, installed-module authenticated text/read/write/retry/scope smoke passed (${paths.length} distribution files). Injected clipboard adapter only; real Dots, provider, tunnel and OS clipboards remain deferred.`);
+  console.log(`Clean package install, CLI lifecycle/text/file sharing, installed-module authenticated bounded file reconstruction/digest/revoke and text/read/write/retry/scope smoke passed (${paths.length} distribution files). Injected clipboard adapter only; real Dots, provider, tunnel and OS clipboards remain deferred.`);
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

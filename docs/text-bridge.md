@@ -1,6 +1,6 @@
 # Explicit text bridge
 
-Phase 2 implements local text sharing and the authenticated MCP text flow. Actual provider/OAuth callback, tunnel, registered plugin in the intended dot, real Mac clipboard/editor, and viewed cloud clipboard validation are deferred and unverified. Local source and clean installed-package checks use injected clipboard adapters. They never access an existing OS clipboard.
+The companion implements local text sharing, selected UTF-8 context files and the authenticated MCP flow. See [Selected context files](context-files.md) for explicit file selection and exact digest-verified materialization. Actual provider/OAuth callback, tunnel, registered plugin in the intended dot, real Mac clipboard/editor, dot file reconstruction and viewed cloud clipboard validation are deferred and unverified. Local source and clean installed-package checks use injected clipboard adapters. They never access an existing OS clipboard.
 
 ## Local operation
 
@@ -23,6 +23,9 @@ node dist/cli.js capture --config /absolute/private/operator.json --name "Copied
 
 # Shares UTF-8 stdin without reading the OS clipboard. Supply input as data.
 node dist/cli.js share-text --config /absolute/private/operator.json --name "Shared text"
+
+# Snapshots one explicitly selected regular UTF-8 file, never an ongoing path grant.
+node dist/cli.js share-file /absolute/path/to/context.txt --config /absolute/private/operator.json --name "Context"
 
 node dist/cli.js list --config /absolute/private/operator.json
 node dist/cli.js revoke SHARE_ID --config /absolute/private/operator.json
@@ -48,13 +51,14 @@ Every protected HTTP message validates the exact configured issuer, sole resourc
 ## Limits and storage
 
 - Text capture/share/write: 256 KiB of valid UTF-8 bytes. Reject invalid UTF-8, lone surrogate input, and oversize data before retaining a snapshot or dispatching a write. No silent normalization/truncation; BOM, quotes, Unicode and newlines remain data.
+- Selected regular UTF-8 context files: 10 MiB per immutable snapshot; nontext binary controls, invalid UTF-8, unsupported file types and detected selection/modification races fail clearly. Default label is `Context file`; the source path and basename are not automatically disclosed. File size limits do not raise the clipboard text limit.
 - All retained snapshot content: 100 MiB, across owners using the same state directory. Snapshot bytes are immutable, with opaque UUID, safe name, kind, byte count, SHA-256, creation and fixed 24-hour expiry.
 - List: default 20, at most 100 items. `nextCursor` is an opaque item ID; ordering is stable by ID. Additions during pagination are not a historical snapshot.
 - Read: default and maximum 64 KiB of UTF-8 content bytes, minimum 4. JSON escaping and MCP metadata add wire overhead. `offset` and `nextOffset` are byte positions, not character indexes; an offset inside a multibyte codepoint fails. A page may end early to preserve UTF-8. `complete` indicates the final page.
 - HTTP: a bounded body of `6 × 256 KiB + 16 KiB` permits worst-case escaped JSON text; tool limits still apply to decoded bytes. Existing ten-second request, header, Host/Origin, socket and concurrency limits remain enforced.
 - Request receipts: retain for seven days beyond completion/recovery, with a hard 50,000-row bound. Receipts contain owner binding, request ID, one-way exact payload/deadline fingerprint, deadline, state, timestamps and byte count, but no clipboard contents.
 
-The private SQLite store uses full synchronous commits, DELETE journaling and secure deletion. Separate CLI processes transact safely with a bounded one-second lock wait; operations may fail busy rather than lose data. Share expiry denies reads immediately; startup, ordinary operations and the running service's one-minute purge remove expired data. Revocation/clear delete retained snapshot bytes. They cannot remove copies already returned to another application. The content/kind storage boundary is ready for a later file-snapshot phase; this phase has no file-sharing command or remote path.
+The private SQLite store uses full synchronous commits, DELETE journaling and secure deletion. Separate CLI processes transact safely with a bounded one-second lock wait; operations may fail busy rather than lose data. Share expiry denies reads immediately; startup, ordinary operations and the running service's one-minute purge remove expired data. Revocation/clear delete retained snapshot bytes. They cannot remove copies already returned to another application. Text/file snapshots share the same owner-scoped listing, bounded byte-read and aggregate accounting boundary. SQLite BLOB substrings keep each page bounded without repeated whole-file loading. Remote tools accept only opaque snapshot IDs and never a local source path.
 
 ## Receipts and interruption
 

@@ -28,7 +28,7 @@ export class ClipboardBridge {
     return { mode: 'explicit-text-bridge' as const, localTransport: this.stopped ? 'stopped' as const : 'available' as const,
       tunnel: 'unverified' as const, dot: 'unverified' as const, cloudClipboard: 'unverified' as const, oauthProvider: 'unverified' as const,
       macClipboard: this.adapter.availability, liveMacClipboard: 'unverified' as const,
-      capabilities: ['explicit-text-share', 'shared-text-read', ...(this.adapter.availability === 'unavailable' ? [] : ['literal-mac-clipboard-write'])],
+      capabilities: ['explicit-text-share', 'explicit-file-share', 'shared-text-read', 'shared-file-read', ...(this.adapter.availability === 'unavailable' ? [] : ['literal-mac-clipboard-write'])],
       ...this.store.counts() };
   }
 

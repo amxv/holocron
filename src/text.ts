@@ -1,4 +1,5 @@
 export const TEXT_LIMIT = 256 * 1024;
+export const FILE_LIMIT = 10 * 1024 * 1024;
 export const AGGREGATE_LIMIT = 100 * 1024 * 1024;
 export const READ_LIMIT = 64 * 1024;
 export const SHARE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -21,6 +22,14 @@ export function literalBytes(text: string): Buffer {
   if (bytes.toString('utf8') !== text) throw new BridgeFailure('invalid_utf8');
   validUtf8(bytes);
   return bytes;
+}
+
+export function contextUtf8(bytes: Uint8Array): void {
+  if (bytes.byteLength > FILE_LIMIT) throw new BridgeFailure('file_too_large');
+  const text = validUtf8(bytes, FILE_LIMIT);
+  // UTF-8 decoding alone accepts NUL and other binary control data. Keep this
+  // restriction file-specific: literal clipboard text retains its prior contract.
+  if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text)) throw new BridgeFailure('binary_file');
 }
 
 export function safeName(name: string): string {

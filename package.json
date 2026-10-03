@@ -2,7 +2,7 @@
   "name": "@shared-clipboard/dots-probe",
   "version": "0.1.0",
   "private": true,
-  "description": "Private owner-authenticated explicit text sharing and literal Mac clipboard MCP bridge",
+  "description": "Private owner-authenticated text and selected UTF-8 file sharing with literal Mac clipboard MCP writes",
   "type": "module",
   "engines": { "node": "24.21.0" },
   "packageManager": "npm@11.19.0",

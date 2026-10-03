@@ -1,11 +1,11 @@
 # Shared Clipboard for Local and Cloud Computers
 
 ## Current implementation
-The TypeScript Mac companion now supports explicit clipboard capture or UTF-8 stdin sharing, immutable text snapshots, bounded MCP list/read, and literal Mac clipboard writes with durable retry receipts. A local CLI manages shares and starts/stops the foreground service. There is no clipboard watcher, automatic paste, command execution, remote clipboard read, or arbitrary filesystem access.
+The TypeScript Mac companion now supports explicit clipboard capture, UTF-8 stdin sharing and selected UTF-8 context files, immutable snapshots, bounded MCP list/read, and literal Mac clipboard writes with durable retry receipts. A local CLI manages shares and starts/stops the foreground service. Files are captured once, up to 10 MiB each and 100 MiB total snapshots, with exact SHA-256 and no remotely visible source paths. There is no clipboard watcher, automatic paste, command execution, remote clipboard read, or arbitrary filesystem access.
 
-The private plugin scaffold still has an empty registered-connection mapping. Actual OAuth provider/callback/resource compatibility, tunnel forwarding, intended Dots installation/calls, real Mac editor paste, and viewed cloud clipboard tests are **deferred and unverified** by the user's instruction. Local tests use injected clipboard adapters and establish no live compatibility. Selected-file sharing and the cloud helper are later phases.
+The private plugin scaffold still has an empty registered-connection mapping. Actual OAuth provider/callback/resource compatibility, tunnel forwarding, intended Dots installation/calls and file reconstruction, real Mac editor paste, and viewed cloud clipboard tests are **deferred and unverified** by the user's instruction. Local tests use injected clipboard adapters and establish no live compatibility. The cloud helper is a later phase.
 
-Use Node `24.21.0` and npm `11.19.0`. Run `npm ci`, then `npm run check`. See [Text bridge usage](docs/text-bridge.md) for local commands, limits and retry behavior, and [Connection setup](docs/phase1-setup.md) for the existing configurable provider/tunnel/plugin boundary and deferred live installation checks.
+Use Node `24.21.0` and npm `11.19.0`. Run `npm ci`, then `npm run check`. See [Text bridge usage](docs/text-bridge.md) for local commands and retry behavior, [Selected context files](docs/context-files.md) for selection and digest-verified reconstruction, and [Connection setup](docs/phase1-setup.md) for the configurable provider/tunnel/plugin boundary and deferred live installation checks.
 
 ## Idea
 A lightweight companion app installed on both my local computer and my AI assistant’s cloud computer, providing a shared clipboard between their operating systems.

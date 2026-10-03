@@ -26,12 +26,15 @@ export async function privateDirectory(path: string): Promise<string> {
   return path;
 }
 
-export async function privateFile(path: string, create = false): Promise<void> {
+export async function privateFile(path: string, create = false, allowUnlinked = false): Promise<void> {
   const uid = currentUid();
   const handle = await open(path, constants.O_NOFOLLOW | constants.O_RDWR | (create ? constants.O_CREAT : 0), 0o600);
   try {
     const info = await handle.stat();
-    if (!info.isFile() || info.uid !== uid || info.nlink !== 1 || (info.mode & 0o777) !== 0o600) {
+    // SQLite DELETE journals can be removed by another local process between
+    // open and fstat. An already-unlinked private regular journal is harmless;
+    // database/config files and retained hardlinks still require exactly one link.
+    if (!info.isFile() || info.uid !== uid || (info.nlink !== 1 && !(allowUnlinked && info.nlink === 0)) || (info.mode & 0o777) !== 0o600) {
       throw new Error('Private regular owner-only file required');
     }
   } finally { await handle.close(); }

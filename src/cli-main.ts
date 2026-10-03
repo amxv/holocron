@@ -6,15 +6,18 @@ import { makeVerifier, ownerId } from './auth.ts';
 import { ShareStore } from './store.ts';
 import { stateDirectory } from './private-state.ts';
 import { localControl, startCompanion } from './lifecycle.ts';
-import { BridgeFailure, TEXT_LIMIT } from './text.ts';
+import { BridgeFailure, TEXT_LIMIT, safeName } from './text.ts';
+import { readSelectedFile } from './file-snapshot.ts';
 import { VERSION } from './mcp.ts';
 import { preparePlugin } from './plugin.ts';
 
 const help = `Usage: shared-clipboard <start|stop|status|check-config|capture|share-text|list|clear> --config <private JSON file>
        shared-clipboard <capture|share-text> --config <private JSON file> [--name <safe label>]
+       shared-clipboard share-file <selected UTF-8 file> --config <private JSON file> [--name <safe label>]
        shared-clipboard revoke <share ID> --config <private JSON file>
        shared-clipboard prepare-plugin --connection-id <registered ID> --output <new directory>
 capture explicitly reads the Mac clipboard. share-text reads UTF-8 stdin only.
+share-file snapshots one explicitly selected regular UTF-8 file, at most 10 MiB, without exposing its path.
 start runs in the foreground; stop uses an owner-only local socket. No automatic clipboard reads, paste, or command execution.
 Actual provider, tunnel, Dots and OS clipboard verification remain deferred. See docs/text-bridge.md.`;
 
@@ -39,8 +42,13 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
     const remaining = [...args.slice(1, index), ...args.slice(index + 2)];
     let name: string | undefined;
     if (['capture', 'share-text'].includes(command!) && remaining[0] === '--name' && remaining.length === 2) name = remaining[1];
+    else if (command === 'share-file') {
+      if (!(remaining.length === 1 || (remaining.length === 3 && remaining[1] === '--name'))) throw new BridgeFailure('invalid_arguments');
+      name = remaining.length === 3 ? remaining[2] : 'Context file';
+      safeName(name!);
+    }
     else if (!(command === 'revoke' && remaining.length === 1) && remaining.length !== 0) throw new BridgeFailure('invalid_arguments');
-    if (!['start', 'stop', 'status', 'check-config', 'capture', 'share-text', 'list', 'revoke', 'clear'].includes(command!)) throw new BridgeFailure('invalid_arguments');
+    if (!['start', 'stop', 'status', 'check-config', 'capture', 'share-text', 'share-file', 'list', 'revoke', 'clear'].includes(command!)) throw new BridgeFailure('invalid_arguments');
     const config = await loadConfig(args[index + 1]!);
     if (command === 'check-config') { io.out('Configuration schema valid. Provider, OAuth, tunnel, Dots and OS clipboard remain unverified.'); return 0; }
     const directory = await stateDirectory(config.stateDirectory);
@@ -49,6 +57,7 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
     const print = (value: unknown) => io.out(JSON.stringify(value));
     switch (command) {
       case 'capture': print(await bridge.capture(name)); break;
+      case 'share-file': print(store.captureFile(await readSelectedFile(remaining[0]!), name)); break;
       case 'share-text': {
         const chunks: Uint8Array[] = [];
         let size = 0;
