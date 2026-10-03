@@ -1,6 +1,13 @@
-# Private installation and operation
+---
+title: Mac companion
+description: Install and operate the companion, or let Secure MCP Tunnel own the private STDIO runtime.
+order: 4
+category: Start
+---
 
-Implementation is locally checked. Actual intended Dots/provider/OAuth/tunnel/plugin and viewed Mac/cloud clipboard compatibility are **deferred and unverified**. Configure those systems later using [Connection setup](phase1-setup.md), then run the acceptance steps below. No real provider has been selected.
+For the primary private tunnel path, follow [Secure MCP Tunnel](secure-mcp-tunnel.md): the tunnel client launches `stdio --local-config` and supervises that runtime. Explicit local sharing/status/stop use the same local config. The HTTP companion and optional HTTP login startup below use `--config` and remain OAuth protected; they are separate from the STDIO runtime.
+
+Actual Dots/plugin discovery, tunnel and viewed Mac/cloud clipboard compatibility remain **deferred and unverified** until tested in the intended installation. Use [STDIO setup](secure-mcp-tunnel.md) for the private tunnel, or [OAuth HTTP setup](phase1-setup.md) for the separate provider-protected connection.
 
 ## Pack and install the Mac companion
 

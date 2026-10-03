@@ -1,4 +1,11 @@
-# Explicit text bridge
+---
+title: Text sharing and clipboard writes
+description: Explicit text snapshots, literal clipboard writes, bounds and durable receipts.
+order: 6
+category: Use Board
+---
+
+For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Board/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
 
 The companion implements local text sharing, selected UTF-8 context files and the authenticated MCP flow. See [Selected context files](context-files.md) for explicit file selection and exact digest-verified materialization. Actual provider/OAuth callback, tunnel, registered plugin in the intended dot, real Mac clipboard/editor, dot file reconstruction and viewed cloud clipboard validation are deferred and unverified. Local source and clean installed-package checks use injected clipboard adapters. They never access an existing OS clipboard.
 
@@ -6,7 +13,7 @@ The companion implements local text sharing, selected UTF-8 context files and th
 
 [Private installation and operation](operations.md) provides the repeatable dedicated-prefix tarball install, foreground lifecycle, explicit optional next-login setup and scoped removal. Setup does not touch other ChatGPT/Codex settings or current clipboards.
 
-Use the pinned Node/npm versions and build first (`npm ci && npm run build`). Both installed bin names, `shared-clipboard` and the existing `shared-clipboard-probe` alias, run the same CLI. The package and portable mapping retain their Phase 1 identifiers for compatibility.
+Use the pinned Node/npm versions and build first (`npm ci && npm run build`). Both installed bin names, `shared-clipboard` and the existing `shared-clipboard-probe` alias, run the same CLI. The package and portable mapping retain their existing identifiers for compatibility.
 
 An existing established provider must grant three distinct, actually configured scopes: status, shared-context read, and clipboard write. Add `writeScope` to the private operator JSON shown in [Connection setup](phase1-setup.md); it has no invented default. Configuration must be an absolute regular non-symlink file, mode `0600`, in a directory accessible only to the same unprivileged OS user. No token or client secret belongs in it. `check-config` checks its structure without network or clipboard access.
 

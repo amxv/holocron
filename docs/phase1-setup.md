@@ -1,6 +1,13 @@
-# Provider, private tunnel and registered plugin setup
+---
+title: OAuth HTTP connection
+description: Configure the separate OAuth-protected HTTP connection and provider.
+order: 5
+category: Start
+---
 
-Status as of 2026-10-04: the user instructed "skip live make it", so implementation continues with live gates deferred. Explicit text sharing, Mac clipboard writes and selected UTF-8 context file snapshots are implemented; see [Text bridge usage](text-bridge.md) and [Selected context files](context-files.md). No provider is selected or verified. No real connection, OAuth callback/resource setting, intended dot call/file reconstruction, real Mac editor test, or viewed cloud clipboard paste/capture has passed. Local tests do not establish these facts.
+This guide is the alternative OAuth-protected HTTP connection. For an existing private OpenAI Secure MCP Tunnel, use [direct STDIO setup](secure-mcp-tunnel.md) with `--local-config`; no external OAuth provider is required for that transport. HTTP keeps its owner/resource/scope checks and accepts only `--config`.
+
+Actual provider/OAuth, intended Dots/plugin discovery, tunnel forwarding and viewed clipboard compatibility remain **deferred and unverified** until checked in the real installation. Local tests establish implementation behavior only.
 
 ## Install and check
 
@@ -60,7 +67,7 @@ Follow the current [Secure MCP Tunnel documentation](https://developers.openai.c
 
 1. Verify developer-mode eligibility in the intended ChatGPT account/workspace. Enable it in Settings, Security and login. Confirm the intended dot can use supported installed plugins in that execution environment.
 2. Create or identify the real tunnel in Platform tunnel settings with Tunnels Read + Manage. Runtime/selection require Read + Use. Associate the tunnel with the owning Platform organization **and** the intended ChatGPT workspace. Organization membership alone does not establish workspace discovery.
-3. Install the official full `tunnel-client` from the OpenAI Homebrew tap on macOS (`brew install openai/tools/tunnel-client`), or follow Platform settings/the latest official release for your platform. The current full client `0.0.15` was downloaded to a temporary directory, checked against the release SHA-256, and its help/sample commands inspected during preparation. No permanent installation, profile, tunnel, or runtime was created. Start with `tunnel-client help quickstart`. The HTTP/OAuth starter is `sample_mcp_with_dcr`; its name does not select or verify a DCR provider. Use a fresh profile directory/name, without `--force`:
+3. Install the official full `tunnel-client` from the OpenAI Homebrew tap on macOS (`brew install openai/tools/tunnel-client`), or follow Platform settings/the latest official release for your platform. Use the supported current download and inspect its installed help. Start with `tunnel-client help quickstart`. The HTTP/OAuth starter is `sample_mcp_with_dcr`; its name does not select or verify a DCR provider. Use a fresh profile directory/name, without `--force`:
 
 ```sh
 tunnel-client init --sample sample_mcp_with_dcr --profile shared-clipboard-probe \
@@ -83,7 +90,7 @@ Use a canonical absolute new directory outside the checkout, inside an owner-onl
 
 Install and enable the private plugin in the actual product surface that the intended dot can access. Local marketplace availability varies by surface. A Codex-local plugin installation does not prove that the cloud dot sees it. Refresh the connection after metadata changes and repeat the calls in a fresh actual dot conversation.
 
-Current official connection docs were re-read for the final implementation. Refresh from the connection's developer settings/tool list after metadata changes; reconnect its account if OAuth expired or was revoked. Do not reset another plugin or replace global Codex settings to repair this connection. Local companion/tunnel status never establishes remote discovery or successful provider revocation. See [Recovery and disconnect](operations.md#recovery-and-disconnect) for separate stop/disconnect/provider/tunnel actions and unexpired-JWT limits.
+Refresh from the connection's developer settings/tool list after metadata changes; reconnect its account if OAuth expired or was revoked. Do not reset another plugin or replace global Codex settings to repair this connection. Local companion/tunnel status never establishes remote discovery or successful provider revocation. See [Recovery and disconnect](operations.md#recovery-and-disconnect) for separate stop/disconnect/provider/tunnel actions and unexpired-JWT limits.
 
 ### Private local marketplace, where supported
 
@@ -120,9 +127,9 @@ On a surface supporting the current official Codex marketplace CLI, explicitly r
 
 This documented desktop path remains untested in the actual intended dot/account. If its product surface has no local marketplace support or does not expose the plugin to that dot, report that concrete compatibility gap; broad computer access or a local Inspector result cannot substitute. Removal disables/uninstalls this plugin in its actual surface and uses `codex plugin marketplace remove shared-clipboard-personal` only for this dedicated source, then deletes its own private files after inspecting them. Neither marketplace removal nor file deletion revokes the external provider/tunnel/registered connection.
 
-The listener binds only IPv4 loopback. Host must exactly equal `127.0.0.1:<actual-port>`; forwarded-host headers are ignored. Missing Origin is accepted for nonbrowser tunnel traffic; present Origin requires an exact configured HTTPS origin. No wildcard CORS, cookie auth, query tokens, session authority, arbitrary path, generic fetch, shell, or remote clipboard capture is exposed. `/mcp` accepts one bounded UTF-8 JSON-RPC POST, with JSON responses through the official Streamable HTTP transport. GET/DELETE streaming sessions are disabled because the service is stateless. Phase 2's body limit is `6 × 256 KiB + 16 KiB` for worst-case escaped text; decoded text is still limited to 256 KiB. Headers remain 8 KiB, active authorized/verification requests 16, sockets 64, and full-request deadline ten seconds. Preflight is restricted to POST and known MCP headers. The actual tunnel must preserve bearer authorization and supported MCP protocol/Accept headers and forward a loopback Host (or the boundary must be deliberately adapted and retested based on observed evidence).
+The listener binds only IPv4 loopback. Host must exactly equal `127.0.0.1:<actual-port>`; forwarded-host headers are ignored. Missing Origin is accepted for nonbrowser tunnel traffic; present Origin requires an exact configured HTTPS origin. No wildcard CORS, cookie auth, query tokens, session authority, arbitrary path, generic fetch, shell, or remote clipboard capture is exposed. `/mcp` accepts one bounded UTF-8 JSON-RPC POST, with JSON responses through the official Streamable HTTP transport. GET/DELETE streaming sessions are disabled because the service is stateless. The HTTP body limit is `6 × 256 KiB + 16 KiB` for worst-case escaped text; decoded text is still limited to 256 KiB. Headers remain 8 KiB, active authorized/verification requests 16, sockets 64, and full-request deadline ten seconds. Preflight is restricted to POST and known MCP headers. The actual tunnel must preserve bearer authorization and supported MCP protocol/Accept headers and forward a loopback Host (or the boundary must be deliberately adapted and retested based on observed evidence).
 
-When a user-supplied secret is needed, use `fidelius ask --help`, then `fidelius ask -m "..." CONTROL_PLANE_API_KEY` or the specific established-provider credential name. Fidelius returns a private temporary directory path, not the secret. Consume the file directly into the necessary local secret store/client configuration without printing it or putting the value in a shell command, repository, plugin manifest, model-visible output, or logs. A tunnel ID and OAuth client ID are identifiers, not substitutes for app-level authorization. Never ask for credentials in chat. No credential prompt was opened during preparation because no provider/tunnel connection was selected or available to test.
+When a user-supplied secret is needed, use `fidelius ask --help`, then `fidelius ask -m "..." CONTROL_PLANE_API_KEY` or the specific established-provider credential name. Fidelius returns a private temporary directory path, not the secret. Consume the file directly into the necessary local secret store/client configuration without printing it or putting the value in a shell command, repository, plugin manifest, model-visible output, or logs. A tunnel ID and OAuth client ID are identifiers, not substitutes for app-level authorization. Never ask for credentials in chat.
 
 ## Deferred actual dot acceptance
 
@@ -132,15 +139,15 @@ Prove rejection from that same actual integration with a disconnected/unauthenti
 
 ## Actual viewed cloud clipboard acceptance
 
-Use an explicitly authorized task on the intended dot's cloud computer. No cloud task or viewed session API was supplied to this implementer; local shells and OS/environment inspection cannot prove cloud capability. Broad personal-computer access and computer-use automation are not authorized.
+Use an explicitly authorized task on the intended dot's cloud computer. Local shells and OS/environment inspection cannot prove viewed-session clipboard capability.
 
 After access is provided, inspect the desktop the user actually sees and choose its helper/backend based on that session. Establish session permission and any clipboard ownership lifetime. Only then use harmless markers:
 
 - Ask the authorized helper to write literal `shared-clipboard-phase1-paste-2026-10-04` to that graphical session's clipboard. Take over the same viewed desktop and paste into a benign text field. Record the visible exact result without submitting or executing it.
 - In that same viewed session, copy `shared-clipboard-phase1-capture-2026-10-04` from a benign field. Capture it through the authorized helper and compare exact bytes. Record the visible session identity and helper result without reading unrelated existing clipboard content.
 
-Do not declare viewed-session compatibility from `DISPLAY`, an OS name, installed commands, or a helper's exit status alone. Record the actual paste and capture, task/session, date, helper invocation and backend, access restrictions, and ownership constraints. A later helper may support documented standard backends under the user's amended scope; backend detection does not complete these live checks.
+Do not declare viewed-session compatibility from `DISPLAY`, an OS name, installed commands, or a helper's exit status alone. Record the actual paste and capture, task/session, date, helper invocation and backend, access restrictions, and ownership constraints. Backend detection does not complete these live checks.
 
-## Deferred evidence
+## Live compatibility records
 
-Phase 1's live acceptance remains incomplete until actual Dots authorization/connection/plugin and viewed cloud paste/capture pass. The latest user amendment defers these installation tests and authorizes subsequent implementation with local checks. Keep private compatibility records in the primary checkout's ignored `tmp/gg/` folder. Unknown values remain explicitly unknown, and real use requires the unavailable provider, callback/resource, developer access, workspace/tunnel permissions, actual registered-plugin surface and graphical session to be established. No relay, invented credentials or local mock evidence substitutes for those facts.
+Keep any private compatibility records in the ignored `tmp/gg/` folder. Verify provider callback/resource configuration, developer access, workspace/tunnel permissions, actual registered-plugin availability and the intended graphical session before relying on the HTTP connection. Local synthetic results cannot establish those external outcomes.

@@ -1,4 +1,11 @@
-# Explicit cloud clipboard transfers
+---
+title: Cloud clipboard helper
+description: Install and operate the independent Linux Wayland clipboard helper.
+order: 8
+category: Use Board
+---
+
+The independent helper works with [private STDIO tunnel](secure-mcp-tunnel.md) or OAuth HTTP Board connections. Private STDIO callers share the local owner authority. The helper receives no tunnel/provider credentials and is installed separately in the selected cloud graphical session.
 
 `shared-clipboard-cloud` is an optional, independent Linux helper. It has no network client, OAuth/tunnel configuration, tokens, automatic installation, clipboard watcher, keyboard events or command execution. Existing Mac clipboard and context tools work without it. Standard backend support and local injected-process tests are implemented. **Actual intended Dots, provider/tunnel and viewed graphical clipboard compatibility are deferred and unverified.**
 

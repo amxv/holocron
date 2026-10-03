@@ -1,4 +1,11 @@
-# Selected UTF-8 context files
+---
+title: Selected UTF-8 context files
+description: Share immutable selected UTF-8 file snapshots with bounded reads and digest verification.
+order: 7
+category: Use Board
+---
+
+For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Board/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
 
 The companion supports explicit local selection of one regular UTF-8 file per command. The authenticated plugin lists and reads its immutable snapshot. Actual intended-dot summarization/reconstruction, OAuth provider, tunnel, registered plugin installation and viewed clipboard checks remain deferred and unverified. Local tests reconstruct source and clean installed-package fixtures with exact byte counts and digests, using no real clipboard.
 

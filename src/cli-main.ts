@@ -12,6 +12,9 @@ import { VERSION } from './mcp.ts';
 import { preparePlugin } from './plugin.ts';
 import { loginAction } from './login.ts';
 import type { LoginEnvironment } from './login.ts';
+import type { Readable, Writable } from 'node:stream';
+import { loadLocalConfig, localOwnerId } from './local-config.ts';
+import { startStdio } from './stdio.ts';
 
 const help = `Usage: shared-clipboard <start|stop|status|check-config|capture|share-text|list|clear> --config <private JSON file>
        shared-clipboard <capture|share-text> --config <private JSON file> [--name <safe label>]
@@ -19,17 +22,22 @@ const help = `Usage: shared-clipboard <start|stop|status|check-config|capture|sh
        shared-clipboard revoke <share ID> --config <private JSON file>
        shared-clipboard prepare-plugin --connection-id <registered ID> --output <new directory>
        shared-clipboard <login-install|login-status|login-remove> --config <absolute private JSON file>
+       shared-clipboard stdio --local-config <absolute private JSON file>
+       shared-clipboard <check-config|capture|share-text|share-file|list|revoke|clear|status|stop> --local-config <absolute private JSON file> [selection/label]
 capture explicitly reads the Mac clipboard. share-text reads UTF-8 stdin only.
 share-file snapshots one explicitly selected regular UTF-8 file, at most 10 MiB, without exposing its path.
 start runs in the foreground; stop uses an owner-only local socket. No automatic clipboard reads, paste, or command execution.
 login-install explicitly writes an optional next-login LaunchAgent only; it does not start or load a job now.
 login-remove disables future login starts only; stop the current companion separately. See docs/operations.md.
-Actual provider, tunnel, Dots and OS clipboard verification remain deferred. See docs/text-bridge.md.`;
+stdio is protocol-only on stdout and opens no HTTP listener. Private STDIO callers share the same local owner authority.
+Use --local-config only for STDIO and explicit local sharing; --config keeps OAuth-protected HTTP behavior.
+Live tunnel, Dots and OS clipboard verification remain deferred. See docs/secure-mcp-tunnel.md.`;
 
 export interface CliIO {
   stdin: AsyncIterable<Uint8Array>;
   out: (line: string) => void;
   error: (line: string) => void;
+  protocol?: { input: Readable; output: Writable };
 }
 
 export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapter = macClipboard(), loginEnvironment?: LoginEnvironment): Promise<number> {
@@ -42,9 +50,12 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
   let store: ShareStore | undefined;
   try {
     const command = args[0];
-    const index = args.indexOf('--config');
+    const local = args.includes('--local-config');
+    const index = args.indexOf(local ? '--local-config' : '--config');
     if (index < 1 || !args[index + 1]) throw new BridgeFailure('invalid_arguments');
     const remaining = [...args.slice(1, index), ...args.slice(index + 2)];
+    if (local && !['stdio', 'stop', 'status', 'check-config', 'capture', 'share-text', 'share-file', 'list', 'revoke', 'clear'].includes(command!)) throw new BridgeFailure('invalid_arguments');
+    if (command === 'stdio' && !local) throw new BridgeFailure('invalid_arguments');
     if (command === 'login-install' || command === 'login-status' || command === 'login-remove') {
       if (remaining.length !== 0) throw new BridgeFailure('invalid_arguments');
       io.out(JSON.stringify(await loginAction(command.slice(6) as 'install' | 'status' | 'remove', args[index + 1]!, loginEnvironment)));
@@ -58,11 +69,12 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
       safeName(name!);
     }
     else if (!(command === 'revoke' && remaining.length === 1) && remaining.length !== 0) throw new BridgeFailure('invalid_arguments');
-    if (!['start', 'stop', 'status', 'check-config', 'capture', 'share-text', 'share-file', 'list', 'revoke', 'clear'].includes(command!)) throw new BridgeFailure('invalid_arguments');
-    const config = await loadConfig(args[index + 1]!);
-    if (command === 'check-config') { io.out('Configuration schema valid. Provider, OAuth, tunnel, Dots and OS clipboard remain unverified.'); return 0; }
-    const directory = await stateDirectory(config.stateDirectory);
-    store = await ShareStore.open(directory, ownerId(config));
+    if (!['stdio', 'start', 'stop', 'status', 'check-config', 'capture', 'share-text', 'share-file', 'list', 'revoke', 'clear'].includes(command!)) throw new BridgeFailure('invalid_arguments');
+    const config = local ? undefined : await loadConfig(args[index + 1]!);
+    const localConfig = local ? await loadLocalConfig(args[index + 1]!) : undefined;
+    if (command === 'check-config') { io.out(local ? 'Private STDIO configuration schema valid. Authorized callers share the local owner. Live tunnel and clipboard remain unverified.' : 'Configuration schema valid. Provider, OAuth, tunnel, Dots and OS clipboard remain unverified.'); return 0; }
+    const directory = await stateDirectory(localConfig?.stateDirectory ?? config?.stateDirectory);
+    store = await ShareStore.open(directory, local ? localOwnerId() : ownerId(config!));
     const bridge = new ClipboardBridge(store, adapter);
     const print = (value: unknown) => io.out(JSON.stringify(value));
     switch (command) {
@@ -84,8 +96,15 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
       case 'clear': print({ cleared: store.clear() }); break;
       case 'status': print({ ...await localControl(directory, 'status'), ...store.counts() }); break;
       case 'stop': print(await localControl(directory, 'stop')); break;
+      case 'stdio': {
+        const service = await startStdio(bridge, io.protocol?.input ?? process.stdin, io.protocol?.output ?? process.stdout, io.error);
+        const stop = () => { void service.stop().catch(() => io.error('stdio_stop_failed')); };
+        process.once('SIGINT', stop); process.once('SIGTERM', stop);
+        try { return await service.done; }
+        finally { process.removeListener('SIGINT', stop); process.removeListener('SIGTERM', stop); }
+      }
       case 'start': {
-        const service = await startCompanion(config, makeVerifier(config), bridge);
+        const service = await startCompanion(config!, makeVerifier(config!), bridge);
         const stop = () => { void service.stop().catch(() => io.error('Companion stop failed.')); };
         process.once('SIGINT', stop); process.once('SIGTERM', stop);
         io.out('Explicit text bridge listening on IPv4 loopback. Live provider, tunnel, Dots and OS verification remain deferred.');

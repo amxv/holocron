@@ -30,7 +30,7 @@ try {
   assert.ok(paths.includes('plugins/shared-clipboard/plugin.json'));
   assert.ok(paths.includes('plugins/shared-clipboard/.app.json'));
   const allowed = new Set(['README.md', 'package.json', 'plugins/shared-clipboard/plugin.json', 'plugins/shared-clipboard/.app.json',
-    ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations'].map((name) => `docs/${name}.md`),
+    ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
   assert.deepEqual(new Set(paths), allowed);
   for (const path of paths) {
@@ -113,6 +113,62 @@ try {
   }
 
   const load = (path) => import(pathToFileURL(join(installed, path)).href);
+  // The installed production CLI is launched by the official SDK, without
+  // provider config, listeners, credentials or real clipboard operations.
+  const { Client } = await load('node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js').catch(() =>
+    import(pathToFileURL(join(clean, 'node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js')).href));
+  const { StdioClientTransport } = await load('node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js').catch(() =>
+    import(pathToFileURL(join(clean, 'node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js')).href));
+  const localConfigPath = join(temporary, 'local.json');
+  await writeFile(localConfigPath, JSON.stringify({ transport: 'stdio', stateDirectory: join(temporary, 'stdio-state') }), { mode: 0o600 });
+  const localArgs = (name, ...extra) => [name, ...extra, '--local-config', localConfigPath];
+  const localItem = JSON.parse(cliRun(localArgs('share-text'), text));
+  const localSelected = join(temporary, 'stdio-selected-context');
+  await writeFile(localSelected, text);
+  const localDigest = createHash('sha256').update(text).digest('hex');
+  const localFile = JSON.parse(cliRun(localArgs('share-file', localSelected)));
+  const writeLog = join(temporary, 'stdio-write-events');
+  const fixture = join(temporary, 'stdio-injected-adapter.mjs');
+  await writeFile(fixture, `import { appendFile } from 'node:fs/promises';
+import { runCli } from ${JSON.stringify(pathToFileURL(join(installed, 'dist/cli-main.js')).href)};
+process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, out: (line) => console.log(line), error: (line) => console.error(line) }, {
+  availability: 'test-adapter', read: async () => { throw Error('No implicit read'); },
+  write: async (bytes) => { await appendFile(${JSON.stringify(writeLog)}, Buffer.from(bytes).toString('base64') + '\\n'); }
+});\n`, { mode: 0o600 });
+  let localReceipt;
+  const localRequest = { request_id: 'installed_stdio_receipt_01', text, expected_sha256: localDigest,
+    valid_until: new Date(Date.now() + 60000).toISOString() };
+  for (const entry of [cli, fixture, fixture]) {
+    const transport = new StdioClientTransport({ command: process.execPath,
+      args: [entry, ...localArgs('stdio')], env: environment, stderr: 'pipe' });
+    let errors = ''; transport.stderr.on('data', (bytes) => { errors += bytes.toString(); });
+    const client = new Client({ name: 'clean-installed-stdio-test', version: '1' });
+    try {
+      await client.connect(transport);
+      const tools = await client.listTools();
+      assert.equal(tools.tools.length, 5);
+      for (const tool of tools.tools) assert.deepEqual(tool._meta.securitySchemes, [{ type: 'noauth' }]);
+      const call = (name, args = {}) => client.callTool({ name, arguments: args });
+      const status = (await call('get_bridge_status')).structuredContent;
+      assert.equal(status.transport, 'stdio'); assert.equal(status.oauthProvider, 'not-required');
+      assert.equal(status.trustBoundary, 'same-user-private-tunnel');
+      assert.equal((await call('read_shared_item', { id: localItem.id })).structuredContent.text, text);
+      assert.equal((await call('read_shared_item', { id: localFile.id })).structuredContent.sha256, localDigest);
+      assert.equal((await call('read_shared_item', { id: localSelected })).isError, true);
+      if (entry === fixture) {
+        assert.equal((await call('copy_text_to_mac', { ...localRequest, text: 'altered' })).isError, true);
+        const receipt = (await call('copy_text_to_mac', localRequest)).structuredContent;
+        assert.equal(receipt.state, 'completed');
+        if (localReceipt) assert.deepEqual(receipt, localReceipt); else localReceipt = receipt;
+      }
+    } finally { await client.close(); }
+    assert.equal(errors, '');
+    assert.equal(JSON.parse(cliRun(localArgs('status'))).localTransport, 'stopped');
+  }
+  assert.equal(await readFile(writeLog, 'utf8'), Buffer.from(text).toString('base64') + '\n');
+  assert.equal(JSON.parse(cliRun(localArgs('revoke', localFile.id))).revoked, true);
+  assert.equal(JSON.parse(cliRun(localArgs('clear'))).cleared, 1);
+
   const { runCli } = await load('dist/cli-main.js');
   const loginEnvironment = { platform: 'darwin', home, node: await realpath(process.execPath), cli };
   const loginLines = [];
@@ -305,7 +361,7 @@ try {
   await assert.rejects(stat(installed));
   assert.equal(await readFile(existingSettings, 'utf8'), 'unrelated-setting = true\n');
   assert.deepEqual(await readFile(cloudData), Buffer.from(text));
-  console.log(`Clean private package install/removal, all three bins/version/help, isolated login generation/status/remove, Mac start/status/stop/restart, synthetic reconnect/auth/expiry/clear, immutable file reconstruction/digest/revoke, independent helper literal read/write/digest/foreground ownership, and cloud-to-Mac receipt/restart/scope checks passed (${paths.length} distribution files). Injected clipboard boundaries only; real Dots/provider/tunnel/login and viewed OS clipboards remain deferred.`);
+  console.log(`Clean private package install/removal, all three bins/version/help, official SDK installed STDIO subprocess discovery/sharing/literal writes/restart receipts, isolated login generation/status/remove, Mac start/status/stop/restart, synthetic reconnect/auth/expiry/clear, immutable file reconstruction/digest/revoke, independent helper literal read/write/digest/foreground ownership, and cloud-to-Mac receipt/restart/scope checks passed (${paths.length} distribution files). Injected clipboard boundaries only; real Dots/provider/tunnel/login and viewed OS clipboards remain deferred.`);
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }
