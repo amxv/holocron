@@ -16,6 +16,8 @@ try {
   const paths = packed.files.map((file) => file.path);
   assert.ok(paths.includes('dist/cli.js'));
   assert.ok(paths.includes('dist/file-snapshot.js'));
+  assert.ok(paths.includes('dist/cloud-cli.js'));
+  assert.ok(paths.includes('docs/cloud-clipboard.md'));
   assert.ok(paths.includes('docs/context-files.md'));
   assert.ok(paths.includes('plugins/shared-clipboard/plugin.json'));
   assert.ok(paths.includes('plugins/shared-clipboard/.app.json'));
@@ -34,6 +36,7 @@ try {
   const installed = join(clean, 'node_modules/@shared-clipboard/dots-probe');
   const cli = join(installed, 'dist/cli.js');
   const cliRun = (args, input) => execFileSync(process.execPath, [cli, ...args], { encoding: 'utf8', ...(input !== undefined ? { input } : {}) });
+  assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard-cloud'), ['--help'], { encoding: 'utf8' }), /foreground owner|foreground ownership/);
   assert.match(cliRun(['--help']), /capture explicitly reads the Mac clipboard/);
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard'), ['--help'], { encoding: 'utf8' }), /share-text/);
   assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.0');
@@ -90,6 +93,47 @@ try {
   } finally { clearTimeout(deadline); if (child.exitCode === null) child.kill('SIGKILL'); }
 
   const load = (path) => import(pathToFileURL(join(installed, path)).href);
+  // Exercise the independent installed helper CLI boundary with a controlled
+  // backend, never a real graphical clipboard. There is no production command override.
+  const { runCloudCli } = await load('dist/cloud-cli-main.js');
+  const { CloudClipboard } = await load('dist/cloud-clipboard.js');
+  const cloudCalls = [];
+  let cloudValue = Buffer.from(text);
+  let releaseOwner;
+  const cloud = new CloudClipboard({ platform: 'linux',
+    env: { WAYLAND_DISPLAY: 'test-session', XDG_RUNTIME_DIR: '/synthetic-session', CONTROL_PLANE_API_KEY: 'NEVER_FORWARD' },
+    executable: async () => true, socket: async () => true }, (command, input, signal) => {
+    cloudCalls.push(command);
+    assert.deepEqual(Object.keys(command.env).sort(), ['LANG', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR']);
+    if (input === undefined) return { fed: Promise.resolve(), done: Promise.resolve({ code: 0, signal: null, output: cloudValue }), running: () => false, stop() {} };
+    cloudValue = Buffer.from(input);
+    let active = true;
+    const done = new Promise((resolve) => { releaseOwner = () => { active = false; resolve({ code: 0, signal: null, output: Buffer.alloc(0) }); }; });
+    return { fed: Promise.resolve(), done, running: () => active, stop() { if (active) releaseOwner(); } };
+  });
+  const cloudLines = [];
+  const cloudIO = (bytes) => ({ stdin: (async function* () { yield bytes; })(),
+    out(line) { cloudLines.push(JSON.parse(line)); if (cloudLines.at(-1).state === 'owned') releaseOwner(); },
+    error(line) { throw new Error(line); } });
+  assert.equal(await runCloudCli(['probe'], cloudIO(Buffer.alloc(0)), cloud), 0);
+  assert.equal(cloudLines.at(-1).viewedDesktop, 'unverified'); assert.equal(cloudCalls.length, 0);
+  const cloudDigest = createHash('sha256').update(text).digest('hex');
+  const cloudData = join(temporary, '`literal` $HOME $(never).txt');
+  await writeFile(cloudData, Buffer.from(text));
+  for (const args of [['write', '--sha256', cloudDigest], ['write', '--sha256', cloudDigest, '--file', cloudData]]) {
+    assert.equal(await runCloudCli(args, cloudIO(Buffer.from(text)), cloud), 0);
+    assert.equal(cloudLines.at(-2).state, 'owned'); assert.equal(cloudLines.at(-2).sha256, snapshot.sha256);
+    assert.equal(cloudLines.at(-1).state, 'ownership-ended'); assert.deepEqual(cloudValue, Buffer.from(text));
+  }
+  assert.equal(await runCloudCli(['read'], cloudIO(Buffer.alloc(0)), cloud), 0);
+  const cloudCapture = cloudLines.at(-1);
+  assert.deepEqual(Buffer.from(cloudCapture.text), Buffer.from(text)); assert.equal(cloudCapture.sha256, cloudDigest);
+  const cloudCallCount = cloudCalls.length;
+  const cloudErrors = [];
+  for (const bytes of [Buffer.from('altered'), Buffer.from([0xff]), Buffer.alloc(256 * 1024 + 1)]) {
+    assert.equal(await runCloudCli(['write', '--sha256', cloudDigest], { ...cloudIO(bytes), error: (line) => cloudErrors.push(JSON.parse(line)) }, cloud), 1);
+  }
+  assert.equal(cloudCalls.length, cloudCallCount); assert.equal(cloudErrors.length, 3);
   const { configSchema } = await load('dist/config.js');
   const { makeVerifier, ownerId } = await load('dist/auth.js');
   const { createProbeHttp } = await load('dist/http.js');
@@ -153,7 +197,10 @@ try {
     assert.equal(createHash('sha256').update(await readFile(materialized)).digest('hex'), fileSnapshot.sha256);
     assert.equal((await call('read_shared_item', { id: selected })).isError, true);
     assert.equal((await call('read_shared_item', { id: fileSnapshot.id, offset: 1 })).isError, true);
-    const input = { request_id: 'package_smoke_request_01', text, valid_until: new Date(Date.now() + 60000).toISOString() };
+    const input = { request_id: 'package_smoke_request_01', text: cloudCapture.text, expected_sha256: cloudCapture.sha256,
+      valid_until: new Date(Date.now() + 60000).toISOString() };
+    assert.equal((await call('copy_text_to_mac', { ...input, text: input.text + 'altered' })).isError, true);
+    assert.equal(adapter.writes, 0); assert.equal(store.receipt(input.request_id), undefined);
     const receipt = (await call('copy_text_to_mac', input)).structuredContent;
     assert.equal(receipt.state, 'completed'); assert.deepEqual(adapter.value, Buffer.from(text));
     adapter.value = Buffer.from('newer');
@@ -178,7 +225,7 @@ try {
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Clean package install, CLI lifecycle/text/file sharing, installed-module authenticated bounded file reconstruction/digest/revoke and text/read/write/retry/scope smoke passed (${paths.length} distribution files). Injected clipboard adapter only; real Dots, provider, tunnel and OS clipboards remain deferred.`);
+  console.log(`Clean package install, independent helper CLI probe/stdin/file/read/foreground ownership/digest rejection, Mac lifecycle, authenticated bounded file reconstruction/digest/revoke and cloud-to-Mac digest/write/retry/scope smoke passed (${paths.length} distribution files). Controlled clipboard workers/adapters only; real Dots, provider, tunnel and viewed OS clipboards remain deferred.`);
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

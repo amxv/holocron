@@ -3,8 +3,9 @@ import type { ClipboardAdapter } from './clipboard.ts';
 import { ClipboardFailure } from './clipboard.ts';
 import type { ShareStore, ClipboardReceipt } from './store.ts';
 import { BridgeFailure, REQUEST_TTL_MS, deadline, literalBytes, safeName } from './text.ts';
+import { verifyDigest } from './digest.ts';
 
-export interface WriteRequest { request_id: string; text: string; valid_until: string }
+export interface WriteRequest { request_id: string; text: string; valid_until: string; expected_sha256?: string }
 
 export class ClipboardBridge {
   private stopped = false;
@@ -37,6 +38,9 @@ export class ClipboardBridge {
       if (this.stopped || callerSignal.aborted || !authorized()) throw new BridgeFailure('bridge_unavailable');
       if (!/^[A-Za-z0-9_-]{16,128}$/.test(request.request_id)) throw new BridgeFailure('invalid_request_id');
       const bytes = literalBytes(request.text);
+      // Validate even retries before accessing a receipt. The optional assertion does
+      // not change the existing exact text/deadline identity of an idempotent request.
+      if (request.expected_sha256 !== undefined) verifyDigest(bytes, request.expected_sha256);
       const expires = deadline(request.valid_until);
       const fingerprint = createHash('sha256').update(JSON.stringify([request.text, request.valid_until])).digest('hex');
       this.store.purge();

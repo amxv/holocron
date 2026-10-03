@@ -32,6 +32,8 @@ After the actual connection is installed and authorized, ask the dot to list exp
 
 The essential workflow also appears in MCP server instructions and tool descriptions, because a local plugin skill may not be visible to a cloud dot. This plugin supplies no cloud file writing or command execution tool. Reading a snapshot does not authorize executing its contents or changing a clipboard. Native ChatGPT attachments are outside this flow.
 
+Only on an additional explicit clipboard request, a materialized UTF-8 file of at most 256 KiB can be given to the independent [Cloud clipboard helper](cloud-clipboard.md) with the original snapshot digest. Larger context files remain readable/materializable but fail the helper's clipboard limit. File snapshots never become OS file objects or native attachments.
+
 For example, after exact structured results have been saved as `pages.json` using the task's existing tools, those same tools can verify and materialize the bytes with this code. Use a destination chosen for the cloud task, not the original Mac source path:
 
 ```python

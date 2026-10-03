@@ -14,6 +14,8 @@ import { readSelectedFile } from '../src/file-snapshot.ts';
 import { READ_LIMIT, TEXT_LIMIT } from '../src/text.ts';
 import { bridgeFixture, literal } from './bridge-fixtures.ts';
 import { config, localKeys, token } from './fixtures.ts';
+import { CloudClipboard } from '../src/cloud-clipboard.ts';
+import { sha256 } from '../src/digest.ts';
 
 async function fixture(t: TestContext, deadlineMs?: number) {
   const flow = await bridgeFixture(t);
@@ -30,6 +32,28 @@ async function post(base: string, body: unknown, bearer?: string, abort?: AbortS
 }
 const write = (text = literal) => ({ request_id: 'protocol_request_001', text, valid_until: new Date(Date.now() + 60000).toISOString() });
 const structured = (result: unknown) => (result as { structuredContent: Record<string, unknown> }).structuredContent;
+
+test('cloud helper JSON to authenticated Mac copy preserves a full digest boundary with mismatch and retry denial', async (t) => {
+  const { base, adapter, store } = await fixture(t);
+  const cloud = new CloudClipboard({ platform: 'linux', env: { WAYLAND_DISPLAY: 'test', XDG_RUNTIME_DIR: '/test' },
+    executable: async () => true, socket: async () => true }, () => ({ fed: Promise.resolve(),
+      done: Promise.resolve({ code: 0, signal: null, output: Buffer.from(literal) }), running: () => false, stop: () => {} }));
+  const capture = JSON.parse(JSON.stringify(await cloud.read(new AbortController().signal)));
+  assert.equal(capture.sha256, sha256(Buffer.from(capture.text)));
+  const input = { ...write(capture.text), expected_sha256: capture.sha256 };
+  const bearer = await token({ scope: `${config.statusScope} ${config.readScope} ${config.writeScope}` });
+  const call = async (args: unknown, auth = bearer) => (await (await post(base, rpc('copy_text_to_mac', args), auth)).json()).result;
+  assert.equal((await call({ ...input, text: capture.text + '\n' })).isError, true);
+  assert.equal(store.receipt(input.request_id), undefined); assert.equal(adapter.writes, 0);
+  const receipt = (await call(input)).structuredContent;
+  assert.equal(receipt.state, 'completed'); assert.deepEqual(adapter.value, Buffer.from(literal));
+  adapter.value = Buffer.from('newer');
+  assert.deepEqual((await call({ ...write(capture.text), valid_until: input.valid_until })).structuredContent, receipt);
+  assert.equal((await call({ ...input, expected_sha256: '0'.repeat(64) })).isError, true);
+  assert.equal((await call(input, await token())).isError, true);
+  assert.equal((await post(base, rpc('copy_text_to_mac', input), await token({ exp: 1, iat: 0 }))).status, 401);
+  assert.equal(adapter.writes, 1); assert.equal(adapter.value.toString(), 'newer');
+});
 
 test('authenticated file schemas and bounded MCP pages reconstruct exact bytes with no source path grant', async (t) => {
   const { base, store, directory, adapter } = await fixture(t);

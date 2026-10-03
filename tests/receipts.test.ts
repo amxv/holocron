@@ -14,11 +14,31 @@ import { ownerId } from '../src/auth.ts';
 import { RECEIPT_TTL_MS, REQUEST_TTL_MS, TEXT_LIMIT } from '../src/text.ts';
 import { bridgeFixture, literal, memoryClipboard, temporary } from './bridge-fixtures.ts';
 import { config } from './fixtures.ts';
+import { sha256 } from '../src/digest.ts';
 
 function request(now = Date.now(), id = 'unique_request_id_0001', text = literal) {
   return { request_id: id, text, valid_until: new Date(now + 60000).toISOString() };
 }
 const signal = () => new AbortController().signal;
+
+test('optional expected digest rejects transcription and invalid assertions before receipts or writes, including retries', async (t) => {
+  const { bridge, adapter, store } = await bridgeFixture(t);
+  const input = request();
+  for (const expected_sha256 of ['invalid', 'F'.repeat(64), '0'.repeat(64)]) {
+    await assert.rejects(bridge.write({ ...input, expected_sha256 }, signal(), () => true), /digest/);
+    assert.equal(store.receipt(input.request_id), undefined);
+  }
+  const expected_sha256 = sha256(Buffer.from(input.text));
+  await assert.rejects(bridge.write({ ...input, text: input.text + 'transcribed', expected_sha256 }, signal(), () => true), /digest_mismatch/);
+  assert.equal(adapter.writes, 0);
+  const receipt = await bridge.write({ ...input, expected_sha256 }, signal(), () => true);
+  adapter.value = Buffer.from('newer');
+  assert.deepEqual(await bridge.write(input, signal(), () => true), receipt);
+  assert.deepEqual(await bridge.write({ ...input, expected_sha256 }, signal(), () => true), receipt);
+  await assert.rejects(bridge.write({ ...input, expected_sha256: '0'.repeat(64) }, signal(), () => true), /digest_mismatch/);
+  await assert.rejects(bridge.write({ ...input, expected_sha256 }, signal(), () => false), /bridge_unavailable/);
+  assert.equal(adapter.writes, 1); assert.equal(adapter.value.toString(), 'newer');
+});
 
 test('exact retry returns original receipt without overwriting newer clipboard; mismatch fails', async (t) => {
   const { bridge, adapter, store, directory } = await bridgeFixture(t);

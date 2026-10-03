@@ -21,4 +21,11 @@ assert.deepEqual(manifest.extensions['com.openai'].interface.capabilities, ['Rea
 assert.deepEqual(JSON.parse(await readFile('plugins/shared-clipboard/.app.json', 'utf8')), { apps: {} });
 assert.match(await readFile('README.md', 'utf8'), /deferred and unverified/);
 assert.match(await readFile('docs/text-bridge.md', 'utf8'), /never access an existing OS clipboard/);
+for (const path of ['src/cloud-clipboard.ts', 'src/cloud-cli-main.ts', 'src/cloud-cli.ts', 'src/cloud-input.ts', 'src/cloud-process.ts']) {
+  const text = await readFile(path, 'utf8');
+  assert.doesNotMatch(text, /from ['"](?:node:(?:http|https|net|tls)|\.\/(?:auth|config|http|lifecycle|private-state))|\bfetch\(/);
+}
+assert.match(await readFile('docs/cloud-clipboard.md', 'utf8'), /deferred and unverified/);
+const packageManifest = JSON.parse(await readFile('package.json', 'utf8'));
+assert.equal(packageManifest.bin['shared-clipboard-cloud'], 'dist/cloud-cli.js');
 console.log(`Source/docs/package scaffold checks passed; ${code.length} code files meet the 1000-line limit.`);

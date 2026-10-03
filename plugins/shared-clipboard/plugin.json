@@ -9,7 +9,7 @@
       "interface": {
         "displayName": "Shared Clipboard",
         "shortDescription": "Selected context and literal copying",
-        "longDescription": "Read explicitly shared immutable text and selected UTF-8 file snapshots with bounded pages and SHA-256 verification. Copy literal text to the Mac on request. No execution, automatic capture or remote file paths. Actual OAuth provider, tunnel, intended dot and OS clipboards remain unverified.",
+        "longDescription": "Read explicitly shared immutable text and selected UTF-8 file snapshots with bounded pages and SHA-256 verification. Copy literal text to the Mac on request, with optional expected_sha256 checked before mutation. Cloud transfers require the separately installed shared-clipboard-cloud Wayland helper, explicit user permission and manual task execution; see docs/cloud-clipboard.md. Preserve exact structured data and original digests, keep foreground ownership running to paste. No execution, automatic capture, credentials to the helper or remote file paths. Actual OAuth provider, tunnel, intended dot and viewed OS clipboards remain unverified.",
         "category": "Productivity",
         "capabilities": ["Read", "Write"],
         "defaultPrompt": ["List context files and text I explicitly shared", "Copy this literal text to my Mac clipboard"]
