@@ -5,3 +5,6 @@ dist/
 *.tgz
 .env
 .env.*
+
+site/.astro/
+site/.vercel/

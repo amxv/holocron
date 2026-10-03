@@ -1,0 +1,43 @@
+---
+import { getCollection } from "astro:content";
+import BoardLayout from "../../layouts/BoardLayout.astro";
+import { docCategories, siteConfig } from "../../data/docs";
+
+const entries = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
+const grouped = docCategories.map((category) => ({
+  category,
+  entries: entries.filter((entry) => entry.data.category === category)
+}));
+---
+
+<BoardLayout
+  title={`${siteConfig.name} Docs`}
+  description={siteConfig.description}
+>
+  <section class="shell docs-index-hero">
+    <p class="section-label">Documentation</p>
+    <h1>A little setup.<br />A clear path to sharing.</h1>
+    <p>
+      Install the Mac companion, connect your intended ChatGPT account and choose the context you share.
+    </p>
+    <a class="button button--solid" href="/docs/getting-started">Set up Board <span aria-hidden="true">↗</span></a>
+  </section>
+
+  <section class="shell docs-index">
+    {grouped.map((group) => (
+      <section class="docs-index__group">
+        <div class="docs-index__group-head">
+          <p class="section-label">{group.category}</p>
+        </div>
+        <div class="docs-index__cards">
+          {group.entries.map((entry) => (
+            <a class="docs-index__card" href={`/docs/${entry.id}`}>
+              <h2>{entry.data.title}</h2>
+              <p>{entry.data.description}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </section>
+</BoardLayout>

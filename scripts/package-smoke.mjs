@@ -30,7 +30,8 @@ try {
   assert.ok(paths.includes('plugins/shared-clipboard/plugin.json'));
   assert.ok(paths.includes('plugins/shared-clipboard/.app.json'));
   const allowed = new Set(['README.md', 'package.json', 'plugins/shared-clipboard/plugin.json', 'plugins/shared-clipboard/.app.json',
-    ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel'].map((name) => `docs/${name}.md`),
+    ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel',
+      'overview', 'getting-started', 'reference', 'troubleshooting'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
   assert.deepEqual(new Set(paths), allowed);
   for (const path of paths) {

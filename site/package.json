@@ -1,0 +1,25 @@
+{
+  "name": "@board/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.0.0 <25" },
+  "packageManager": "npm@11.19.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "validate": "npm run check && npm run build && node scripts/validate-site.mjs"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.4",
+    "@astrojs/markdown-satteri": "0.3.2",
+    "@fontsource-variable/dm-sans": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@types/node": "24.19.1",
+    "astro": "7.0.3",
+    "typescript": "5.9.3",
+    "zuedocs": "0.1.26"
+  }
+}

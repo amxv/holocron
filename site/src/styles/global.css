@@ -1,0 +1,66 @@
+@import "zuedocs/styles.css";
+
+:root,
+:root[data-theme="light"],
+:root[data-theme="dark"] {
+  --font-sans: "DM Sans Variable", sans-serif;
+  --font-heading: "DM Sans Variable", sans-serif;
+  --font-editorial: "Instrument Serif", serif;
+}
+
+:root,
+:root[data-theme="light"] {
+  --bg: #fbfaf6;
+  --surface: #fffefa;
+  --surface-muted: #f4f3ec;
+  --surface-subtle: #f4f3ec;
+  --ink: #252a25;
+  --muted: #636b62;
+  --line: #dddfd5;
+}
+
+:root[data-theme="dark"] {
+  --bg: #151b17;
+  --surface: #1c241e;
+  --surface-muted: #242d26;
+  --surface-subtle: #242d26;
+  --ink: #f5f4ec;
+  --muted: #b2bdaf;
+  --line: #354037;
+}
+
+.brand__strapline { letter-spacing: 0; }
+.brand__name { font-weight: 650; letter-spacing: -.045em; }
+.site-nav__index { color: var(--muted); }
+.button--solid { background: var(--signal); border-color: var(--signal); color: var(--bg); }
+.button--solid:hover { filter: brightness(1.08); }
+.button { gap: 1.3rem; }
+.section-label { color: var(--signal); }
+.skip-link { position: fixed; top: -8rem; left: 1rem; padding: .6rem 1rem; z-index: 1000; background: var(--ink); color: var(--bg); }
+.skip-link:focus { top: 1rem; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.docs-index-hero h1 { font-family: var(--font-editorial); font-weight: 400; letter-spacing: -.015em; }
+.docs-index-hero .button { margin-top: 1.75rem; }
+.docs-copy { overflow-wrap: anywhere; }
+.docs-copy pre { overflow-wrap: normal; }
+.docs-sidebar__link.is-active { color: var(--signal); }
+.docs-toc { max-height: calc(100vh - 9rem); overflow-y: auto; }
+.docs-toc a { line-height: 1.5; }
+.docs-hero h1 { letter-spacing: -.04em; }
+.site-footer { margin-top: 5rem; }
+
+@media (max-width: 600px) {
+  .brand__strapline { display: none; }
+  .site-nav__index { display: none; }
+  .site-nav { gap: .65rem; }
+  .site-header__inner, .site-header--docs .site-header__inner { gap: .7rem; }
+  .site-header__actions { gap: .75rem; }
+  .brand { gap: .5rem; }
+  .brand__logo { width: 2rem; height: 2rem; }
+  .docs-hero h1 { font-size: 2.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

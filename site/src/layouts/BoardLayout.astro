@@ -1,0 +1,58 @@
+---
+// Use the published ZueDocs shell components; keep the product document head local.
+import SiteHeader from "zuedocs/components/SiteHeader.astro";
+import SiteFooter from "zuedocs/components/SiteFooter.astro";
+import "@fontsource-variable/dm-sans";
+import "@fontsource/instrument-serif/latin-400.css";
+import "@fontsource/instrument-serif/latin-400-italic.css";
+import "../styles/global.css";
+import { primaryNav, siteConfig } from "../data/docs";
+
+interface Props { title: string; description: string; noindex?: boolean }
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site);
+---
+
+<!doctype html>
+<html lang="en" style={`--site-accent:${siteConfig.accentColor};--site-accent-dark:${siteConfig.accentColorDark}`}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <meta name="theme-color" content="#275d48" />
+    <meta property="og:site_name" content="Board" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <script is:inline>
+      (() => {
+        let stored;
+        try { stored = localStorage.getItem("zuedocs-theme-mode"); } catch {}
+        const mode = ["light", "dark", "system"].includes(stored) ? stored : "system";
+        const theme = mode === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+        document.documentElement.dataset.themeMode = mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <SiteHeader siteConfig={siteConfig} primaryNav={primaryNav} />
+    <main id="main-content"><slot /></main>
+    <SiteFooter siteConfig={siteConfig} />
+  </body>
+</html>
+
+<script>
+  import "zuedocs/docsEnhancements";
+</script>
