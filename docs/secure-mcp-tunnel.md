@@ -58,6 +58,8 @@ The direct MCP executable contract is:
 
 Let the MCP client launch it. Do not start a standalone second Board runtime while the tunnel owns it. STDIO stdout contains only newline-delimited MCP JSON-RPC, never startup banners or management output. Errors go to stderr as generic safe codes, without paths, request text or credentials. STDIO accepts the SDK's initialization lifecycle, negotiating up to MCP `2025-11-25`; it does not implement the newer `2026-07-28` discovery protocol. Clients supporting newer MCP must use the documented legacy initialization fallback.
 
+Run the tunnel from the installed package directory. Board rejects a state directory that is the current working directory or lies beneath it, so never launch from the state directory or any ancestor of state, such as the private Board directory, your home or `/`. A sibling installation prefix is safe; the installed module directory in the examples below is also safe. Apply this working-directory rule to local sharing/status/stop commands and the actual launch directory of any supervisor. `check-config` validates config only and does not detect this startup condition.
+
 ## Map the existing tunnel to Board
 
 The supported mapping is a `main` command binding. Use absolute executable/config paths, quoting each path containing spaces inside the command string. Never place credentials in this string. An example command string is:
@@ -69,6 +71,7 @@ The supported mapping is a `main` command binding. Use absolute executable/confi
 For a new named profile attached to your existing tunnel, using the runtime credential reference already provisioned for your installation:
 
 ```sh
+cd /absolute/private/board/node_modules/@shared-clipboard/dots-probe
 tunnel-client init --sample sample_mcp_stdio_local --profile board-stdio \
   --tunnel-id YOUR_EXISTING_TUNNEL_ID \
   --control-plane-api-key-ref env:CONTROL_PLANE_API_KEY \
@@ -94,6 +97,7 @@ Replace that profile's `main` HTTP target rather than retaining a second conflic
 For a long-lived installation managed by the tunnel client, use its native supervision instead of shell backgrounding:
 
 ```sh
+cd /absolute/private/board/node_modules/@shared-clipboard/dots-probe
 tunnel-client runtimes connect --alias board --profile board-stdio \
   --tunnel-id YOUR_EXISTING_TUNNEL_ID \
   --runtime-api-key env:CONTROL_PLANE_API_KEY \

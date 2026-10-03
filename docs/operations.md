@@ -38,6 +38,8 @@ If the parent `Library/Application Support` is missing, create it first. With an
 
 Create `operator.json` in the private directory using the complete public-input example in [Connection setup](phase1-setup.md), replacing all placeholders with your actual provider/connection values. Keep mode `0600` and parent mode `0700`. It contains public issuer/JWKS/resource/owner/scopes, not tokens or client secrets. An optional `stateDirectory` must be canonical absolute and private, outside the checkout; the default is `~/Library/Application Support/shared-clipboard`. Schema validation makes no provider/clipboard/network calls.
 
+Launch the companion or tunnel, and run local sharing/status/stop commands, from the installed package directory (for example, `cd "$SC_INSTALL"` when state is outside that prefix). State must also be outside the current working directory: launching from state or any ancestor of state is refused before opening it. Configure a supervisor's actual working directory accordingly. `check-config` alone does not exercise this guard. See [STDIO tunnel setup](secure-mcp-tunnel.md) for the private transport's exact commands.
+
 ```sh
 "$SC_NODE" "$SC_CLI" check-config --config "$SC_CONFIG"
 "$SC_NODE" "$SC_CLI" start --config "$SC_CONFIG"
