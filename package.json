@@ -1,0 +1,29 @@
+{
+  "name": "@shared-clipboard/dots-probe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Authenticated synthetic MCP probe for the private Dots compatibility gate",
+  "type": "module",
+  "engines": { "node": "24.21.0" },
+  "packageManager": "npm@11.19.0",
+  "bin": { "shared-clipboard-probe": "dist/cli.js" },
+  "files": ["dist", "plugins/shared-clipboard", "docs", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-concurrency=1 tests/*.test.ts",
+    "start": "node dist/cli.js",
+    "check": "npm run typecheck && npm run build && npm test && npm run package:smoke",
+    "package:smoke": "node scripts/package-smoke.mjs",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.0",
+    "jose": "6.2.12",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "typescript": "7.0.2"
+  }
+}

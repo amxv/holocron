@@ -1,2 +1,7 @@
 .agents/gg/queue.md
 tmp/
+node_modules/
+dist/
+*.tgz
+.env
+.env.*

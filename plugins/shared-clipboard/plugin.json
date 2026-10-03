@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "shared-clipboard-probe",
+  "version": "0.1.0",
+  "description": "Private authenticated synthetic Dots compatibility probe. No clipboard or file sharing is implemented.",
+  "extensions": {
+    "com.openai": {
+      "apps": "./.app.json",
+      "interface": {
+        "displayName": "Shared Clipboard Probe",
+        "shortDescription": "Synthetic private connection test",
+        "longDescription": "Checks owner authorization and reads a fixed harmless marker. Tunnel, Dots, and cloud clipboard compatibility require live evidence.",
+        "category": "Productivity",
+        "capabilities": ["Read"],
+        "defaultPrompt": ["Check my authenticated synthetic bridge probe", "Read the fixed phase1-marker"]
+      }
+    }
+  }
+}
