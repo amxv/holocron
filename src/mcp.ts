@@ -12,7 +12,8 @@ import { BridgeFailure, FILE_LIMIT, READ_LIMIT, TEXT_LIMIT } from './text.ts';
 export const PROBE_ID = 'phase1-marker';
 export const PROBE_TEXT = 'Shared Clipboard Phase 1: synthetic data only.\n';
 export const PROBE_DIGEST = createHash('sha256').update(PROBE_TEXT).digest('hex');
-export const VERSION = '0.1.0';
+import { VERSION } from './version.ts';
+export { VERSION } from './version.ts';
 
 const statusOutput = z.strictObject({
   mode: z.literal('synthetic-probe'),

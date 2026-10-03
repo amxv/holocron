@@ -11,10 +11,10 @@ for (const path of code) {
   const text = await readFile(path, 'utf8');
   assert.ok(text.split('\n').length <= 1001, `${path} exceeds 1000 lines`);
 }
-const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), 'README.md', 'package.json'];
+const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), 'README.md', 'package.json', 'package-lock.json'];
 for (const path of maintained) {
   const text = await readFile(path, 'utf8');
-  assert.doesNotMatch(text, /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);
+  assert.doesNotMatch(text, /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|plugin_asdk_app_[A-Za-z0-9]+|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);
 }
 const manifest = JSON.parse(await readFile('plugins/shared-clipboard/plugin.json', 'utf8'));
 assert.deepEqual(manifest.extensions['com.openai'].interface.capabilities, ['Read', 'Write']);
@@ -28,4 +28,13 @@ for (const path of ['src/cloud-clipboard.ts', 'src/cloud-cli-main.ts', 'src/clou
 assert.match(await readFile('docs/cloud-clipboard.md', 'utf8'), /deferred and unverified/);
 const packageManifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.equal(packageManifest.bin['shared-clipboard-cloud'], 'dist/cloud-cli.js');
+assert.equal(packageManifest.private, true);
+assert.equal(packageManifest.engines.node, '24.21.0');
+assert.equal(packageManifest.packageManager, 'npm@11.19.0');
+const lockfile = JSON.parse(await readFile('package-lock.json', 'utf8'));
+assert.deepEqual(lockfile.packages[''].bin, packageManifest.bin);
+assert.equal(await readFile('src/version.ts', 'utf8'), `export const VERSION = '${packageManifest.version}';\n`);
+const loginSource = await readFile('src/login.ts', 'utf8');
+assert.doesNotMatch(loginSource, /node:child_process|\bspawn\(|\bexecFile\(|\bprocess\.kill\(/);
+assert.match(await readFile('docs/operations.md', 'utf8'), /KeepAlive=false/);
 console.log(`Source/docs/package scaffold checks passed; ${code.length} code files meet the 1000-line limit.`);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, writeFile, unlink, symlink, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, stat, writeFile, unlink, symlink, rm, realpath } from 'node:fs/promises';
 import { once } from 'node:events';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -10,6 +10,13 @@ import { createHash } from 'node:crypto';
 const temporary = await mkdtemp(join(await realpath('/tmp'), 'sc-package-'));
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 try {
+  const home = join(temporary, 'home'); await mkdir(home, { mode: 0o700 });
+  const environment = { PATH: process.env.PATH, HOME: home, npm_config_cache: join(temporary, 'npm-cache'),
+    npm_config_userconfig: join(temporary, 'npmrc'), npm_config_audit: 'false', npm_config_fund: 'false' };
+  await writeFile(environment.npm_config_userconfig, '', { mode: 0o600 });
+  await mkdir(join(home, '.gg', 'codex'), { recursive: true, mode: 0o700 });
+  const existingSettings = join(home, '.gg', 'codex', 'config.toml');
+  await writeFile(existingSettings, 'unrelated-setting = true\n', { mode: 0o600 });
   const packed = JSON.parse(execFileSync(npm, ['pack', '--json', '--silent', '--pack-destination', temporary], {
     encoding: 'utf8', maxBuffer: 1024 * 1024,
   }))[0];
@@ -19,27 +26,38 @@ try {
   assert.ok(paths.includes('dist/cloud-cli.js'));
   assert.ok(paths.includes('docs/cloud-clipboard.md'));
   assert.ok(paths.includes('docs/context-files.md'));
+  assert.ok(paths.includes('docs/operations.md'));
   assert.ok(paths.includes('plugins/shared-clipboard/plugin.json'));
   assert.ok(paths.includes('plugins/shared-clipboard/.app.json'));
+  const allowed = new Set(['README.md', 'package.json', 'plugins/shared-clipboard/plugin.json', 'plugins/shared-clipboard/.app.json',
+    ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations'].map((name) => `docs/${name}.md`),
+    ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
+  assert.deepEqual(new Set(paths), allowed);
   for (const path of paths) {
-    assert.match(path, /^(dist\/|docs\/|plugins\/shared-clipboard\/|README\.md$|package\.json$)/);
-    assert.doesNotMatch(path, /(?:\.env|\.tgz|\.map$|node_modules|probe-config)/);
+    assert.doesNotMatch(path, /(?:\.env|\.tgz|\.map$|node_modules|probe-config|\.sqlite|\.sock|\.plist)/);
     const bytes = await readFile(path);
-    assert.doesNotMatch(bytes.toString('utf8'), /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);
+    assert.doesNotMatch(bytes.toString('utf8'), /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|plugin_asdk_app_[A-Za-z0-9]+|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);
   }
   const clean = join(temporary, 'clean');
   await mkdir(clean);
   await writeFile(join(clean, 'package.json'), JSON.stringify({ name: 'clean-smoke-profile', private: true, type: 'module' }));
   execFileSync(npm, ['install', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund', join(temporary, packed.filename)], {
-    cwd: clean, encoding: 'utf8', maxBuffer: 1024 * 1024,
+    cwd: clean, env: environment, encoding: 'utf8', maxBuffer: 1024 * 1024,
   });
   const installed = join(clean, 'node_modules/@shared-clipboard/dots-probe');
+  for (const path of paths) assert.deepEqual(await readFile(join(installed, path)), await readFile(path));
+  for (const developmentOnly of ['typescript', '@types/node']) await assert.rejects(stat(join(clean, 'node_modules', developmentOnly)));
   const cli = join(installed, 'dist/cli.js');
-  const cliRun = (args, input) => execFileSync(process.execPath, [cli, ...args], { encoding: 'utf8', ...(input !== undefined ? { input } : {}) });
+  const cliRun = (args, input) => execFileSync(process.execPath, [cli, ...args], { env: environment, encoding: 'utf8', ...(input !== undefined ? { input } : {}) });
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard-cloud'), ['--help'], { encoding: 'utf8' }), /foreground owner|foreground ownership/);
   assert.match(cliRun(['--help']), /capture explicitly reads the Mac clipboard/);
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard'), ['--help'], { encoding: 'utf8' }), /share-text/);
   assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.0');
+  for (const name of ['shared-clipboard', 'shared-clipboard-probe', 'shared-clipboard-cloud']) {
+    const bin = join(clean, 'node_modules/.bin', name);
+    assert.match(execFileSync(bin, ['--help'], { env: environment, encoding: 'utf8' }), /Usage:/);
+    assert.equal(execFileSync(bin, ['--version'], { env: environment, encoding: 'utf8' }).trim(), '0.1.0');
+  }
   const operatorConfig = {
     issuer: 'https://synthetic-issuer.invalid', jwksUrl: 'https://synthetic-issuer.invalid/jwks',
     resource: 'https://synthetic-resource.invalid/mcp', ownerSubject: 'synthetic-owner', tokenType: 'at+jwt',
@@ -77,7 +95,8 @@ try {
   await unlink(selected);
   assert.equal(JSON.parse(cliRun(command('status'))).localTransport, 'stopped');
   // A clean installed foreground service, controlled locally, performs no actual clipboard operation.
-  const child = spawn(process.execPath, [cli, ...command('start')], { stdio: ['ignore', 'pipe', 'pipe'] });
+  for (let restart = 0; restart < 2; restart++) {
+  const child = spawn(process.execPath, [cli, ...command('start')], { env: environment, stdio: ['ignore', 'pipe', 'pipe'] });
   const exited = once(child, 'exit');
   const ready = new Promise((resolve, reject) => {
     child.stdout.on('data', (data) => { if (data.toString().includes('listening on IPv4 loopback')) resolve(); });
@@ -91,8 +110,25 @@ try {
     assert.equal(JSON.parse(cliRun(command('stop'))).localTransport, 'stopped');
     assert.equal((await exited)[0], 0);
   } finally { clearTimeout(deadline); if (child.exitCode === null) child.kill('SIGKILL'); }
+  }
 
   const load = (path) => import(pathToFileURL(join(installed, path)).href);
+  const { runCli } = await load('dist/cli-main.js');
+  const loginEnvironment = { platform: 'darwin', home, node: await realpath(process.execPath), cli };
+  const loginLines = [];
+  const loginIO = { stdin: (async function* () { throw Error('No login stdin'); })(),
+    out: (line) => loginLines.push(JSON.parse(line)), error: (line) => assert.fail(line) };
+  const noClipboard = { availability: 'test-adapter', read: async () => assert.fail('No login capture'), write: async () => assert.fail('No login write') };
+  const login = (action) => runCli(command('login-' + action), loginIO, noClipboard, loginEnvironment);
+  assert.equal(await login('status'), 0); assert.equal(loginLines.at(-1).nextLogin, 'disabled');
+  assert.equal(await login('install'), 0); assert.equal(loginLines.at(-1).launchd, 'unverified');
+  const job = join(home, 'Library', 'LaunchAgents', 'org.shared-clipboard.companion.plist');
+  assert.equal((await stat(job)).mode & 0o777, 0o600);
+  const jobText = await readFile(job, 'utf8'); assert.ok(jobText.includes(cli));
+  assert.equal(await login('install'), 0); assert.equal(await readFile(job, 'utf8'), jobText);
+  assert.equal(await login('status'), 0); assert.equal(loginLines.at(-1).nextLogin, 'enabled');
+  assert.equal(await login('remove'), 0); assert.equal(await login('remove'), 0); await assert.rejects(stat(job));
+  assert.equal(await readFile(existingSettings, 'utf8'), 'unrelated-setting = true\n');
   // Exercise the independent installed helper CLI boundary with a controlled
   // backend, never a real graphical clipboard. There is no production command override.
   const { runCloudCli } = await load('dist/cloud-cli-main.js');
@@ -149,6 +185,9 @@ try {
     read: async () => { throw new Error('No clipboard capture in package checks'); },
     async write(bytes) { this.value = Buffer.from(bytes); this.writes++; } };
   const bridge = new ClipboardBridge(store, adapter);
+  const input = { request_id: 'package_smoke_request_01', text: cloudCapture.text, expected_sha256: cloudCapture.sha256,
+    valid_until: new Date(Date.now() + 60000).toISOString() };
+  let receipt;
   const server = createProbeHttp(configSchema.parse(operatorConfig), verifier, { bridge });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
@@ -197,11 +236,9 @@ try {
     assert.equal(createHash('sha256').update(await readFile(materialized)).digest('hex'), fileSnapshot.sha256);
     assert.equal((await call('read_shared_item', { id: selected })).isError, true);
     assert.equal((await call('read_shared_item', { id: fileSnapshot.id, offset: 1 })).isError, true);
-    const input = { request_id: 'package_smoke_request_01', text: cloudCapture.text, expected_sha256: cloudCapture.sha256,
-      valid_until: new Date(Date.now() + 60000).toISOString() };
     assert.equal((await call('copy_text_to_mac', { ...input, text: input.text + 'altered' })).isError, true);
     assert.equal(adapter.writes, 0); assert.equal(store.receipt(input.request_id), undefined);
-    const receipt = (await call('copy_text_to_mac', input)).structuredContent;
+    receipt = (await call('copy_text_to_mac', input)).structuredContent;
     assert.equal(receipt.state, 'completed'); assert.deepEqual(adapter.value, Buffer.from(text));
     adapter.value = Buffer.from('newer');
     assert.deepEqual((await call('copy_text_to_mac', input)).structuredContent, receipt);
@@ -225,7 +262,50 @@ try {
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Clean package install, independent helper CLI probe/stdin/file/read/foreground ownership/digest rejection, Mac lifecycle, authenticated bounded file reconstruction/digest/revoke and cloud-to-Mac digest/write/retry/scope smoke passed (${paths.length} distribution files). Controlled clipboard workers/adapters only; real Dots, provider, tunnel and viewed OS clipboards remain deferred.`);
+
+  // A new installed store/server and new HTTP calls model a local restart/reconnect.
+  // No OAuth account or real tunnel connection is substituted by this synthetic gate.
+  let clock = Date.now();
+  const restartedStore = await ShareStore.open(operatorConfig.stateDirectory, ownerId(operatorConfig), { now: () => clock });
+  const restartedBridge = new ClipboardBridge(restartedStore, adapter, () => clock);
+  const restartedServer = createProbeHttp(configSchema.parse(operatorConfig), verifier, { bridge: restartedBridge });
+  restartedServer.listen(0, '127.0.0.1'); await once(restartedServer, 'listening');
+  try {
+    const base = `http://127.0.0.1:${restartedServer.address().port}`;
+    const now = Math.floor(Date.now() / 1000);
+    const claims = { iss: operatorConfig.issuer, sub: operatorConfig.ownerSubject, aud: operatorConfig.resource,
+      iat: now, exp: now + 60, scope: 'probe:status probe:read clipboard:write' };
+    const sign = (claims) => new SignJWT(claims).setProtectedHeader({ alg: 'ES256', typ: 'at+jwt' }).sign(keys.privateKey);
+    const jwt = await sign(claims);
+    const request = (name, args, bearer = jwt) => fetch(base + '/mcp', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', Authorization: `Bearer ${bearer}` },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name, arguments: args } }) });
+    const call = async (name, args) => { const response = await request(name, args); assert.equal(response.status, 200); return (await response.json()).result; };
+    assert.deepEqual((await call('copy_text_to_mac', input)).structuredContent, receipt);
+    assert.equal(adapter.writes, 1); assert.equal(adapter.value.toString(), 'newer');
+    const expiredJwt = await sign({ ...claims, iat: now - 120, exp: now - 1 });
+    const nonowner = await sign({ ...claims, sub: 'not-the-owner' });
+    assert.equal((await request('get_bridge_status', {}, expiredJwt)).status, 401);
+    assert.equal((await request('get_bridge_status', {}, nonowner)).status, 403);
+    const expires = restartedStore.capture(Buffer.from('synthetic expiry marker'));
+    clock += 24 * 60 * 60 * 1000;
+    assert.equal((await call('read_shared_item', { id: expires.id })).isError, true);
+    assert.equal(restartedStore.counts().sharedItems, 0);
+    clock += 8 * 24 * 60 * 60 * 1000; restartedStore.purge();
+    assert.equal(restartedStore.receipt(input.request_id), undefined);
+    assert.equal((await call('copy_text_to_mac', input)).isError, true); // Expired envelope after cleanup cannot revive.
+    assert.equal(adapter.writes, 1); assert.equal(adapter.value.toString(), 'newer');
+  } finally {
+    await restartedBridge.stop(); restartedStore.close();
+    restartedServer.closeAllConnections(); await new Promise((resolve) => restartedServer.close(resolve));
+  }
+  // Removal uses the isolated prefix only and preserves unrelated profile settings and selected files.
+  execFileSync(npm, ['uninstall', '--ignore-scripts', '--no-audit', '--no-fund', '@shared-clipboard/dots-probe'],
+    { cwd: clean, env: environment, encoding: 'utf8', maxBuffer: 1024 * 1024 });
+  await assert.rejects(stat(installed));
+  assert.equal(await readFile(existingSettings, 'utf8'), 'unrelated-setting = true\n');
+  assert.deepEqual(await readFile(cloudData), Buffer.from(text));
+  console.log(`Clean private package install/removal, all three bins/version/help, isolated login generation/status/remove, Mac start/status/stop/restart, synthetic reconnect/auth/expiry/clear, immutable file reconstruction/digest/revoke, independent helper literal read/write/digest/foreground ownership, and cloud-to-Mac receipt/restart/scope checks passed (${paths.length} distribution files). Injected clipboard boundaries only; real Dots/provider/tunnel/login and viewed OS clipboards remain deferred.`);
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

@@ -4,6 +4,8 @@ The companion implements local text sharing, selected UTF-8 context files and th
 
 ## Local operation
 
+[Private installation and operation](operations.md) provides the repeatable dedicated-prefix tarball install, foreground lifecycle, explicit optional next-login setup and scoped removal. Setup does not touch other ChatGPT/Codex settings or current clipboards.
+
 Use the pinned Node/npm versions and build first (`npm ci && npm run build`). Both installed bin names, `shared-clipboard` and the existing `shared-clipboard-probe` alias, run the same CLI. The package and portable mapping retain their Phase 1 identifiers for compatibility.
 
 An existing established provider must grant three distinct, actually configured scopes: status, shared-context read, and clipboard write. Add `writeScope` to the private operator JSON shown in [Connection setup](phase1-setup.md); it has no invented default. Configuration must be an absolute regular non-symlink file, mode `0600`, in a directory accessible only to the same unprivileged OS user. No token or client secret belongs in it. `check-config` checks its structure without network or clipboard access.
@@ -61,6 +63,8 @@ Every protected HTTP message validates the exact configured issuer, sole resourc
 The private SQLite store uses full synchronous commits, DELETE journaling and secure deletion. Separate CLI processes transact safely with a bounded one-second lock wait; operations may fail busy rather than lose data. Share expiry denies reads immediately; startup, ordinary operations and the running service's one-minute purge remove expired data. Revocation/clear delete retained snapshot bytes. They cannot remove copies already returned to another application. Text/file snapshots share the same owner-scoped listing, bounded byte-read and aggregate accounting boundary. SQLite BLOB substrings keep each page bounded without repeated whole-file loading. Remote tools accept only opaque snapshot IDs and never a local source path.
 
 ## Receipts and interruption
+
+Snapshots are private plaintext local data. SQLite secure deletion cannot erase other applications' copies, backups or guarantee forensic SSD erasure. External OAuth revocation is separate from local stop; already-issued JWTs can remain valid until their bounded expiry. See [Recovery and disconnect](operations.md#recovery-and-disconnect).
 
 After any supplied digest is validated, the request ID, fingerprint, deadline and started state commit before any OS write. A completed receipt commits only after successful OS return. Exact duplicate calls return the original receipt without rewriting, even after their deadline or a restart. Reusing an ID with different text or deadline fails. Concurrent duplicates join one operation; concurrent distinct writes fail `clipboard_busy` and do not queue.
 

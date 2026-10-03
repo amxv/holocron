@@ -10,15 +10,20 @@ import { BridgeFailure, TEXT_LIMIT, safeName } from './text.ts';
 import { readSelectedFile } from './file-snapshot.ts';
 import { VERSION } from './mcp.ts';
 import { preparePlugin } from './plugin.ts';
+import { loginAction } from './login.ts';
+import type { LoginEnvironment } from './login.ts';
 
 const help = `Usage: shared-clipboard <start|stop|status|check-config|capture|share-text|list|clear> --config <private JSON file>
        shared-clipboard <capture|share-text> --config <private JSON file> [--name <safe label>]
        shared-clipboard share-file <selected UTF-8 file> --config <private JSON file> [--name <safe label>]
        shared-clipboard revoke <share ID> --config <private JSON file>
        shared-clipboard prepare-plugin --connection-id <registered ID> --output <new directory>
+       shared-clipboard <login-install|login-status|login-remove> --config <absolute private JSON file>
 capture explicitly reads the Mac clipboard. share-text reads UTF-8 stdin only.
 share-file snapshots one explicitly selected regular UTF-8 file, at most 10 MiB, without exposing its path.
 start runs in the foreground; stop uses an owner-only local socket. No automatic clipboard reads, paste, or command execution.
+login-install explicitly writes an optional next-login LaunchAgent only; it does not start or load a job now.
+login-remove disables future login starts only; stop the current companion separately. See docs/operations.md.
 Actual provider, tunnel, Dots and OS clipboard verification remain deferred. See docs/text-bridge.md.`;
 
 export interface CliIO {
@@ -27,7 +32,7 @@ export interface CliIO {
   error: (line: string) => void;
 }
 
-export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapter = macClipboard()): Promise<number> {
+export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapter = macClipboard(), loginEnvironment?: LoginEnvironment): Promise<number> {
   if (args.length === 1 && args[0] === '--help') { io.out(help); return 0; }
   if (args.length === 1 && args[0] === '--version') { io.out(VERSION); return 0; }
   if (args.length === 5 && args[0] === 'prepare-plugin' && args[1] === '--connection-id' && args[3] === '--output') {
@@ -40,6 +45,11 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
     const index = args.indexOf('--config');
     if (index < 1 || !args[index + 1]) throw new BridgeFailure('invalid_arguments');
     const remaining = [...args.slice(1, index), ...args.slice(index + 2)];
+    if (command === 'login-install' || command === 'login-status' || command === 'login-remove') {
+      if (remaining.length !== 0) throw new BridgeFailure('invalid_arguments');
+      io.out(JSON.stringify(await loginAction(command.slice(6) as 'install' | 'status' | 'remove', args[index + 1]!, loginEnvironment)));
+      return 0;
+    }
     let name: string | undefined;
     if (['capture', 'share-text'].includes(command!) && remaining[0] === '--name' && remaining.length === 2) name = remaining[1];
     else if (command === 'share-file') {

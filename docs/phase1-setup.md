@@ -1,8 +1,10 @@
-# Phase 1 synthetic probe and live gates
+# Provider, private tunnel and registered plugin setup
 
 Status as of 2026-10-04: the user instructed "skip live make it", so implementation continues with live gates deferred. Explicit text sharing, Mac clipboard writes and selected UTF-8 context file snapshots are implemented; see [Text bridge usage](text-bridge.md) and [Selected context files](context-files.md). No provider is selected or verified. No real connection, OAuth callback/resource setting, intended dot call/file reconstruction, real Mac editor test, or viewed cloud clipboard paste/capture has passed. Local tests do not establish these facts.
 
 ## Install and check
+
+Start with [Private installation and operation](operations.md) for the clean local tarball install, absolute installed CLI paths, optional login startup, restart/recovery/removal and complete user-run acceptance. This document configures the external connection separately. Neither package install nor config validation creates a provider, tunnel, account or connection.
 
 The runtime is pinned to Node `24.21.0` (LTS), npm `11.19.0`, the official `@modelcontextprotocol/sdk` `1.32.0`, `jose` `6.2.12`, and Zod `4.6.5`. TypeScript is `7.0.2`. Versions were checked against current package manifests and [Node releases](https://nodejs.org/en/about/previous-releases). The lockfile pins transitive dependencies.
 
@@ -77,9 +79,46 @@ Add only the actual canonical resource/metadata origin and external provider dis
 node dist/cli.js prepare-plugin --connection-id ACTUAL_REGISTERED_ID --output /absolute/path/to/new-private-plugin
 ```
 
-This creates an owner-only directory with root `plugin.json` and `.app.json` containing `apps.shared-clipboard-probe.id`. It never overwrites an existing folder or edits marketplace/Codex settings. The committed `.app.json` has `apps: {}` and does not register a connection. Put the real technical ID only into the generated private package, never the distributable scaffold. The [portable plugin packaging documentation](https://developers.openai.com/plugins/build/plugins) uses `extensions.com.openai.apps` to reference this mapping.
+Use a canonical absolute new directory outside the checkout, inside an owner-only private parent such as the operator directory from the installation guide. This creates root `plugin.json` and `.app.json`, both mode `0600`, in a `0700` directory, with `apps.shared-clipboard-probe.id`. It refuses unsafe parents/existing output and never edits marketplace/Codex settings. ID validation checks syntax only; the actual connection must exist and be tested independently. The committed `.app.json` has `apps: {}` and registers nothing. Put the genuine technical ID only in the generated private package, never the distributable scaffold. On this machine, preserve `~/.gg/codex` and all unrelated settings/plugins. The [portable plugin packaging documentation](https://developers.openai.com/plugins/build/plugins) uses `extensions.com.openai.apps` to reference this mapping.
 
 Install and enable the private plugin in the actual product surface that the intended dot can access. Local marketplace availability varies by surface. A Codex-local plugin installation does not prove that the cloud dot sees it. Refresh the connection after metadata changes and repeat the calls in a fresh actual dot conversation.
+
+Current official connection docs were re-read for the final implementation. Refresh from the connection's developer settings/tool list after metadata changes; reconnect its account if OAuth expired or was revoked. Do not reset another plugin or replace global Codex settings to repair this connection. Local companion/tunnel status never establishes remote discovery or successful provider revocation. See [Recovery and disconnect](operations.md#recovery-and-disconnect) for separate stop/disconnect/provider/tunnel actions and unexpired-JWT limits.
+
+### Private local marketplace, where supported
+
+For the desktop Work/Codex local marketplace path documented in [Package your plugin](https://developers.openai.com/plugins/build/plugins), create a **fresh dedicated marketplace root outside the checkout**, rather than overwriting an existing personal catalog. Using the private installation variables from the operations guide:
+
+```sh
+umask 077
+SC_MARKET="$SC_PRIVATE/marketplace"
+mkdir "$SC_MARKET"
+mkdir "$SC_MARKET/plugins"
+mkdir -p "$SC_MARKET/.agents/plugins"
+"$SC_NODE" "$SC_CLI" prepare-plugin --connection-id ACTUAL_REGISTERED_ID \
+  --output "$SC_MARKET/plugins/shared-clipboard"
+```
+
+Create a new `"$SC_MARKET/.agents/plugins/marketplace.json"` with mode `0600` and this catalog. Relative paths are resolved from the marketplace root; no real ID or credential belongs in the catalog itself:
+
+```json
+{
+  "name": "shared-clipboard-personal",
+  "interface": { "displayName": "Personal Shared Clipboard" },
+  "plugins": [
+    {
+      "name": "shared-clipboard-probe",
+      "source": { "source": "local", "path": "./plugins/shared-clipboard" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}
+```
+
+On a surface supporting the current official Codex marketplace CLI, explicitly register this new root with `codex plugin marketplace add "$SC_MARKET"`, then use `codex plugin marketplace list` to inspect it. This supported add is a separate user-run opt-in; the bridge generator never modifies Codex configuration. Keep this machine's existing `~/.gg/codex` configuration in place, and do not replace another marketplace. Restart the ChatGPT desktop app, open Plugins Directory, choose Personal Shared Clipboard, install/enable the plugin and authorize its actual connection. For updated metadata, refresh the developer connection and use a fresh chat; for a catalog update, the supported command is `codex plugin marketplace upgrade shared-clipboard-personal`.
+
+This documented desktop path remains untested in the actual intended dot/account. If its product surface has no local marketplace support or does not expose the plugin to that dot, report that concrete compatibility gap; broad computer access or a local Inspector result cannot substitute. Removal disables/uninstalls this plugin in its actual surface and uses `codex plugin marketplace remove shared-clipboard-personal` only for this dedicated source, then deletes its own private files after inspecting them. Neither marketplace removal nor file deletion revokes the external provider/tunnel/registered connection.
 
 The listener binds only IPv4 loopback. Host must exactly equal `127.0.0.1:<actual-port>`; forwarded-host headers are ignored. Missing Origin is accepted for nonbrowser tunnel traffic; present Origin requires an exact configured HTTPS origin. No wildcard CORS, cookie auth, query tokens, session authority, arbitrary path, generic fetch, shell, or remote clipboard capture is exposed. `/mcp` accepts one bounded UTF-8 JSON-RPC POST, with JSON responses through the official Streamable HTTP transport. GET/DELETE streaming sessions are disabled because the service is stateless. Phase 2's body limit is `6 × 256 KiB + 16 KiB` for worst-case escaped text; decoded text is still limited to 256 KiB. Headers remain 8 KiB, active authorized/verification requests 16, sockets 64, and full-request deadline ten seconds. Preflight is restricted to POST and known MCP headers. The actual tunnel must preserve bearer authorization and supported MCP protocol/Accept headers and forward a loopback Host (or the boundary must be deliberately adapted and retested based on observed evidence).
 

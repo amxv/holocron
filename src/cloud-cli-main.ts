@@ -2,6 +2,7 @@ import { CloudClipboard } from './cloud-clipboard.ts';
 import { boundedInput, cloudInputFile } from './cloud-input.ts';
 import { requireDigest } from './digest.ts';
 import { BridgeFailure } from './text.ts';
+import { VERSION } from './version.ts';
 
 const help = `Usage: shared-clipboard-cloud probe
        shared-clipboard-cloud read
@@ -24,6 +25,7 @@ export interface CloudIO {
 
 export async function runCloudCli(args: string[], io: CloudIO, adapter = new CloudClipboard(), signal = new AbortController().signal): Promise<number> {
   if (args.length === 1 && args[0] === '--help') { io.out(help); return 0; }
+  if (args.length === 1 && args[0] === '--version') { io.out(VERSION); return 0; }
   const emit = (result: Record<string, unknown>) => io.out(JSON.stringify(result));
   try {
     if (args.length === 1 && args[0] === 'probe') {

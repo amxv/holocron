@@ -1,40 +1,26 @@
-# Shared Clipboard for Local and Cloud Computers
+# Shared Clipboard for ChatGPT Dots
 
-## Current implementation
-The TypeScript Mac companion now supports explicit clipboard capture, UTF-8 stdin sharing and selected UTF-8 context files, immutable snapshots, bounded MCP list/read, and literal Mac clipboard writes with durable retry receipts. A local CLI manages shares and starts/stops the foreground service. Files are captured once, up to 10 MiB each and 100 MiB total snapshots, with exact SHA-256 and no remotely visible source paths. There is no clipboard watcher, automatic paste, command execution, remote clipboard read, or arbitrary filesystem access.
+A personal Mac companion for explicitly shared text and selected UTF-8 context files, with an owner-authenticated MCP plugin that can copy literal text to the Mac clipboard. You paste it yourself and decide whether to run it. There is no clipboard watcher, automatic paste, command execution, remote live clipboard read or arbitrary filesystem access.
 
-The optional independently packaged `shared-clipboard-cloud` helper offers explicit probe/read/write for standard Linux Wayland `wl-copy`/`wl-paste`. It accepts literal stdin or an already-created data file, verifies the original digest before writing, and retains foreground clipboard ownership. It has no network or provider/tunnel credentials. See [Cloud clipboard transfers](docs/cloud-clipboard.md) for setup, exact data formats and both digest-verified directions.
+**Actual intended Dots, registered plugin, OAuth provider/callback/resource, private tunnel and viewed Mac/cloud clipboard compatibility are deferred and unverified.** Local security and installed-package checks use injected adapters. They establish implementation behavior, not those live outcomes. No real provider has been selected.
 
-The private plugin scaffold still has an empty registered-connection mapping. Actual OAuth provider/callback/resource compatibility, tunnel forwarding, intended Dots installation/calls and file reconstruction, real Mac editor paste, and viewed cloud clipboard tests are **deferred and unverified** by the user's instruction. Local tests use injected clipboard adapters and establish no live compatibility. A helper probe reports tentative prerequisites, never actual intended-desktop compatibility.
+## Use it
 
-Use Node `24.21.0` and npm `11.19.0`. Run `npm ci`, then `npm run check`. See [Text bridge usage](docs/text-bridge.md) for local commands and retry behavior, [Selected context files](docs/context-files.md) for selection and digest-verified reconstruction, and [Connection setup](docs/phase1-setup.md) for the configurable provider/tunnel/plugin boundary and deferred live installation checks.
+1. Follow [Private installation and operation](docs/operations.md) to pack/install with Node `24.21.0` and npm `11.19.0`, configure the private companion, and start/status/stop it. Startup at login is a separate explicit opt-in.
+2. Follow [Provider, tunnel and plugin connection](docs/phase1-setup.md) for your existing public OAuth provider, official outbound tunnel client, actual developer MCP connection and generated private plugin. These are separate installations; the distributable plugin mapping is empty. Setup preserves other plugins and `~/.gg/codex` settings.
+3. [Share text](docs/text-bridge.md) with `capture` or literal stdin, or [select context files](docs/context-files.md) with `share-file`. Ask the dot to list/read the chosen snapshot. Copy requests write literal bytes only after authorization and optional original digest verification.
+4. For both cloud desktop directions, explicitly install the independent, credential-free [Linux Wayland helper](docs/cloud-clipboard.md) in the intended graphical session. Preserve the original digest through exact structured data and retain its foreground clipboard owner while pasting. Its prerequisite probe reports candidate/unavailable; viewed-desktop access remains unverified.
 
-## Idea
-A lightweight companion app installed on both my local computer and my AI assistant’s cloud computer, providing a shared clipboard between their operating systems.
+Text/clipboard limit: 256 KiB. Context file limit: 10 MiB. Aggregate snapshots: 100 MiB. Reads: at most 64 KiB of UTF-8 per page. Shares expire after 24 hours. Files are immutable captures with SHA-256, not ongoing path grants or native attachments. Unsupported, binary or oversize inputs fail without truncation.
 
-## Primary Use Case
-Copy a command on my Mac, transfer it to the cloud computer, and paste it into its terminal without retyping it or relying on clipboard support in the remote desktop viewer.
+The Mac must be awake and the companion/tunnel available. The bridge has no offline write queue. Completed request receipts prevent duplicate writes from replacing newer clipboard contents; interruption can leave an uncertain result that is never replayed automatically. Private local snapshots are plaintext. Revoke/clear cannot erase copies already returned to the dot or another application. Stop/disconnect leaves the current clipboard alone. [Recovery, removal and user-run live acceptance](docs/operations.md#recovery-and-disconnect) cover the remaining operational boundaries.
 
-Support transferring text back from the cloud computer to my Mac too.
+## Validate locally
 
-## Suggested MVP
-- Local macOS app and cloud Linux app
-- Secure pairing between the two installations
-- Explicit action to send clipboard text in either direction
-- Received text available to paste into any application
-- Plain-text support first
-- Connection status and easy disconnect
-- Automatic expiry of transferred text
+```sh
+mise exec node@24.21.0 -- npm ci
+mise exec node@24.21.0 -- npm run check
+git diff --check
+```
 
-## Safety Defaults
-- Never automatically execute commands
-- Start with manual sharing rather than syncing every clipboard change
-- Encrypt transfers and authenticate paired devices
-- Avoid logging clipboard contents
-- Provide a way to clear shared content
-
-## Open Questions
-- Direct connection or encrypted relay?
-- Menu-bar app, keyboard shortcut, CLI, or a combination?
-- Should optional automatic sync be added later?
-- How should pairing survive cloud-computer restarts or replacement?
+The gate includes typecheck/build, auth/security/expiry/idempotency/file/cloud process tests, a fresh private tarball installation without development dependencies, and distribution/source scans. Tests never access an existing OS clipboard or actual login configuration. The package is private; public publication, a hosted relay, paid accounts, custom OAuth servers, broad local-computer access and a docs site are outside this implementation.
