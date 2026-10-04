@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { chmod, mkdir, realpath, rm } from 'node:fs/promises';
+import { chmod, copyFile, mkdir, realpath, rm } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { privateDirectory } from './private-state.ts';
@@ -11,6 +11,9 @@ export async function buildSecretPrompt(directory: string, signal: AbortSignal):
   await privateDirectory(dirname(directory)); await mkdir(directory, { mode: 0o700 });
   try {
     const output = join(directory, 'holocron-secrets-ui');
+    const icon = join(directory, 'HolocronIcon.png');
+    await copyFile(fileURLToPath(new URL('../native/HolocronIcon.png', import.meta.url)), icon);
+    await chmod(icon, 0o600);
     const child = spawn('/usr/bin/swiftc', ['-O', '-framework', 'AppKit', fileURLToPath(new URL('../native/HolocronSecrets.swift', import.meta.url)), '-o', output], {
       stdio: 'ignore', shell: false, env: { PATH: '/usr/bin:/bin' }, signal,
     });

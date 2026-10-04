@@ -7,7 +7,7 @@ category: Use Holocron
 
 Run `holocron ask` on the computer that needs the keys. Approve each request in a native Mac prompt. The command returns only a private temporary directory path containing one file per named key. The authorized program reads those files directly; values stay out of chat, model/MCP responses and clipboard snapshots.
 
-This guide targets **0.3.1**. Publish that private release and update the existing relay before using the new flow. Actual receiver/native GUI acceptance remains pending. The Mac owner follows [Mac setup](secret-operations.md).
+This guide targets **0.3.2**. Publish that private release and update the existing relay before using the new flow. Actual receiver/native GUI acceptance remains pending. The Mac owner follows [Mac setup](secret-operations.md).
 
 ## Authenticate the receiving computer
 
@@ -23,7 +23,7 @@ Ask the Mac owner to run `holocron pair`. Replace `MAC_PAIRING_CODE` with their 
 curl -fsSL https://holocron.ashray.xyz/setup.sh | sh -s -- receiver --code MAC_PAIRING_CODE
 ```
 
-Run as your regular OS user with shell tracing off. You need `curl`, `tar`, `mktemp` and a SHA-256 utility. The unique public pairing code expires after five minutes.
+Run as your regular OS user with shell tracing off. You need `curl`, `tar`, `mktemp` and a SHA-256 utility. The unique public pairing code expires after fifteen minutes.
 
 Setup prints an **eight-digit verification number**. Give it to the Mac owner through your trusted conversation. They enter it in the native pairing prompt and approve. A wrong number cancels the session. Neither endpoint accepts the relay's claim about peer identity.
 
@@ -70,7 +70,7 @@ Request one to eight uppercase names with a non-secret purpose. Saved pairing is
 HC_SECRET_DIR=$(holocron ask -m "Run my approved task" OPENAI_API_KEY)
 ```
 
-The command waits for native approval and prints only the private directory path. Files are `0600` in a `0700` directory. Never display values with `cat`, read them through model-visible tools, substitute them into argv, enable tracing or log them.
+The command waits up to fifteen minutes from request creation for native approval and prints only the private directory path. The owner can type or use Cmd+V or **Edit > Paste** in masked native fields. Files are `0600` in a `0700` directory. Never display values with `cat`, read them through model-visible tools, substitute them into argv, enable tracing or log them.
 
 The authorized program reads the files directly and sends values only to the intended provider. Suppress credentials and provider response bodies from output. Clean up even when the program fails:
 
@@ -78,7 +78,7 @@ The authorized program reads the files directly and sends values only to the int
 holocron secrets cleanup --directory "$HC_SECRET_DIR"
 ```
 
-An independent worker also removes files after five minutes. Sleep, power loss or forced termination can delay deletion; cleanup is not a secure-erasure guarantee. Ctrl+C cancels pending requests, which expire after three minutes. Pairing lasts seven days.
+An independent worker also removes files five minutes after receipt. This plaintext cleanup window is separate from the fifteen-minute approval deadline. Sleep, power loss or forced termination can delay deletion; cleanup is not a secure-erasure guarantee. Ctrl+C cancels pending requests. Pairing lasts seven days; requests approaching pairing expiry use the earlier deadline.
 
 Existing `ask --pairing-file /absolute/private/receiver.json -m PURPOSE NAME` and the original fingerprint-authenticated `secrets prepare`, `pair`, `complete` workflow remain supported.
 

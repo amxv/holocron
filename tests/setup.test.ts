@@ -13,6 +13,8 @@ import { runHolocronCli } from '../src/holocron-main.ts';
 import { encode } from '../src/secret-crypto.ts';
 import nacl from 'tweetnacl';
 import { resolveTunnelExecutable } from '../src/tunnel-executable.ts';
+import { promptNeedsRefresh, ownedPromptVersion } from '../src/setup-prompt.ts';
+import { VERSION } from '../src/version.ts';
 
 async function fixture(t: Parameters<typeof temporary>[0]) {
   const root = await temporary(t); const home = join(root, 'profile'); await mkdir(home, { mode: 0o700 });
@@ -37,6 +39,22 @@ test('Mac setup reuses linked Board config/helper, is repeatable, preserves unre
   assert.equal(await runSetupCli(['setup'], f.io, f.signal, f.env), 0); assert.equal((await readdir(f.home)).includes('setup.lock'), false);
   await saveSetup(f.home, { version: 1, role: 'receiver', relay: first.relay, macConfigs: [] });
   await assert.rejects(setupMac(f.home, flags, f.signal), /setup_role_conflict/);
+});
+test('prompt refresh is limited to owned layouts; failed rebuilding retains external helper and saved references', { skip: process.platform !== 'darwin' }, async t => {
+  const f = await fixture(t);
+  const before = await setupMac(f.home, { '--admin-file': f.admin, '--prompt': f.prompt }, f.signal);
+  const bytes = await readFile(join(f.home, 'setup.json'));
+  assert.equal(promptNeedsRefresh(f.home, f.prompt), false);
+  assert.equal(promptNeedsRefresh(f.home, join(f.home, 'native-prompt-v3/holocron-secrets-ui')), true);
+  assert.equal(ownedPromptVersion(f.home, join(f.root, 'native-prompt-v3/holocron-secrets-ui')), undefined);
+  assert.equal(promptNeedsRefresh(f.home, join(f.home, `native-prompt-${VERSION}-00000000-0000-0000-0000-000000000000/holocron-secrets-ui`)), false);
+  await assert.rejects(setupMac(f.home, { '--rebuild-prompt': 'true' }, AbortSignal.abort()), /prompt_build_failed/);
+  assert.deepEqual(await readFile(join(f.home, 'setup.json')), bytes);
+  assert.deepEqual(await readSetup(f.home), before);
+  assert.equal(await readFile(f.prompt, 'utf8'), '#!/bin/sh\nexit 1\n');
+  assert.equal((await readdir(f.home)).some(name => name.startsWith('native-prompt-')), false);
+  assert.equal(await runSetupCli(['setup', '--prompt', f.prompt, '--rebuild-prompt'], f.io, f.signal, f.env), 2);
+  assert.deepEqual(await readFile(join(f.home, 'setup.json')), bytes);
 });
 test('setup failure and retry remove only their lock; explicit profile binding needs no credential copy or tunnel provisioning', async t => {
   const f = await fixture(t);

@@ -23,9 +23,9 @@ const help = `Usage: holocron ask [--pairing-file <absolute private receiver.jso
        holocron secrets revoke --mac-config <absolute private mac.json>
        holocron secrets cleanup --directory <private temporary session directory>
 ask runs on the requester and prints only its private temporary directory path; files auto-delete after five minutes.
-The human approves named secrets in the Mac's native prompt. Request expiry is three minutes; Ctrl+C cancels.
+The human approves named secrets in the Mac's native prompt. Request expiry is fifteen minutes; Ctrl+C cancels.
 Receiver credentials are generated and stay on that computer. ask selects the saved receiver unless an explicit file is supplied.
-Code pairing uses a five-minute public code plus eight digits entered in the native Mac prompt. Pairing lasts seven days.
+Code pairing uses a fifteen-minute public code plus eight digits entered in the native Mac prompt. Pairing lasts seven days.
 Legacy file pairing requires independently compared fingerprints; exchange only descriptor.json and encrypted enrollment.json.
 serve is a separate foreground Mac process; it polls every 30 seconds when idle and never changes the tunnel.
 Requires a dedicated encrypted relay; an MCP connection alone cannot deliver requester files.

@@ -8,6 +8,7 @@ import { promptExecutable, readPairing, relayUrl } from './secret-pairing.ts';
 import { buildSecretPrompt } from './secret-prompt-build.ts';
 import { object, SecretFailure } from './secret-shapes.ts';
 import { resolveTunnelExecutable } from './tunnel-executable.ts';
+import { promptBuildDirectory, promptNeedsRefresh } from './setup-prompt.ts';
 
 export const DEFAULT_RELAY = 'https://holocron.ashray.xyz/api/secrets';
 export interface SetupProfile {
@@ -39,7 +40,9 @@ export async function setupMac(home: string, flags: Record<string, string>, sign
   let previous: SetupProfile | undefined;
   try { previous = await readSetup(home); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   if (previous && previous.role !== 'mac') throw new SecretFailure('setup_role_conflict');
-  if (previous && Object.keys(flags).length === 0) return previous;
+  const rebuild = flags['--rebuild-prompt'] === 'true' || Boolean(previous?.prompt && !flags['--prompt'] && promptNeedsRefresh(home, previous.prompt));
+  if (previous && Object.keys(flags).length === 0 && !rebuild) return previous;
+  if (flags['--rebuild-prompt'] && flags['--prompt']) throw new SecretFailure('invalid_arguments');
   const adminFile = flags['--admin-file'] ?? previous?.adminFile;
   if (!adminFile) throw new SecretFailure('setup_needs_admin_file_use_trusted_local_credentials');
   canonicalPath(adminFile);
@@ -54,13 +57,14 @@ export async function setupMac(home: string, flags: Record<string, string>, sign
   const reuse = flags['--mac-config']; const macConfigs = previous?.macConfigs.slice() ?? [];
   if (reuse) { canonicalPath(reuse); const pairing = await readPairing(reuse, 'mac'); if (pairing.relay !== relay) throw new SecretFailure('pairing_peer_mismatch'); if (!macConfigs.includes(reuse)) macConfigs.push(reuse); }
   await privateDirectory(home);
-  let prompt = flags['--prompt'] ?? previous?.prompt;
+  let prompt = rebuild ? undefined : flags['--prompt'] ?? previous?.prompt;
   let builtDirectory: string | undefined;
   if (prompt) await promptExecutable(prompt);
   else {
     // A failed build removes its owned destination, so setup is safely retryable.
-    prompt = await buildSecretPrompt(join(home, 'native-prompt-v3'), signal);
-    builtDirectory = join(home, 'native-prompt-v3');
+    const directory = promptBuildDirectory(home, randomUUID());
+    prompt = await buildSecretPrompt(directory, signal);
+    builtDirectory = directory;
   }
   try {
     let localConfig = flags['--local-config'] ?? previous?.localConfig;

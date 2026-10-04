@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile, symlink, stat } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile, symlink, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pairings } from '../tests/secret-fixtures.ts';
@@ -76,19 +76,45 @@ else process.exit(1);
     const macCli = () => execFileSync(holocron, setupArgs, { cwd: '/', env: { ...env, HOLOCRON_CLI_HOME: macHome }, encoding: 'utf8', stdio: 'pipe' });
     await writeFile(local, '{}', { mode: 0o600 });
     assert.throws(macCli, /setup_operation_failed/);
-    assert.equal((await readdir(macHome)).includes('native-prompt-v3'), false);
+    assert.equal((await readdir(macHome)).some(name => name.startsWith('native-prompt-')), false);
     assert.equal((await readdir(macHome)).includes('setup.lock'), false);
     await writeFile(local, localBytes, { mode: 0o600 });
     assert.match(macCli(), /Mac setup saved/);
     const setupPath = join(macHome, 'setup.json'); const setupBefore = await readFile(setupPath);
     const setup = JSON.parse(setupBefore.toString('utf8'));
     assert.equal(setup.tunnelClient, tunnelTarget);
-    assert.equal(setup.prompt, join(macHome, 'native-prompt-v3/holocron-secrets-ui'));
+    assert.ok(setup.prompt.startsWith(join(macHome, `native-prompt-${manifest.version}-`)));
     assert.equal((await stat(setup.prompt)).mode & 0o777, 0o700);
+    assert.deepEqual(await readFile(join(setup.prompt, '../HolocronIcon.png')), await readFile('native/HolocronIcon.png'));
     assert.match(macCli(), /Mac setup saved/); assert.deepEqual(await readFile(setupPath), setupBefore);
     assert.equal(await readFile(local, 'utf8'), localBytes); assert.equal(await readFile(tunnelProfile, 'utf8'), 'SYNTHETIC_PROFILE');
     assert.equal((await readdir(macHome)).includes('setup.lock'), false);
-    console.log('Installed Mac setup regression passed: tunnel alias resolves to guarded target, native helper builds automatically, failure removes owned helper/lock, repeat setup preserves Board references.');
+    // Upgrade the saved 0.3.1 generated-helper layout without re-pairing, even
+    // though the original mac.json still references the old helper.
+    const legacyDirectory = join(macHome, 'native-prompt-v3'); await mkdir(legacyDirectory, { mode: 0o700 });
+    const legacyHelper = join(legacyDirectory, 'holocron-secrets-ui'); await copyFile(setup.prompt, legacyHelper);
+    const pairingPath = join(macHome, 'saved-mac.json');
+    const pairingBytes = JSON.stringify({ ...pairings().mac, prompt: legacyHelper });
+    await writeFile(pairingPath, pairingBytes, { mode: 0o600 });
+    const oldSetup = { ...setup, prompt: legacyHelper, macConfigs: [pairingPath] };
+    await writeFile(setupPath, JSON.stringify(oldSetup), { mode: 0o600 });
+    const savedCli = args => execFileSync(holocron, args, { cwd: '/', env: { ...env, HOLOCRON_CLI_HOME: macHome }, encoding: 'utf8', stdio: 'pipe' });
+    assert.match(savedCli(['setup']), /Pairing retained/);
+    const refreshed = JSON.parse(await readFile(setupPath, 'utf8'));
+    assert.notEqual(refreshed.prompt, legacyHelper);
+    assert.deepEqual({ ...refreshed, prompt: legacyHelper }, oldSetup);
+    assert.equal(await readFile(pairingPath, 'utf8'), pairingBytes);
+    assert.ok((await stat(legacyHelper)).size > 10_000);
+    const refreshedBytes = await readFile(setupPath);
+    assert.match(savedCli(['setup']), /Pairing retained/);
+    assert.deepEqual(await readFile(setupPath), refreshedBytes);
+    assert.match(savedCli(['setup', '--rebuild-prompt']), /Pairing retained/);
+    const rebuilt = JSON.parse(await readFile(setupPath, 'utf8'));
+    assert.notEqual(rebuilt.prompt, refreshed.prompt);
+    assert.deepEqual({ ...rebuilt, prompt: legacyHelper }, oldSetup);
+    assert.equal(await readFile(pairingPath, 'utf8'), pairingBytes);
+    assert.ok((await stat(refreshed.prompt)).size > 10_000);
+    console.log('Installed Mac setup regression passed: native build/icon, rollback, repeat setup, owned helper upgrade and explicit rebuild preserve saved pairing and Board/tunnel references.');
   }
   // Execute the actual public setup shell and installed Node CLI with Linux's
   // platform branches selected. This is not an actual Linux kernel/ABI test.

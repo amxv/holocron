@@ -26,6 +26,7 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var finished = false
     init(_ request: Request) { self.request = request; super.init() }
     func applicationDidFinishLaunching(_ notification: Notification) {
+        buildMenus()
         let width: CGFloat = 520
         let stack = NSStackView()
         stack.orientation = .vertical
@@ -108,6 +109,29 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if let first = request.names.first { window.makeFirstResponder(fields[first]) }
         NSApp.activate(ignoringOtherApps: true)
     }
+    // Match Fidelius: AppKit routes native editing to the focused field editor.
+    // NSSecureTextField retains its masking and secure copy/cut restrictions.
+    private func buildMenus() {
+        let mainMenu = NSMenu()
+        let appItem = NSMenuItem()
+        mainMenu.addItem(appItem)
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "Quit Holocron", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appItem.submenu = appMenu
+        let editItem = NSMenuItem()
+        mainMenu.addItem(editItem)
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = editMenu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        redo.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(NSMenuItem.separator())
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = editMenu
+        NSApp.mainMenu = mainMenu
+    }
     @objc private func approveRequest() {
         var values: [String: String] = [:]
         for name in request.names {
@@ -156,5 +180,8 @@ if args.first == "--pair-code" {
 }
 let delegate = Delegate(request)
 NSApplication.shared.setActivationPolicy(.regular)
+let iconURL = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("HolocronIcon.png")
+guard let icon = NSImage(contentsOf: iconURL) else { exit(2) }
+NSApplication.shared.applicationIconImage = icon
 NSApplication.shared.delegate = delegate
 NSApplication.shared.run()

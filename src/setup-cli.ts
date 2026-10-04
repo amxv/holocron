@@ -12,16 +12,17 @@ import { SecretFailure } from './secret-shapes.ts';
 import type { CliIO } from './cli-main.ts';
 import { relayClient } from './secret-client.ts';
 
-const help = `Usage: holocron setup [--admin-file ABS] [--local-config ABS] [--tunnel-profile ABS --tunnel-client ABS] [--mac-config ABS] [--prompt ABS]
+const help = `Usage: holocron setup [--admin-file ABS] [--local-config ABS] [--tunnel-profile ABS --tunnel-client ABS] [--mac-config ABS] [--prompt ABS | --rebuild-prompt]
        holocron setup receiver --code CODE [--recipient LABEL] [--renew]
        holocron setup --recover
        holocron pair [--recover]
        holocron start | stop | status
 Mac setup saves private references, builds the native approval helper and reuses linked Board/MCP configuration.
+Stopped Mac setup refreshes older owned helpers. --rebuild-prompt builds this release's helper and retains saved pairing.
 The existing tunnel profile supplies its own identity and credential references; no account or tunnel is created.
 start runs the configured tunnel and saved secret services in the foreground. stop addresses only that owned supervisor.
 status without flags reports component states for a configured setup; explicit --local-config/--config keeps legacy behavior.
-pair prints a unique five-minute code. Receiver setup prints eight verification digits for the Mac's native approval.
+pair prints a unique fifteen-minute code. Receiver setup prints eight verification digits for the Mac's native approval.
 Exchange the code and verification number through your trusted conversation. No descriptor/fingerprint files to exchange.
 Pairing lasts seven days. ask -m PURPOSE NAME uses the saved receiver. Existing file pairing commands remain available.`;
 function flags(args: string[], allowed: string[]): Record<string, string> {
@@ -29,7 +30,7 @@ function flags(args: string[], allowed: string[]): Record<string, string> {
   for (let i = 0; i < args.length; i++) {
     const key = args[i]!;
     if (!allowed.includes(key) || result[key] !== undefined) throw new SecretFailure('invalid_arguments');
-    if (['--renew', '--recover'].includes(key)) result[key] = 'true';
+    if (['--renew', '--recover', '--rebuild-prompt'].includes(key)) result[key] = 'true';
     else { const value = args[++i]; if (!value || value.startsWith('--')) throw new SecretFailure('invalid_arguments'); result[key] = value; }
   }
   return result;
@@ -101,11 +102,12 @@ export async function runSetupCli(args: string[], io: CliIO, signal: AbortSignal
         await saveSetup(home, { version: 1, role: 'receiver', relay, receiverConfig: path, macConfigs: [] });
         io.out('Receiver paired. Use holocron ask -m PURPOSE NAME.'); return 0;
       }
-      const f = flags(args.slice(1), ['--admin-file', '--local-config', '--tunnel-profile', '--tunnel-client', '--mac-config', '--prompt', '--relay', '--recover']);
+      const f = flags(args.slice(1), ['--admin-file', '--local-config', '--tunnel-profile', '--tunnel-client', '--mac-config', '--prompt', '--relay', '--recover', '--rebuild-prompt']);
       const state = await operatorControl(home, 'status');
       if (state.runtime !== 'stopped') throw new SecretFailure('stop_operator_before_setup');
       if (f['--recover']) { if (Object.keys(f).length !== 1) throw new SecretFailure('invalid_arguments'); await recoverOperator(home); io.out('Owned stale runtime socket recovered. Setup references retained.'); return 0; }
-      await setupMac(home, f, signal); io.out('Mac setup saved. Run holocron pair, then holocron start.'); return 0;
+      const saved = await setupMac(home, f, signal);
+      io.out(saved.macConfigs.length ? 'Mac setup saved. Pairing retained. Run holocron start.' : 'Mac setup saved. Run holocron pair, then holocron start.'); return 0;
     } finally { await rmdir(lock); }
   } catch (error) {
     io.error(signal.aborted ? 'operation_cancelled' : error instanceof SecretFailure ? error.code : 'setup_operation_failed');

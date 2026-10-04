@@ -12,7 +12,9 @@ for (const path of code) {
   assert.ok(text.split('\n').length <= 1001, `${path} exceeds 1000 lines`);
 }
 const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), ...await files('native'), 'README.md', 'package.json', 'package-lock.json'];
-for (const path of await files('native')) assert.ok((await readFile(path, 'utf8')).split('\n').length <= 1001, `${path} exceeds 1000 lines`);
+for (const path of (await files('native')).filter(path => path.endsWith('.swift'))) assert.ok((await readFile(path, 'utf8')).split('\n').length <= 1001, `${path} exceeds 1000 lines`);
+assert.deepEqual(await readFile('native/HolocronIcon.svg'), await readFile('site/public/favicon.svg'));
+assert.deepEqual((await readFile('native/HolocronIcon.png')).subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
 for (const path of maintained) {
   const text = await readFile(path, 'utf8');
   assert.doesNotMatch(text, /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|plugin_asdk_app_[A-Za-z0-9]+|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);

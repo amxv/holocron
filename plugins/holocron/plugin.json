@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "holocron",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Private owner-authenticated explicit text and selected UTF-8 file snapshots, plus literal Mac clipboard writes. Live provider, tunnel, Dots and OS verification is deferred.",
   "extensions": {
     "com.openai": {

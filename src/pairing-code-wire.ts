@@ -3,9 +3,9 @@ import nacl from 'tweetnacl';
 import { decode, encode } from './secret-crypto.ts';
 import { descriptorFingerprint, parseDescriptor } from './secret-enrollment.ts';
 import type { ReceiverDescriptor } from './secret-enrollment.ts';
-import { encoded, hashPattern, object, SecretFailure } from './secret-shapes.ts';
+import { encoded, hashPattern, object, SecretFailure, PAIRING_CODE_MS } from './secret-shapes.ts';
 
-export const CODE_MS = 5 * 60_000;
+export const CODE_MS = PAIRING_CODE_MS;
 export const codePattern = /^[A-Z2-7]{20}$/;
 export const cleanCode = (code: string) => code.toUpperCase().replaceAll('-', '');
 export const displayCode = (code: string) => code.match(/.{4}/g)!.join('-');

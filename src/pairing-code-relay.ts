@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { encoded, hashPattern, object, parseEnvelope, SecretFailure } from './secret-shapes.ts';
+import { encoded, hashPattern, object, parseEnvelope, SecretFailure, PAIRING_CODE_MS } from './secret-shapes.ts';
 import type { SecretRedis } from './secret-relay.ts';
 
 // Public commitments/reveals and encrypted enrollment only. Owner/receiver session
@@ -14,7 +14,7 @@ if rate==1 then redis.call('PEXPIRE',KEYS[3],60000) end
 if rate>600 then return '{"error":"rate_limited"}' end
 if action=='code-open' then
   if redis.call('EXISTS',KEYS[2])==1 then return '{"error":"pairing_code_used"}' end
-  redis.call('SET',KEYS[2],'1','PX',900000)
+  redis.call('SET',KEYS[2],'1','PX',${PAIRING_CODE_MS})
   redis.call('SET',KEYS[1],cjson.encode({offer=data.offer,owner=data.ownerTokenHash,state='open'}),'PX',data.offer.expiresAt-now)
   return '{"ok":true}'
 end
@@ -60,7 +60,7 @@ export async function codeRelay(redis: SecretRedis, admin: string, action: strin
     if (!/^[A-Za-z0-9_-]{43}$/.test(admin) || !timingSafeEqual(digest(token), digest(admin))) return { error: 'unauthorized' };
     const d = object(value, ['offer', 'ownerTokenHash']); const offer = object(d.offer, ['version', 'code', 'commitment', 'expiresAt']);
     if (offer.version !== 1 || offer.code !== code || typeof offer.commitment !== 'string' || !hashPattern.test(offer.commitment) ||
-        !Number.isSafeInteger(offer.expiresAt) || Number(offer.expiresAt) <= now || Number(offer.expiresAt) > now + 300000 ||
+        !Number.isSafeInteger(offer.expiresAt) || Number(offer.expiresAt) <= now || Number(offer.expiresAt) > now + PAIRING_CODE_MS ||
         typeof d.ownerTokenHash !== 'string' || !hashPattern.test(d.ownerTokenHash)) throw new SecretFailure('invalid_arguments');
     data = d;
   } else if (action === 'code-commit') {

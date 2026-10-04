@@ -7,7 +7,7 @@ category: Reference
 
 Set up once, pair each receiver with a temporary code and native approval, then use `holocron start`, `status` and `stop`.
 
-This guide targets **0.3.1**, requiring private release publication and an update to the existing relay. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
+This guide targets **0.3.2**, requiring private release publication and an update to the existing relay. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
 
 ## Mac setup
 
@@ -20,7 +20,7 @@ curl -fsSL https://holocron.ashray.xyz/setup.sh | sh -s -- \
 
 Setup installs missing pinned Node/GitHub CLI locally, verifies the private release, builds the AppKit approval helper and reuses your linked Holocron or Board config. Fresh setup creates a private STDIO config. It starts no service. Complete the native Command Line Tools installer or GitHub device login when required, then repeat setup.
 
-Add `~/.local/bin` to PATH, or use `$HOME/.local/bin/holocron`. Repeating `holocron setup` retains the saved setup. Existing permissions, unrelated jobs and old profiles are not silently migrated.
+Add `~/.local/bin` to PATH, or use `$HOME/.local/bin/holocron`. Repeating `holocron setup` retains the saved setup and refreshes an older owned helper while the operator is stopped. Existing permissions, unrelated jobs and old profiles are not silently migrated.
 
 Save your **existing local MCP tunnel** references once:
 
@@ -31,7 +31,26 @@ holocron setup --tunnel-profile /absolute/private/existing-tunnel.yaml \
 
 The private profile retains its existing tunnel identity, control-plane settings, workspace associations and credential references. Holocron supplies the installed STDIO main command internally for its owned run. It provisions no tunnel or account. The official tunnel client/profile must already be installed and authorized. Setup resolves package-manager executable aliases such as `/opt/homebrew/bin/tunnel-client` once and saves their guarded canonical target. If a package upgrade removes that target, repeat setup with the alias to bind the new executable. Stop a manually running tunnel through its existing owner before switching supervision.
 
-For an existing unlinked Board config, add `--local-config /absolute/private/local.json`. To reuse an existing secret pairing explicitly, add `--mac-config /absolute/private/mac.json`. `--prompt /absolute/private/helper` reuses a trusted helper; code pairing requires the 0.3.0 or later helper's `--pair-code` support. The default build supplies it.
+For an existing unlinked Board config, add `--local-config /absolute/private/local.json`. To reuse an existing secret pairing explicitly, add `--mac-config /absolute/private/mac.json`. `--prompt /absolute/private/helper` reuses an operator-managed helper; use the 0.3.2 helper for masked typing and Cmd+V. The default build supplies it and the existing green H app icon, rasterized from the site's favicon asset. Native Edit menu actions follow the focused AppKit field editor, as in Fidelius; secure fields retain native masking and copy/cut restrictions. [AppKit responder-chain behavior](https://developer.apple.com/videos/play/wwdc2022/10075/) explains this routing.
+
+## Upgrade a saved Mac setup
+
+Publish the new private release and deploy the updated relay first. Stop the existing owned supervisor, then install and rebuild from 0.3.2:
+
+```sh
+holocron stop
+hc_bootstrap=$(mktemp)
+curl -fsSL https://holocron.ashray.xyz/install.sh -o "$hc_bootstrap"
+sh "$hc_bootstrap" --version 0.3.2
+rm -f "$hc_bootstrap"
+"$HOME/.local/bin/holocron" --version
+"$HOME/.local/bin/holocron" setup --rebuild-prompt
+"$HOME/.local/bin/holocron" start
+```
+
+The version check must print `0.3.2`. Keep the same `HOLOCRON_CLI_HOME` override, if your setup uses one. Setup builds in a fresh private versioned directory, copies its icon, and atomically saves the new helper reference only after success. It retains pairing credentials, expiry, pending recovery, Board state and tunnel references. Older helpers remain for existing explicit pairing-file commands. Build/save failures retain the previous setup and remove only the new owned helper. No fresh `pair` is needed. Ordinary `setup` also refreshes older generated helpers; external `--prompt` helpers stay operator-controlled until explicitly rebuilt. Setup refuses while the owned supervisor runs. Restarting makes the new code and helper effective for saved services.
+
+Receivers should install 0.3.2 with the same installer command to obtain the full fifteen-minute request window. Existing saved pairings remain compatible. Earlier clients still use their earlier deadline limits; upgrade both endpoints before new code pairing.
 
 ## Pair a receiving computer
 
@@ -39,7 +58,7 @@ For an existing unlinked Board config, add `--local-config /absolute/private/loc
 holocron pair
 ```
 
-Give the printed five-minute code to your intended receiver through your trusted conversation. They run the [single setup command](secret-requests.md#install-and-pair-with-one-command) and give you eight verification digits. Enter them in the native Mac prompt, review recipient/relay/expiry, then choose **Approve pairing**. The prompt does not reveal the expected number.
+Give the printed fifteen-minute code to your intended receiver through your trusted conversation. They run the [single setup command](secret-requests.md#install-and-pair-with-one-command) and give you eight verification digits. Enter them in the native Mac prompt, review recipient/relay/expiry, then choose **Approve pairing**. The prompt does not reveal the expected number.
 
 One code admits one receiver proposal. Mismatch, cancellation or expiry requires a fresh code. Saved pairing lasts seven days; every key request still needs native approval. A code alone grants no lasting authority.
 
@@ -75,7 +94,7 @@ Success is `{"revoked":true}`. Stop the service and retain its config until ackn
 | `pairing_peer_mismatch` | Cancel, confirm the intended computer, then use a fresh session |
 | `pairing_incomplete_revoke_mac_config` | Run `holocron pair --recover`; acknowledgement or actual expiry is required |
 | `unsafe_tunnel_client` | Check executable ownership, write permissions and target; repeat setup with the trusted installed alias |
-| Existing helper build directory after an interrupted setup | Reuse its verified helper explicitly with `--prompt`; setup never replaces that directory automatically |
+| Interrupted helper build or old helper behavior | Stop the owned run and use `holocron setup --rebuild-prompt`; builds use a fresh directory and preserve existing helpers |
 | Stale owned runtime socket | Run `holocron setup --recover`, then start |
 | `setup_busy_or_interrupted_inspect_setup_lock` | Verify the other setup exited, then remove only its empty private `setup.lock` directory |
 | Expired receiver | Get a fresh code and repeat receiver setup with `--renew` |
@@ -88,7 +107,7 @@ Reuse the configured Vercel/Upstash backend. The function needs `UPSTASH_REDIS_R
 
 POST JSON rejects browser Origins/query strings, uses no-store responses and sanitizes backend failures. Stored state contains public commitments/keys, credential hashes, metadata and ciphertext. Disable external payload/header capture and redact Authorization.
 
-Code sessions last five minutes with atomic one-proposal transitions, one ciphertext consumption and a 15-minute reuse tombstone. Global code traffic is bounded at 600 operations/minute. Channel quotas remain ten requests/hour and 240 operations/minute. A compromised relay can deny service. Clocks must be accurate; both endpoints need HTTPS.
+Code sessions last fifteen minutes with atomic one-proposal transitions, one ciphertext consumption and a 15-minute reuse tombstone. Global code traffic is bounded at 600 operations/minute. Channel quotas remain ten requests/hour and 240 operations/minute. A compromised relay can deny service. Clocks must be accurate; both endpoints need HTTPS.
 
 ## Security and expiry reference
 
@@ -98,13 +117,13 @@ This is a commitment-based short authentication flow, not a password protocol. A
 
 Enrollment binds the complete descriptor and pinned Mac key. Ed25519-signed requests and NaCl box deliveries preserve authenticated endpoint binding and secrecy with a compromised relay. Receiver credentials remain local. Names/recipient/purpose are public metadata; values are nonempty exact UTF-8 up to 4,096 bytes, without NUL or trimming.
 
-Requests expire in three minutes; private receiving files auto-delete after five minutes. Sleep/power loss/worker termination can delay removal. Same-user malware, endpoint memory and downstream copies remain within the endpoint trust boundary; secure erasure is not promised.
+Pairing code sessions and key requests expire after fifteen minutes from creation. The prompt shows the exact deadline; joining a session late or approaching the seven-day pairing expiry leaves less time. Received plaintext files still auto-delete five minutes after receipt, independently of approval time. Sleep/power loss/worker termination can delay removal. Same-user malware, endpoint memory and downstream copies remain within the endpoint trust boundary; secure erasure is not promised.
 
 The commitment rationale follows [RFC 6189 section 4.4.1.1](https://www.rfc-editor.org/rfc/rfc6189.html#section-4.4.1.1), without implementing ZRTP. The existing unsuppressed site advisory GHSA-ch52-4w7c-c8xp remains separate.
 
 ## Acceptance on your devices
 
-1. Pair the actual receiver and observe native number entry/approval. Run the [harmless PASS/FAIL check](secret-requests.md#test-the-connection) before real values.
+1. Pair the actual receiver and observe native number entry/approval. Run the [harmless PASS/FAIL check](secret-requests.md#test-the-connection) before real values. For paste acceptance, manually copy only `holocron-acceptance-2026`, focus `TEST_API_KEY`, type a character, press Cmd+A then Cmd+V, and confirm masked bullets. Repeat with **Edit > Paste**, then approve and expect PASS. Confirm the native Dock/app-switcher uses the same green H as the website. This deliberately replaces your clipboard with harmless test text; perform it yourself when ready.
 2. Observe native Cancel, receiver Ctrl+C, wrong code, wrong verification number and expiry. Each must fail without key files.
 3. Repeat without manual cleanup and observe absence after five minutes. Sleep/worker termination can delay deletion.
 4. Stop, revoke and confirm acknowledgement. The next request must fail without files. Pair fresh endpoints before real keys.

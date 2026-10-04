@@ -1,5 +1,7 @@
 // Shared wire contract. These objects contain request metadata or ciphertext only.
-export const SECRET_REQUEST_MS = 180_000;
+export const SECRET_REQUEST_MS = 15 * 60_000;
+export const PAIRING_CODE_MS = 15 * 60_000;
+// Plaintext lifetime starts only after receipt, independently of human approval.
 export const SECRET_FILE_MS = 300_000;
 export const PAIRING_MS = 7 * 86_400_000;
 export const SECRET_WIRE_LIMIT = 64 * 1024;

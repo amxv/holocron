@@ -96,13 +96,16 @@ test('Mac prompt builds from packaged native source without launching a GUI or i
   assert.equal((await stat(helper)).mode & 0o777, 0o700);
   assert.equal((await stat(directory)).mode & 0o777, 0o700);
   assert.ok((await stat(helper)).size > 10_000);
+  const icon = join(directory, 'HolocronIcon.png');
+  assert.equal((await stat(icon)).mode & 0o777, 0o600);
+  assert.deepEqual(await readFile(icon), await readFile(new URL('../native/HolocronIcon.png', import.meta.url)));
   await assert.rejects(buildSecretPrompt(directory, new AbortController().signal));
 });
 
 test('an expiring requester destroys its pending request without materializing a secret', async () => {
   const f = pairings(); const operations: string[] = []; let wrote = false;
   await assert.rejects(askSecrets({ ...f.receiver, channel: { ...f.receiver.channel, expiresAt: Date.now() + 30 } }, ['API_KEY'], 'Expiry test', new AbortController().signal, {
-    interval: 2, call: async (action) => { operations.push(action); return action === 'receive' ? { state: 'pending' } : { ok: true }; },
+    interval: 2, call: async (action, data) => { operations.push(action); if (action === 'create') assert.ok((data as { expiresAt: number }).expiresAt <= Date.now() + 30); return action === 'receive' ? { state: 'pending' } : { ok: true }; },
     write: async () => { wrote = true; return '/unexpected'; },
   }));
   assert.equal(wrote, false); assert.equal(operations.at(-1), 'cancel');

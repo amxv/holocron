@@ -119,7 +119,7 @@ if ! gh auth status --hostname github.com >/dev/null 2>&1; then
   else printf 'Have the device owner run: %s auth login --hostname github.com --git-protocol https --web\nThen repeat this setup command.\n' "$(command -v gh)" >&2; exit 1; fi
 fi
 hc_fetch https://holocron.ashray.xyz/install.sh "$hc_temp/install.sh"
-sh "$hc_temp/install.sh" --version 0.3.1
+sh "$hc_temp/install.sh" --version 0.3.2
 if [ "$hc_os" = Darwin ] && [ "${1:-}" != receiver ] && ! /usr/bin/xcrun --find swiftc >/dev/null 2>&1; then
   /usr/bin/xcode-select --install >/dev/null 2>&1 || true
   fail 'Complete the native Command Line Tools installation, then repeat this command.'

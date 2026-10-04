@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "holocron",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "title": "Holocron",
   "description": "Explicitly share a Mac clipboard snapshot or selected Finder file with Holocron for ChatGPT.",
   "icon": "icon.png",

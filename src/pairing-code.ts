@@ -38,10 +38,10 @@ export async function offerPairing(options: { directory: string; relay: string; 
   const commitment = offerCommitment(options.relay, expiresAt, mac);
   const offer: CodeOffer = { version: 1, code: commitmentCode(commitment), commitment, expiresAt };
   const call = (dependencies.call ?? ((c, t) => transport(options.relay, c, t)))(offer.code, token);
-  const deadline = AbortSignal.any([signal, AbortSignal.timeout(CODE_MS)]); let opened = false; let paired: string | undefined;
+  const deadline = AbortSignal.any([signal, AbortSignal.timeout(Math.max(1, expiresAt - Date.now()))]); let opened = false; let paired: string | undefined;
   try {
     acknowledged(await (dependencies.call ?? ((c, t) => transport(options.relay, c, t)))(offer.code, admin)('code-open', { offer, ownerTokenHash: tokenHash(token) }, deadline));
-    opened = true; dependencies.output(`Pairing code: ${displayCode(offer.code)} (expires in five minutes)`);
+    opened = true; dependencies.output(`Pairing code: ${displayCode(offer.code)} (expires in fifteen minutes)`);
     const reply = await poll(call, 'committed', deadline, dependencies.interval ?? 1000);
     const receiver = parseReceiverCommit(reply.commit); // Freeze locally BEFORE revealing the Mac key.
     acknowledged(await call('code-reveal-mac', mac, deadline));
@@ -93,7 +93,7 @@ export async function receivePairing(options: { directory: string; relay: string
   relayUrl(options.relay); const code = cleanCode(options.code); const token = freshNonce();
   const call = (dependencies.call ?? ((c, t) => transport(options.relay, c, t)))(code, token);
   const offer = parseOffer((await call('code-peek', {}, signal)).offer, code);
-  const deadline = AbortSignal.any([signal, AbortSignal.timeout(offer.expiresAt - Date.now())]);
+  const deadline = AbortSignal.any([signal, AbortSignal.timeout(Math.max(1, offer.expiresAt - Date.now()))]);
   const prepared = await prepareReceiver(options.directory, options.relay, options.recipient);
   let committed = false; let completed = false;
   try {

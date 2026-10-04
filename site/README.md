@@ -42,7 +42,7 @@ Static content needs no credentials. No runtime directory is loaded. Keep privat
 
 `vercel.json` owns deployment commands and response headers. Keep the explicit Bun build-tool pin: `packageManager` alone does not select Vercel's build-container Bun. Do not set `bunVersion`; the secret API uses the Node runtime.
 
-`public/install.sh` is copied to `/install.sh`, pinned to **0.3.1**, requiring a new private release. `public/setup.sh` becomes `/setup.sh`; it installs missing user-local Node 24.21.0/GitHub CLI 2.102.0 from fixed official SHA-256 pins, then authenticates using this device's GitHub authorization and runs the private installer/setup. Earlier published tags/assets stay immutable. Never publish the private bundle under `public/`. See [release maintenance](../docs/operations.md#publish-the-private-cli-release-and-installer).
+`public/install.sh` is copied to `/install.sh`, pinned to **0.3.2**, requiring a new private release. `public/setup.sh` becomes `/setup.sh`; it installs missing user-local Node 24.21.0/GitHub CLI 2.102.0 from fixed official SHA-256 pins, then authenticates using this device's GitHub authorization and runs the private installer/setup. Earlier published tags/assets stay immutable. Never publish the private bundle under `public/`. See [release maintenance](../docs/operations.md#publish-the-private-cli-release-and-installer).
 
 ## Separate secret API
 

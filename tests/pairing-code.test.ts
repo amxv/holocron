@@ -8,7 +8,7 @@ import { isolatedRedis } from './secret-fixtures.ts';
 import { secretRelay } from '../src/secret-relay.ts';
 import { relayClient } from '../src/secret-client.ts';
 import { offerPairing, receivePairing } from '../src/pairing-code.ts';
-import { checkMacReveal, commitmentCode, offerCommitment, parseOffer, verificationCode } from '../src/pairing-code-wire.ts';
+import { CODE_MS, checkMacReveal, commitmentCode, offerCommitment, parseOffer, verificationCode } from '../src/pairing-code-wire.ts';
 import { decode, encode } from '../src/secret-crypto.ts';
 import { prepareReceiver } from '../src/secret-enrollment.ts';
 import { readPairing } from '../src/secret-pairing.ts';
@@ -28,7 +28,7 @@ async function fixture(t: Parameters<typeof temporary>[0]) {
   const macDirectory = join(root, 'mac'); const receiverDirectory = join(root, 'receiver');
   const options = { directory: macDirectory, relay, prompt, adminFile };
   const provision = async (pairing: Parameters<typeof relayClient>[0], token: string, signal: AbortSignal) => relayClient({ ...pairing, token }, fetcher)('provision', pairing.channel, signal);
-  return { root, redis, admin, call, code, output, emit, wire, options, receiverDirectory, relay, provision, expire: () => { offset += 301000; } };
+  return { root, redis, admin, call, code, output, emit, wire, options, receiverDirectory, relay, provision, expire: () => { offset += CODE_MS + 1000; } };
 }
 
 test('real Redis code pairing freezes peers, requires intended receiver verification and keeps receiver private material local', async t => {
@@ -36,6 +36,7 @@ test('real Redis code pairing freezes peers, requires intended receiver verifica
   const mac = offerPairing(f.options, new AbortController().signal, { call: f.call, interval: 2, output: f.emit, provision: f.provision,
     approve: async number => { approvals++; assert.equal(number, expected); return true; } });
   const code = await f.code;
+  assert.match(f.output[0]!, /expires in fifteen minutes/);
   const receiver = await receivePairing({ directory: f.receiverDirectory, relay: f.relay, recipient: 'Intended Linux agent', code }, new AbortController().signal,
     { call: f.call, interval: 2, output: line => { expected = /Verification number: (\d{8})/.exec(line)![1]!; } });
   const macConfig = await mac; assert.equal(approvals, 1);

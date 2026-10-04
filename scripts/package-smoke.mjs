@@ -31,10 +31,12 @@ try {
   assert.ok(paths.includes('docs/context-files.md'));
   assert.ok(paths.includes('docs/operations.md'));
   assert.ok(paths.includes('native/HolocronSecrets.swift'));
+  assert.ok(paths.includes('native/HolocronIcon.png'));
+  assert.ok(paths.includes('native/HolocronIcon.svg'));
   assert.ok(paths.includes('docs/secret-requests.md'));
   assert.ok(paths.includes('plugins/holocron/plugin.json'));
   assert.ok(paths.includes('plugins/holocron/.app.json'));
-  const allowed = new Set(['README.md', 'package.json', 'native/HolocronSecrets.swift', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
+  const allowed = new Set(['README.md', 'package.json', 'native/HolocronSecrets.swift', 'native/HolocronIcon.png', 'native/HolocronIcon.svg', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
     ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel',
       'overview', 'getting-started', 'reference', 'troubleshooting', 'secret-requests', 'secret-operations', 'raycast'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
