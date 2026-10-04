@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile, symlink, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pairings } from '../tests/secret-fixtures.ts';
@@ -62,6 +62,34 @@ else process.exit(1);
     assert.match(execFileSync(process.execPath, [join(marker.release, 'dist', legacy), '--help'], { encoding: 'utf8', env }), /Usage:/);
   }
   assert.equal((await readdir(temporary)).some(entry => entry.startsWith('holocron-install.')), false);
+  if (process.platform === 'darwin') {
+    // The published 0.3.0 failure was a package-manager symlink rejected as a
+    // native helper. Exercise the actual installed CLI, default Swift build,
+    // setup rollback and repeatable binding without touching any live config.
+    const macHome = join(home, 'mac-profile'); await mkdir(macHome, { mode: 0o700 });
+    const admin = join(macHome, 'admin'); await writeFile(admin, Buffer.alloc(32, 7).toString('base64url'), { mode: 0o600 });
+    const local = join(macHome, 'board-local.json'); const localBytes = JSON.stringify({ transport: 'stdio', stateDirectory: join(macHome, 'board-state') });
+    const tunnelProfile = join(macHome, 'board.yaml'); await writeFile(tunnelProfile, 'SYNTHETIC_PROFILE', { mode: 0o600 });
+    const tunnelTarget = join(tools, 'tunnel-real'); await writeFile(tunnelTarget, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+    const tunnelAlias = join(tools, 'tunnel-client'); await symlink(tunnelTarget, tunnelAlias);
+    const setupArgs = ['setup', '--admin-file', admin, '--local-config', local, '--tunnel-profile', tunnelProfile, '--tunnel-client', tunnelAlias];
+    const macCli = () => execFileSync(holocron, setupArgs, { cwd: '/', env: { ...env, HOLOCRON_CLI_HOME: macHome }, encoding: 'utf8', stdio: 'pipe' });
+    await writeFile(local, '{}', { mode: 0o600 });
+    assert.throws(macCli, /setup_operation_failed/);
+    assert.equal((await readdir(macHome)).includes('native-prompt-v3'), false);
+    assert.equal((await readdir(macHome)).includes('setup.lock'), false);
+    await writeFile(local, localBytes, { mode: 0o600 });
+    assert.match(macCli(), /Mac setup saved/);
+    const setupPath = join(macHome, 'setup.json'); const setupBefore = await readFile(setupPath);
+    const setup = JSON.parse(setupBefore.toString('utf8'));
+    assert.equal(setup.tunnelClient, tunnelTarget);
+    assert.equal(setup.prompt, join(macHome, 'native-prompt-v3/holocron-secrets-ui'));
+    assert.equal((await stat(setup.prompt)).mode & 0o777, 0o700);
+    assert.match(macCli(), /Mac setup saved/); assert.deepEqual(await readFile(setupPath), setupBefore);
+    assert.equal(await readFile(local, 'utf8'), localBytes); assert.equal(await readFile(tunnelProfile, 'utf8'), 'SYNTHETIC_PROFILE');
+    assert.equal((await readdir(macHome)).includes('setup.lock'), false);
+    console.log('Installed Mac setup regression passed: tunnel alias resolves to guarded target, native helper builds automatically, failure removes owned helper/lock, repeat setup preserves Board references.');
+  }
   // Execute the actual public setup shell and installed Node CLI with Linux's
   // platform branches selected. This is not an actual Linux kernel/ABI test.
   const receiverProfile = join(home, 'receiver-profile'); await mkdir(receiverProfile, { mode: 0o700 });

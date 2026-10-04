@@ -7,7 +7,7 @@ category: Reference
 
 Set up once, pair each receiver with a temporary code and native approval, then use `holocron start`, `status` and `stop`.
 
-This guide targets **0.3.0**, requiring private release publication and an update to the existing relay. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
+This guide targets **0.3.1**, requiring private release publication and an update to the existing relay. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
 
 ## Mac setup
 
@@ -29,9 +29,9 @@ holocron setup --tunnel-profile /absolute/private/existing-tunnel.yaml \
   --tunnel-client /absolute/path/to/tunnel-client
 ```
 
-The private profile retains its existing tunnel identity, control-plane settings, workspace associations and credential references. Holocron supplies the installed STDIO main command internally for its owned run. It provisions no tunnel or account. The official tunnel client/profile must already be installed and authorized. Stop a manually running tunnel through its existing owner before switching supervision.
+The private profile retains its existing tunnel identity, control-plane settings, workspace associations and credential references. Holocron supplies the installed STDIO main command internally for its owned run. It provisions no tunnel or account. The official tunnel client/profile must already be installed and authorized. Setup resolves package-manager executable aliases such as `/opt/homebrew/bin/tunnel-client` once and saves their guarded canonical target. If a package upgrade removes that target, repeat setup with the alias to bind the new executable. Stop a manually running tunnel through its existing owner before switching supervision.
 
-For an existing unlinked Board config, add `--local-config /absolute/private/local.json`. To reuse an existing secret pairing explicitly, add `--mac-config /absolute/private/mac.json`. `--prompt /absolute/private/helper` reuses a trusted helper; code pairing requires the 0.3.0 helper's `--pair-code` support. The default build supplies it.
+For an existing unlinked Board config, add `--local-config /absolute/private/local.json`. To reuse an existing secret pairing explicitly, add `--mac-config /absolute/private/mac.json`. `--prompt /absolute/private/helper` reuses a trusted helper; code pairing requires the 0.3.0 or later helper's `--pair-code` support. The default build supplies it.
 
 ## Pair a receiving computer
 
@@ -74,6 +74,8 @@ Success is `{"revoked":true}`. Stop the service and retain its config until ackn
 | Wrong, expired or already used code | Run `holocron pair` again |
 | `pairing_peer_mismatch` | Cancel, confirm the intended computer, then use a fresh session |
 | `pairing_incomplete_revoke_mac_config` | Run `holocron pair --recover`; acknowledgement or actual expiry is required |
+| `unsafe_tunnel_client` | Check executable ownership, write permissions and target; repeat setup with the trusted installed alias |
+| Existing helper build directory after an interrupted setup | Reuse its verified helper explicitly with `--prompt`; setup never replaces that directory automatically |
 | Stale owned runtime socket | Run `holocron setup --recover`, then start |
 | `setup_busy_or_interrupted_inspect_setup_lock` | Verify the other setup exited, then remove only its empty private `setup.lock` directory |
 | Expired receiver | Get a fresh code and repeat receiver setup with `--renew` |

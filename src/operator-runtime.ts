@@ -10,6 +10,7 @@ import { serveSecrets } from './secret-workflow.ts';
 import { relayClient } from './secret-client.ts';
 import { SecretFailure } from './secret-shapes.ts';
 import type { SetupProfile } from './setup-profile.ts';
+import { validateTunnelExecutable } from './tunnel-executable.ts';
 
 const socketPath = (home: string) => join(home, 'operator.sock');
 const quote = (v: string) => "'" + v.replaceAll("'", "'\\''") + "'";
@@ -57,7 +58,7 @@ export async function startOperator(home: string, signal: AbortSignal, output: (
   const savedPairings = await Promise.all(profile.macConfigs.map(path => readPairing(path, 'mac', true)));
   const pairings = savedPairings.filter(p => p.channel.expiresAt > Date.now());
   if (!pairings.length && !profile.tunnelProfile) throw new SecretFailure('operator_no_components_pair_or_configure_tunnel');
-  if (profile.tunnelProfile) { await readPrivateConfig(profile.tunnelProfile); await promptExecutable(profile.tunnelClient!); }
+  if (profile.tunnelProfile) { await readPrivateConfig(profile.tunnelProfile); await validateTunnelExecutable(profile.tunnelClient!); }
   const stop = new AbortController(); const deadline = AbortSignal.any([signal, stop.signal]);
   const components: Record<string, unknown>[] = pairings.map(p => ({ component: 'secrets', recipient: p.channel.recipient, expiresAt: p.channel.expiresAt, state: 'starting', backend: 'unverified' }));
   const tunnel: Record<string, unknown> = { state: profile.tunnelProfile ? 'starting' : 'not-configured', readiness: 'unverified', discovery: 'unverified' };

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createServer } from 'node:net';
 import { once } from 'node:events';
-import { mkdir, readFile, readdir, stat, writeFile, chmod } from 'node:fs/promises';
+import { mkdir, readFile, readdir, stat, writeFile, chmod, symlink, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { temporary } from './bridge-fixtures.ts';
 import { setupMac, readSetup, saveSetup } from '../src/setup-profile.ts';
@@ -12,6 +12,7 @@ import { linkConfig } from '../src/holocron-profile.ts';
 import { runHolocronCli } from '../src/holocron-main.ts';
 import { encode } from '../src/secret-crypto.ts';
 import nacl from 'tweetnacl';
+import { resolveTunnelExecutable } from '../src/tunnel-executable.ts';
 
 async function fixture(t: Parameters<typeof temporary>[0]) {
   const root = await temporary(t); const home = join(root, 'profile'); await mkdir(home, { mode: 0o700 });
@@ -51,6 +52,32 @@ test('setup failure and retry remove only their lock; explicit profile binding n
   assert.equal(args[args.indexOf('--profile-file') + 1], profile);
   assert.match(args[args.indexOf('--mcp.command') + 1]!, /stdio.*--local-config/);
   assert.equal(args.some(s => /admin-key|runtime-api-key|tunnel-id/.test(s)), false);
+});
+test('package-manager tunnel aliases bind a guarded canonical target without relaxing native helper validation', async t => {
+  const f = await fixture(t); const profile = join(f.root, 'tunnel.yaml');
+  await writeFile(profile, 'SYNTHETIC_PROFILE', { mode: 0o600 });
+  const target = join(f.root, 'tunnel-real'); await writeFile(target, '#!/bin/sh\nexit 1\n', { mode: 0o700 });
+  const alias = join(f.root, 'tunnel-client'); await symlink(target, alias);
+  const flags = { '--admin-file': f.admin, '--prompt': f.prompt, '--tunnel-profile': profile, '--tunnel-client': alias };
+  await setupMac(f.home, flags, f.signal);
+  assert.equal((await readSetup(f.home)).tunnelClient, target);
+  const before = await readFile(join(f.home, 'setup.json'));
+  await chmod(target, 0o722); await assert.rejects(setupMac(f.home, flags, f.signal), /unsafe_tunnel_client/);
+  await chmod(target, 0o600); await assert.rejects(resolveTunnelExecutable(alias), /unsafe_tunnel_client/);
+  await chmod(target, 0o700);
+  await assert.rejects(setupMac(f.home, { ...flags, '--prompt': alias }, f.signal), /unsafe_prompt/);
+  await assert.rejects(resolveTunnelExecutable(f.root), /unsafe_tunnel_client/);
+  await assert.rejects(resolveTunnelExecutable(join(f.root, 'missing')), /unsafe_tunnel_client/);
+  await assert.rejects(resolveTunnelExecutable('relative'), /unsafe_tunnel_client/);
+  const other = join(f.root, 'other'); await writeFile(other, '#!/bin/sh\nexit 1\n', { mode: 0o700 });
+  await rm(alias); await symlink(other, alias);
+  assert.equal((await readSetup(f.home)).tunnelClient, target);
+  assert.deepEqual(await readFile(join(f.home, 'setup.json')), before);
+  // A replaced canonical target must fail closed at start even if its new target
+  // would otherwise be a valid executable. Explicit setup is needed to rebind.
+  await rm(target); await symlink(other, target);
+  await assert.rejects(startOperator(f.home, f.signal, () => {}), /unsafe_tunnel_client/);
+  assert.deepEqual(await operatorControl(f.home, 'status'), { runtime: 'stopped' });
 });
 test('owned supervisor start/status/stop is idempotent; failure rollback and stale socket recovery preserve external runtimes', async t => {
   const f = await fixture(t); const tunnel = join(f.root, 'tunnel'); const profile = join(f.root, 'profile.yaml');

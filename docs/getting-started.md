@@ -30,12 +30,12 @@ set +x
 node --version   # must be v24.21.0
 hc_bootstrap=$(mktemp)
 curl -fsSL https://holocron.ashray.xyz/install.sh -o "$hc_bootstrap"
-sh "$hc_bootstrap" --version 0.3.0
+sh "$hc_bootstrap" --version 0.3.1
 rm "$hc_bootstrap"
-"$HOME/.local/bin/holocron" --version   # must be 0.3.0
+"$HOME/.local/bin/holocron" --version   # must be 0.3.1
 ```
 
-This guide targets 0.3.0; publish its new private release and update the existing relay before using the new flow. The installer verifies GitHub-recorded SHA-256 and installs `~/.local/bin/holocron`, pinned to your absolute Node executable. Add `~/.local/bin` to PATH, or use that full path. CLI-only installation starts no service and pairs no endpoints. [Installation reference](operations.md#one-command-cli-installation) covers custom paths, upgrades and removal.
+This guide targets 0.3.1; publish its new private release and update the existing relay before using the new flow. The installer verifies GitHub-recorded SHA-256 and installs `~/.local/bin/holocron`, pinned to your absolute Node executable. Add `~/.local/bin` to PATH, or use that full path. CLI-only installation starts no service and pairs no endpoints. [Installation reference](operations.md#one-command-cli-installation) covers custom paths, upgrades and removal.
 
 ## Choose your workflow
 

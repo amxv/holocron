@@ -7,6 +7,7 @@ import { writePairingJson } from './secret-enrollment.ts';
 import { promptExecutable, readPairing, relayUrl } from './secret-pairing.ts';
 import { buildSecretPrompt } from './secret-prompt-build.ts';
 import { object, SecretFailure } from './secret-shapes.ts';
+import { resolveTunnelExecutable } from './tunnel-executable.ts';
 
 export const DEFAULT_RELAY = 'https://holocron.ashray.xyz/api/secrets';
 export interface SetupProfile {
@@ -47,27 +48,36 @@ export async function setupMac(home: string, flags: Record<string, string>, sign
   if (!/^[A-Za-z0-9_-]{43}$/.test(admin)) throw new SecretFailure('invalid_admin_file');
   const relay = flags['--relay'] ?? previous?.relay ?? DEFAULT_RELAY; relayUrl(relay);
   const tunnelProfile = flags['--tunnel-profile'] ?? previous?.tunnelProfile;
-  const tunnelClient = flags['--tunnel-client'] ?? previous?.tunnelClient;
+  let tunnelClient = flags['--tunnel-client'] ?? previous?.tunnelClient;
   if (Boolean(tunnelProfile) !== Boolean(tunnelClient)) throw new SecretFailure('setup_needs_tunnel_profile_and_client');
-  if (tunnelProfile && tunnelClient) { canonicalPath(tunnelProfile); await readPrivateConfig(tunnelProfile); await promptExecutable(tunnelClient); }
+  if (tunnelProfile && tunnelClient) { canonicalPath(tunnelProfile); await readPrivateConfig(tunnelProfile); tunnelClient = await resolveTunnelExecutable(tunnelClient); }
   const reuse = flags['--mac-config']; const macConfigs = previous?.macConfigs.slice() ?? [];
   if (reuse) { canonicalPath(reuse); const pairing = await readPairing(reuse, 'mac'); if (pairing.relay !== relay) throw new SecretFailure('pairing_peer_mismatch'); if (!macConfigs.includes(reuse)) macConfigs.push(reuse); }
   await privateDirectory(home);
   let prompt = flags['--prompt'] ?? previous?.prompt;
+  let builtDirectory: string | undefined;
   if (prompt) await promptExecutable(prompt);
   else {
     // A failed build removes its owned destination, so setup is safely retryable.
     prompt = await buildSecretPrompt(join(home, 'native-prompt-v3'), signal);
+    builtDirectory = join(home, 'native-prompt-v3');
   }
-  let localConfig = flags['--local-config'] ?? previous?.localConfig;
-  if (localConfig) await linkConfig(home, localConfig);
-  else {
-    try { localConfig = await linkedConfig(home); }
-    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; localConfig = await initConfig(home); }
+  try {
+    let localConfig = flags['--local-config'] ?? previous?.localConfig;
+    if (localConfig) await linkConfig(home, localConfig);
+    else {
+      try { localConfig = await linkedConfig(home); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; localConfig = await initConfig(home); }
+    }
+    const next: SetupProfile = { version: 1, role: 'mac', relay, adminFile, prompt, macConfigs, localConfig,
+      ...(tunnelProfile ? { tunnelProfile, tunnelClient } : {}), ...(previous?.pendingMacDirectory ? { pendingMacDirectory: previous.pendingMacDirectory } : {}) };
+    await saveSetup(home, next); return next;
+  } catch (error) {
+    // Only a helper newly built by this attempt is removed. Existing helpers,
+    // linked Board configs and completed setup remain untouched on failure.
+    if (builtDirectory) await rm(builtDirectory, { recursive: true });
+    throw error;
   }
-  const next: SetupProfile = { version: 1, role: 'mac', relay, adminFile, prompt, macConfigs, localConfig,
-    ...(tunnelProfile ? { tunnelProfile, tunnelClient } : {}), ...(previous?.pendingMacDirectory ? { pendingMacDirectory: previous.pendingMacDirectory } : {}) };
-  await saveSetup(home, next); return next;
 }
 export async function savedReceiver(env = process.env): Promise<string> {
   const p = await readSetup(await holocronHome(env));

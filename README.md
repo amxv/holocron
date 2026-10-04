@@ -2,7 +2,7 @@
 
 Share selected context with an agent on another computer, and privately provide the API keys it asks for. You choose the clipboard text or UTF-8 file. You approve each key request in a native Mac prompt.
 
-[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node/GitHub CLI locally and uses this computer's own access to the **private `amxv/holocron` repository**. The 0.3.0 workflow requires publishing its new private release and updating the existing relay; earlier published releases stay immutable.
+[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node/GitHub CLI locally and uses this computer's own access to the **private `amxv/holocron` repository**. The 0.3.1 workflow requires publishing its new private release and updating the existing relay; earlier published releases stay immutable.
 
 Set up the Mac once, then use `holocron pair`, `holocron start`, `holocron status` and `holocron stop`. The receiver installs and pairs with one command:
 
