@@ -5,7 +5,7 @@ order: 13
 category: "Reference"
 ---
 
-Holocron is the product and canonical executable. The private package is `@amxv/holocron` `0.2.0`. Its production release is `holocron-v0.2.0`, asset `holocron-0.2.0.tgz`, in the private `amxv/holocron` repository. The independent helper is available as `holocron cloud` or `holocron-cloud`. Intentional compatibility aliases are `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`.
+Holocron is the product and canonical executable. The private package is `@amxv/holocron` `0.3.0`. Its production release is `holocron-v0.3.0`, asset `holocron-0.3.0.tgz`, in the private `amxv/holocron` repository. The independent helper is available as `holocron cloud` or `holocron-cloud`. Intentional compatibility aliases are `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`.
 
 ## Mac CLI
 
@@ -90,7 +90,9 @@ The [one-command installer](operations.md#one-command-cli-installation) places t
 | `holocron status`, `holocron check-config` | Query local state/control or validate config only |
 | `holocron stdio` | Protocol-only MCP subprocess; let the existing tunnel launch it |
 | `holocron cloud probe`, `holocron cloud read`, `holocron cloud write --sha256 DIGEST [--file FILE]` | Delegate the independent Wayland helper |
-| `holocron ask --pairing-file RECEIVER_JSON -m PURPOSE NAME [NAME...]` | Block for Mac approval and print only a private receiving-computer temporary directory path |
+| `holocron setup`, `pair`, `start`, `status`, `stop` | Save Mac setup/tunnel references, native code pairing and owned foreground lifecycle; explicit config flags retain companion compatibility |
+| `holocron setup receiver --code CODE` | Generate credentials locally, verify the Mac commitment, print eight digits for native approval and save receiver pairing |
+| `holocron ask [--pairing-file RECEIVER_JSON] -m PURPOSE NAME [NAME...]` | Use saved or explicit pairing, block for native approval and print only a private temporary directory path |
 | `holocron secrets prepare`, `pair`, `complete` | Receiver-generated credentials, public descriptor exchange, explicit native Mac approval and fingerprint-verified encrypted enrollment |
 | `holocron secrets build-prompt`, `serve`, `revoke`, `cleanup` | Build the Mac UI, serve approved requests, revoke one pairing or remove a returned temporary session |
 

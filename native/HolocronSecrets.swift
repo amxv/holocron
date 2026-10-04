@@ -13,6 +13,7 @@ struct Request {
     let pairing: Bool
     let macFingerprint: String
     let enrollmentExpiry: String
+    var codePairing: Bool = false
 }
 struct Response: Codable {
     let cancelled: Bool
@@ -39,7 +40,9 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         details.isSelectable = true
         details.drawsBackground = false
         details.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        if request.pairing {
+        if request.codePairing {
+            details.string = "Recipient: \(request.recipient)\nRelay: \(request.purpose)\nExpires: \(request.expiry)\n\nGet the eight-digit verification number from the intended receiving computer through your trusted conversation. Enter it below. A wrong number cancels this pairing. Do not approve a number supplied by the relay or another computer."
+        } else if request.pairing {
             details.string = "Recipient: \(request.recipient)\nReceiver fingerprint: \(request.fingerprint)\nDescriptor: \(request.requestID)\nRelay: \(request.purpose)\nPairing expires: \(request.expiry)\nEnrollment expires: \(request.enrollmentExpiry)\n\nMac fingerprint: \(request.macFingerprint)\n\nCompare the receiver fingerprint with the intended computer. Approve only that computer. Give the receiver this Mac fingerprint through your authenticated conversation. No key values are sent by pairing."
         } else {
             details.string = "Recipient: \(request.recipient)\nRecipient fingerprint: \(request.fingerprint)\nRequest: \(request.requestID)\nExpires: \(request.expiry)\n\nPurpose: \(request.purpose)\n\nApprove only these named keys for this recipient and purpose.\nRecipient files auto-delete after five minutes."
@@ -63,7 +66,7 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             let label = NSTextField(labelWithString: name)
             label.font = .monospacedSystemFont(ofSize: 12, weight: .semibold)
             let field = NSSecureTextField()
-            field.placeholderString = "Enter key privately"
+            field.placeholderString = request.codePairing ? "Eight digits from the intended receiver" : "Enter key privately"
             field.translatesAutoresizingMaskIntoConstraints = false
             field.widthAnchor.constraint(equalToConstant: width).isActive = true
             fields[name] = field
@@ -138,7 +141,11 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 // Arguments are public request metadata only. Secret bytes use inherited FD 3.
 let args = Array(CommandLine.arguments.dropFirst())
 let request: Request
-if args.first == "--pair" {
+if args.first == "--pair-code" {
+    guard args.count == 4 else { exit(2) }
+    request = Request(recipient: args[1], fingerprint: "", requestID: "", purpose: args[2], expiry: args[3],
+                      names: ["VERIFICATION_CODE"], pairing: true, macFingerprint: "", enrollmentExpiry: "", codePairing: true)
+} else if args.first == "--pair" {
     guard args.count == 8 else { exit(2) }
     request = Request(recipient: args[1], fingerprint: args[2], requestID: args[3], purpose: args[4], expiry: args[5],
                       names: [], pairing: true, macFingerprint: args[6], enrollmentExpiry: args[7])

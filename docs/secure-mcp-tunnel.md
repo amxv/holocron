@@ -54,6 +54,10 @@ Run the tunnel from the installed package directory. Holocron rejects a state di
 
 ## Map the existing tunnel to Holocron
 
+For daily use, save your already authorized private profile and executable once with `holocron setup --tunnel-profile /absolute/private/profile.yaml --tunnel-client /absolute/path/to/tunnel-client`. Then use `holocron start`, `status` and `stop`; Holocron supplies its installed STDIO main command internally. Stop the old manually supervised instance before switching. Setup preserves profile contents and credential references, and creates no tunnel identity. See [Mac setup and lifecycle](secret-operations.md#start-inspect-and-stop).
+
+The explicit commands below remain the lower-level tunnel-client reference.
+
 The supported mapping is a `main` command binding. Use absolute executable/config paths, quoting each path containing spaces inside the command string. Never place credentials in this string. An example command string is:
 
 ```text

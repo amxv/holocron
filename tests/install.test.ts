@@ -88,7 +88,7 @@ else process.exit(1);
 `, { mode: 0o755 });
   const env = { ...process.env, PATH: fakeBin + ':' + process.env.PATH, TMPDIR: downloads,
     TEST_ASSET: asset, TEST_EVENTS: events };
-  const shell = resolve('site/public/install.sh'); assert.match(await readFile(shell, "utf8"), /^holocron_version=0\.2\.0$/m);
+  const shell = resolve('site/public/install.sh'); assert.match(await readFile(shell, "utf8"), /^holocron_version=0\.3\.0$/m);
   const args = [shell, "--version", "0.1.1", '--prefix', f.options.prefix, '--bin-dir', f.options.bin];
   assert.match((await run('sh', args, { env, cwd: '/' })).stdout, /Holocron 0.1.1 installed/);
   assert.match((await run('sh', args, { env, cwd: '/' })).stdout, /already installed/);

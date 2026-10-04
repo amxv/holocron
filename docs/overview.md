@@ -41,4 +41,4 @@ There is no clipboard watcher, automatic paste, command execution or remote live
 
 Context snapshots are private local **plaintext**. Approved keys exist in private receiver files and endpoint memory. Protect both OS accounts. Revocation prevents future access but cannot erase copies already received. Interrupted clipboard writes are not replayed automatically.
 
-The private 0.2.0 release and secret relay are live; a production synthetic relay probe passed. Actual intended receiver/native GUI acceptance is still pending, and context discovery/viewed clipboard behavior must be checked in your own installation. [Test a harmless key](secret-requests.md#test-the-connection) before real values.
+The 0.3.0 workflow adds automated setup, temporary code pairing and saved daily controls. It requires the new private release and existing relay update. Earlier synthetic relay acceptance does not establish real device/native GUI behavior or remote discovery. [Test a harmless key](secret-requests.md#test-the-connection) before real values.

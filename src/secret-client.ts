@@ -21,7 +21,7 @@ export function relayClient(pairing: Pick<SecretPairing, 'relay' | 'channel' | '
     } finally { reader.releaseLock(); }
     const value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     if (!response.ok || !value || typeof value !== 'object' || Array.isArray(value)) {
-      const known = ['unauthorized', 'request_busy', 'request_replayed', 'request_unavailable', 'rate_limited', 'request_rate_limited', 'pairing_exists'];
+      const known = ['unauthorized', 'request_busy', 'request_replayed', 'request_unavailable', 'rate_limited', 'request_rate_limited', 'pairing_exists', 'pairing_code_expired_or_invalid', 'pairing_code_used'];
       throw new SecretFailure(known.includes(value?.error) ? value.error : 'relay_unavailable');
     }
     return value;

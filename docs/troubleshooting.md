@@ -13,9 +13,9 @@ Confirm `node --version` is `v24.21.0` and run `gh auth status --hostname github
 
 ## Pairing or key requests fail
 
-Complete enrollment within 15 minutes with an independently confirmed Mac fingerprint. Existing destination files are refused. For incomplete provisioning or pending-file cleanup, use [pairing recovery](secret-operations.md#pairing-recovery).
+For code pairing, use a fresh five-minute Mac code and enter the intended receiver's eight digits in the native prompt. Wrong/expired/reused codes require a fresh session. `holocron pair --recover` handles an uncertain provisioning write with acknowledged revocation. The legacy file workflow still requires an independently confirmed Mac fingerprint within 15 minutes. See [pairing recovery](secret-operations.md#pairing-recovery).
 
-For a pending request, keep the Mac awake and `secrets serve` running for the same pairing. Confirm accurate clocks and relay HTTPS access. Requests expire after three minutes and pairing after seven days; Ctrl+C cancels the pending request. Do not print key files or send receiver/Mac configs to diagnose a failure. Revoke with acknowledgement before replacing a pairing.
+Keep the Mac awake with `holocron start` running; `secrets serve --mac-config FILE` remains available for legacy supervision. Confirm accurate clocks and relay HTTPS access. Requests expire after three minutes and pairing after seven days; Ctrl+C cancels. Do not print key files/configs. Bare `status` reports setup components; `status --local-config FILE` retains companion metadata. Use `setup --recover` only for a stopped owned stale runtime socket.
 
 ## The companion is unavailable
 

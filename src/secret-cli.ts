@@ -9,8 +9,11 @@ import { fingerprint } from './secret-crypto.ts';
 import { SecretFailure } from './secret-shapes.ts';
 import type { CliIO } from './cli-main.ts';
 import { buildSecretPrompt } from './secret-prompt-build.ts';
+import { savedReceiver } from './setup-profile.ts';
 
-const help = `Usage: holocron ask --pairing-file <absolute private receiver.json> -m <non-secret purpose> NAME [NAME...]
+const help = `Usage: holocron ask [--pairing-file <absolute private receiver.json>] -m <non-secret purpose> NAME [NAME...]
+       holocron setup receiver --code CODE
+       holocron setup | pair | start | stop | status
        holocron secrets prepare --directory <new private directory> --relay <https://host/api/secrets> --recipient <label>
        holocron secrets pair --directory <new private directory> --descriptor-file <public descriptor staged privately> --receiver-fingerprint <verified public fingerprint> --prompt <absolute AppKit helper> --admin-file <private token file>
        holocron secrets complete --pending-file <private pending.json> --enrollment-file <encrypted enrollment staged privately> --mac-fingerprint <verified public fingerprint>
@@ -21,8 +24,9 @@ const help = `Usage: holocron ask --pairing-file <absolute private receiver.json
        holocron secrets cleanup --directory <private temporary session directory>
 ask runs on the requester and prints only its private temporary directory path; files auto-delete after five minutes.
 The human approves named secrets in the Mac's native prompt. Request expiry is three minutes; Ctrl+C cancels.
-Receiver credentials are generated and stay on that computer. Exchange only descriptor.json and encrypted enrollment.json.
-Pair requires explicit native Mac approval and independently compared public fingerprints. Enrollment expires in 15 minutes; pairing in seven days.
+Receiver credentials are generated and stay on that computer. ask selects the saved receiver unless an explicit file is supplied.
+Code pairing uses a five-minute public code plus eight digits entered in the native Mac prompt. Pairing lasts seven days.
+Legacy file pairing requires independently compared fingerprints; exchange only descriptor.json and encrypted enrollment.json.
 serve is a separate foreground Mac process; it polls every 30 seconds when idle and never changes the tunnel.
 Requires a dedicated encrypted relay; an MCP connection alone cannot deliver requester files.
 Purpose, names and recipient labels are non-secret metadata. Never place key values in arguments.
@@ -38,13 +42,14 @@ function flags(args: string[], expected: string[]): Record<string, string> {
   }
   return out;
 }
-export async function runSecretCli(args: string[], io: CliIO, signal: AbortSignal): Promise<number> {
+export async function runSecretCli(args: string[], io: CliIO, signal: AbortSignal, env = process.env): Promise<number> {
   if ((args.length === 1 && args[0] === '--help') || (args.length === 2 && args[0] === 'ask' && args[1] === '--help')) { io.out(help); return 0; }
   try {
     if (args[0] === 'ask') {
-      if (args[1] !== '--pairing-file' || !args[2] || args[3] !== '-m' || !args[4] || args.length < 6) throw new SecretFailure('invalid_arguments');
-      const pairing = await readPairing(args[2], 'receiver');
-      const directory = await askSecrets(pairing, args.slice(5), args[4], signal);
+      const explicit = args[1] === '--pairing-file'; const purpose = explicit ? 3 : 1;
+      if (args[purpose] !== '-m' || !args[purpose + 1] || args.length < purpose + 3 || explicit && !args[2]) throw new SecretFailure('invalid_arguments');
+      const pairing = await readPairing(explicit ? args[2]! : await savedReceiver(env), 'receiver');
+      const directory = await askSecrets(pairing, args.slice(purpose + 2), args[purpose + 1]!, signal);
       io.out(directory); return 0;
     }
     if (args[0] === 'build-prompt') {

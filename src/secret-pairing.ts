@@ -23,12 +23,13 @@ export async function promptExecutable(path: string): Promise<void> {
     throw new SecretFailure('unsafe_prompt');
   }
 }
-export async function readPairing(path: string, role: 'mac' | 'receiver'): Promise<SecretPairing> {
+export async function readPairing(path: string, role: 'mac' | 'receiver', allowExpired = false): Promise<SecretPairing> {
   const data = object(JSON.parse((await readPrivateConfig(path)).toString('utf8')),
     ['version', 'role', 'relay', 'channel', 'token', 'boxSecret', 'signSecret', 'prompt']);
   if (data.version !== 1 || data.role !== role || typeof data.relay !== 'string' || typeof data.token !== 'string') throw new SecretFailure('invalid_pairing');
   relayUrl(data.relay); encoded(data.token, 32);
-  const channel = parseChannel(data.channel, Date.now());
+  const expiry = (data.channel as { expiresAt?: unknown })?.expiresAt;
+  const channel = parseChannel(data.channel, allowExpired && Number.isSafeInteger(expiry) && Number(expiry) <= Date.now() ? Number(expiry) - 1 : Date.now());
   if (tokenHash(data.token) !== (role === 'mac' ? channel.macTokenHash : channel.receiverTokenHash)) throw new SecretFailure('invalid_pairing');
   if (role === 'mac') {
     encoded(data.boxSecret, 32);

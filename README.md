@@ -2,7 +2,15 @@
 
 Share selected context with an agent on another computer, and privately provide the API keys it asks for. You choose the clipboard text or UTF-8 file. You approve each key request in a native Mac prompt.
 
-[Install Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Installation requires **Node 24.21.0** and your own authenticated GitHub CLI access to the **private `amxv/holocron` repository**. The private 0.2.0 release, hosted installer and encrypted secret relay are live.
+[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node/GitHub CLI locally and uses this computer's own access to the **private `amxv/holocron` repository**. The 0.3.0 workflow requires publishing its new private release and updating the existing relay; earlier published releases stay immutable.
+
+Set up the Mac once, then use `holocron pair`, `holocron start`, `holocron status` and `holocron stop`. The receiver installs and pairs with one command:
+
+```sh
+curl -fsSL https://holocron.ashray.xyz/setup.sh | sh -s -- receiver --code MAC_PAIRING_CODE
+```
+
+Give the printed eight-digit verification number to the Mac owner for native approval. Later, `holocron ask -m "Run my approved task" OPENAI_API_KEY` uses saved pairing. [Mac setup and tunnel references](docs/secret-operations.md) cover the one-time configuration and necessary device login.
 
 | Task | Guide |
 | --- | --- |

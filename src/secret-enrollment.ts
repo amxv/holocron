@@ -46,12 +46,13 @@ async function newDirectory(directory: string): Promise<void> {
   await privateDirectory(dirname(directory));
   await mkdir(directory, { mode: 0o700 }); // Never adopt or overwrite another pairing.
 }
-async function writeJson(path: string, value: unknown): Promise<void> {
+export async function writePairingJson(path: string, value: unknown): Promise<void> {
   const handle = await open(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
   try { await handle.writeFile(JSON.stringify(value) + '\n'); await handle.sync(); }
   catch (error) { await rm(path, { force: true }); throw error; }
   finally { await handle.close(); }
 }
+const writeJson = writePairingJson;
 export async function prepareReceiver(directory: string, relay: string, recipient: string) {
   relayUrl(relay); label(recipient, 64);
   await newDirectory(directory);
@@ -80,13 +81,23 @@ export async function pairReceiver(options: {
   provision?: (pairing: SecretPairing, admin: string, signal: AbortSignal) => Promise<{ ok?: unknown }>;
 } = {}) {
   const descriptor = parseDescriptor(await readJson(options.descriptorFile));
+  return pairDescriptor({ ...options, descriptor }, signal, dependencies);
+}
+export async function pairDescriptor(options: {
+  directory: string; descriptor: ReceiverDescriptor; receiverFingerprint: string; prompt: string; adminFile: string;
+}, signal: AbortSignal, dependencies: {
+  approve?: (prompt: string, approval: PairApproval, signal: AbortSignal) => Promise<boolean>;
+  provision?: (pairing: SecretPairing, admin: string, signal: AbortSignal) => Promise<{ ok?: unknown }>;
+  key?: nacl.BoxKeyPair;
+} = {}) {
+  const descriptor = parseDescriptor(options.descriptor);
   if (!hashPattern.test(options.receiverFingerprint) || options.receiverFingerprint !== receiverFingerprint(descriptor)) {
     throw new SecretFailure('receiver_fingerprint_mismatch');
   }
   await promptExecutable(options.prompt);
   const admin = (await readPrivateConfig(options.adminFile)).toString('utf8').trim(); encoded(admin, 32);
   await newDirectory(options.directory);
-  const key = nacl.box.keyPair(); let provisioning = false;
+  const key = dependencies.key ?? nacl.box.keyPair(); let provisioning = false;
   const pending = AbortSignal.any([signal, AbortSignal.timeout(Math.max(1, descriptor.expiresAt - Date.now()))]);
   try {
     const macBoxPublic = encode(key.publicKey); const expiry = Date.now() + PAIRING_MS;

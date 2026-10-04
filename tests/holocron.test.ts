@@ -51,7 +51,8 @@ test('init refuses existing config; overrides are explicit and OAuth/lifecycle/s
   const override = { ...f.env, BOARD_LOCAL_CONFIG: f.config };
   assert.equal(await run(['copy'], override), 0); assert.equal(f.adapter.reads, 1);
   assert.equal(await run(['list', '--local-config', f.config], { ...f.env, BOARD_LOCAL_CONFIG: '/nonexistent' }), 0);
-  for (const args of [['start'], ['login-install'], ['exec', literal],
+  assert.equal(await run(['start']), 1); // The new owned lifecycle requires explicit saved setup.
+  for (const args of [['login-install'], ['exec', literal],
     ['copy', '--local-config', f.config, '--local-config', f.config], ['link'], ['copy', '--local-config']]) {
     assert.equal(await run(args), 2);
   }

@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { object, parseChannel, parseEnvelope, parseSecretRequest, SecretFailure, SECRET_WIRE_LIMIT, idPattern } from './secret-shapes.ts';
+import { codeRelay } from './pairing-code-relay.ts';
 
 export interface SecretRedis { eval(script: string, keys: string[], args: unknown[]): Promise<unknown> }
 // All state transitions, authorization, quotas, consumption and replay tombstones are atomic.
@@ -103,6 +104,10 @@ export function secretRelay(redis: SecretRedis, adminToken: string, now = Date.n
         }
       } finally { inputDeadline.removeEventListener('abort', stopRead); reader.releaseLock(); }
       const body = object(JSON.parse(Buffer.concat(chunks).toString('utf8')), ['action', 'channel', 'data']);
+      if (typeof body.action === 'string' && body.action.startsWith('code-')) {
+        const result = await codeRelay(redis, adminToken, body.action, body.channel, body.data, token, now());
+        return reply(result.error === 'unauthorized' ? 401 : result.error === 'rate_limited' ? 429 : result.error ? 409 : 200, result);
+      }
       if (typeof body.channel !== 'string' || !idPattern.test(body.channel) || typeof body.action !== 'string') throw new SecretFailure('invalid_arguments');
       const clock = now(); const action = body.action; let data: unknown; let requestId = 'none';
       if (action === 'provision') {

@@ -9,14 +9,14 @@ For daily setup, use [getting started](getting-started.md). The private context 
 
 ## One-command CLI installation
 
-On macOS or Linux, use Node **24.21.0**, `gh`, `curl`, `tar` and `mktemp`, as an unprivileged user. Authenticate GitHub on that computer with read access to private `amxv/holocron`. The private `holocron-v0.2.0` release and hosted installer are live. No public npm package or anonymous release access is available.
+For automated prerequisites and saved setup, use [Mac setup](secret-operations.md#mac-setup) or the [one receiver command](secret-requests.md#install-and-pair-with-one-command). The CLI-only installer below requires Node **24.21.0**, `gh`, `curl`, `tar` and `mktemp`, as an unprivileged user. Authenticate GitHub on this computer with read access to private `amxv/holocron`. The 0.3.0 pin requires a new private release; no public npm package or anonymous release access is available.
 
 ```sh
 set -eu
 hc_bootstrap=$(mktemp)
 curl -fsSL https://holocron.ashray.xyz/install.sh -o "$hc_bootstrap"
 sh "$hc_bootstrap" --help
-sh "$hc_bootstrap" --version 0.2.0 \
+sh "$hc_bootstrap" --version 0.3.0 \
   --prefix "$HOME/.local/share/holocron-cli" --bin-dir "$HOME/.local/bin"
 rm "$hc_bootstrap"
 ```
@@ -29,7 +29,7 @@ An optional `--attestation` requires a signed immutable-release attestation thro
 
 ## Upgrades and install recovery
 
-Repeating identical bytes/version is a no-op. To upgrade, deliberately select a **newly published** version with `--version X.Y.Z`. Previous release directories stay available for running processes. A different bundle for an already-installed version is refused. Never replace the bytes of `board-v0.1.0`, `holocron-v0.1.1`, `holocron-v0.2.0` or any published release.
+Repeating identical bytes/version is a no-op. To upgrade, deliberately select a **newly published** version with `--version X.Y.Z`. Previous release directories stay available for running processes. A different bundle for an installed version is refused. Never replace `board-v0.1.0`, `holocron-v0.1.1`, `holocron-v0.2.0` or any published release; publish 0.3.0 separately.
 
 Reconnect the known tunnel deliberately when you want its next subprocess to use the new CLI. Installation alone never restarts a runtime. Concurrent installs are refused; inspect a stale `.install-lock` only after confirming no installer is running. An interrupted install can leave a lock or unreferenced release. Inspect only the dedicated prefix; there is no force-overwrite or destructive uninstall flag.
 
@@ -59,18 +59,18 @@ SC_PRIVATE="$HOME/Library/Application Support/holocron-operator"
 mkdir "$SC_INSTALL" "$SC_PRIVATE"
 bun run ci:all
 HOLOCRON_TEST_REDIS_SERVER=/absolute/test/redis-server bun run check
-bun pm pack --ignore-scripts --filename "$SC_PRIVATE/amxv-holocron-0.2.0.tgz"
+bun pm pack --ignore-scripts --filename "$SC_PRIVATE/amxv-holocron-0.3.0.tgz"
 bun install --cwd "$SC_INSTALL" --production --ignore-scripts \
-  "$SC_PRIVATE/amxv-holocron-0.2.0.tgz"
+  "$SC_PRIVATE/amxv-holocron-0.3.0.tgz"
 ```
 
-Create the parent first if missing, and use fresh dedicated directories. Record the actual absolute Node and installed CLI paths. The artifact includes `dist`, canonical docs, native prompt source and the unmapped plugin scaffold, not tests, website/Raycast source, runtime state or credentials. The private package is `@amxv/holocron` version `0.2.0`; [legacy bins](reference.md) remain supported.
+Create the parent first if missing, and use fresh dedicated directories. Record the actual absolute Node and installed CLI paths. The artifact includes `dist`, canonical docs, native prompt source and the unmapped plugin scaffold, not tests, website/Raycast source, runtime state or credentials. The private package is `@amxv/holocron` version `0.3.0`; [legacy bins](reference.md) remain supported.
 
 For direct `dist/cli.js`/historical CLI commands, launch from the installed package directory with state outside that directory and its ancestors. The friendly `holocron` wrapper anchors automatically. `check-config` alone does not exercise the state/working-directory guard. Use [STDIO setup](secure-mcp-tunnel.md) or the separate [HTTP configuration](phase1-setup.md) for their exact runtime contract.
 
 ## Publish the private CLI release and installer
 
-**0.2.0 is already published.** These steps are for a later, new version. Keep the repository private and every published tag/asset unchanged. Build from an approved clean commit with pinned Node/Bun after updating the version consistently:
+**0.3.0 is already published.** These steps are for a later, new version. Keep the repository private and every published tag/asset unchanged. Build from an approved clean commit with pinned Node/Bun after updating the version consistently:
 
 ```sh
 bun run ci:all

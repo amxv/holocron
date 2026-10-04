@@ -7,6 +7,9 @@ import { macClipboard } from './clipboard.ts';
 import { holocronHome, initConfig, linkConfig, linkedConfig } from './holocron-profile.ts';
 import { runSecretCli } from './secret-cli.ts';
 import { VERSION } from './version.ts';
+import { runSetupCli } from './setup-cli.ts';
+import { exists } from './setup-profile.ts';
+import { join } from 'node:path';
 
 const help = `Usage: holocron copy [--name <label>] [--local-config <absolute private JSON>]
        holocron share [--name <label>] [--local-config <absolute private JSON>]
@@ -15,7 +18,8 @@ const help = `Usage: holocron copy [--name <label>] [--local-config <absolute pr
        holocron revoke <share ID> [--local-config <absolute private JSON>]
        holocron link --local-config <absolute private JSON>
        holocron init
-       holocron ask --pairing-file <private receiver.json> -m <purpose> NAME [NAME...]
+       holocron setup | pair | start | stop | status
+       holocron ask [--pairing-file <private receiver.json>] -m <purpose> NAME [NAME...]
        holocron secrets --help
        holocron cloud <probe|read|write --sha256 <digest> [--file <literal data file>]>
        holocron <start|stop|status|check-config|capture|share-text|share-file|list|revoke|clear> --config <private HTTP JSON>
@@ -36,8 +40,13 @@ export async function runHolocronCli(args: string[], io: CliIO, adapter: Clipboa
   if (args.length === 1 && args[0] === '--help') { io.out(help); return 0; }
   if (args.length === 1 && args[0] === '--version') { io.out(VERSION); return 0; }
   const command = args[0];
+  const env = options.env ?? process.env;
+  if (command === 'setup' || command === 'pair' || (command === 'start' && !args.includes('--config')) ||
+      (['stop', 'status'].includes(command ?? '') && args.length === 1 && await exists(join(await holocronHome(env), 'setup.json')))) {
+    return runSetupCli(args, io, options.signal ?? new AbortController().signal, env);
+  }
   if (command === 'ask' || command === 'secrets') {
-    return runSecretCli(command === 'ask' ? args : args.slice(1), io, options.signal ?? new AbortController().signal);
+    return runSecretCli(command === 'ask' ? args : args.slice(1), io, options.signal ?? new AbortController().signal, env);
   }
   if (command === 'cloud') {
     const cloudArgs = args.slice(1);
@@ -45,7 +54,6 @@ export async function runHolocronCli(args: string[], io: CliIO, adapter: Clipboa
     if (file >= 0 && cloudArgs[file + 1]) cloudArgs[file + 1] = resolve(options.selectedDirectory ?? process.cwd(), cloudArgs[file + 1]!);
     return (options.cloud ?? runCloudCli)(cloudArgs, io, undefined, options.signal);
   }
-  const env = options.env ?? process.env;
   if (args.includes('--config') || command === 'prepare-plugin' || command?.startsWith('login-')) {
     const direct = args.slice();
     if (command === 'copy') direct[0] = 'capture';

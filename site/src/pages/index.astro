@@ -4,7 +4,7 @@ import { siteConfig } from "../data/docs";
 import "../styles/landing.css";
 
 const tasks = [
-  { number: "01", title: "Install on your computer", text: "Use Node 24.21.0 and your own GitHub login with access to the private release.", href: "/docs/getting-started#install-holocron", label: "Installation guide" },
+  { number: "01", title: "Set up once", text: "Install with one command and this computer’s own GitHub access. Setup handles the pinned runtime.", href: "/docs/getting-started#install-holocron", label: "Setup guide" },
   { number: "02", title: "Connect the right endpoint", text: "Pair the receiving agent for keys. Connect the Mac’s private MCP tunnel for context.", href: "/docs/getting-started#choose-your-workflow", label: "Choose your workflow" },
   { number: "03", title: "Share with intention", text: "Approve a key request on your Mac, or share the clipboard text and files you select.", href: "/docs/secret-requests", label: "Request your first key" }
 ];
@@ -20,7 +20,7 @@ const tasks = [
         <a class="button button--solid" href="/docs/getting-started">Install Holocron <span aria-hidden="true">↗</span></a>
         <a class="hc-link" href="/docs/secret-requests">Pair your agent <span aria-hidden="true">→</span></a>
       </div>
-      <p class="hc-prerequisite">Private GitHub access · Node 24.21.0 · macOS + receiving computer</p>
+      <p class="hc-prerequisite">Private GitHub access · Automated setup · macOS + receiving computer</p>
     </div>
 
     <div class="hc-exchange" role="group" aria-label="Two explicit workflows: selected context through MCP, and approved encrypted keys to a paired receiver">
@@ -62,7 +62,7 @@ const tasks = [
         <span class="hc-caption">02 / Private API keys</span>
         <h3>Your agent asks. You approve.</h3>
         <p>The paired receiving agent requests named keys with a purpose. Review the native Mac prompt and enter the values. Its program reads short-lived private files directly.</p>
-        <div class="docs-copy"><pre><code class="language-sh">holocron ask --pairing-file receiver.json \
+        <div class="docs-copy"><pre><code class="language-sh">holocron ask \
   -m "Run my approved task" OPENAI_API_KEY</code></pre></div>
         <p class="hc-code-note">After endpoint pairing. Values stay out of chat, clipboard shares and command output.</p>
         <a class="hc-link" href="/docs/secret-requests">Pair & request keys <span aria-hidden="true">→</span></a>
@@ -79,6 +79,6 @@ const tasks = [
 
   <section class="hc-close shell" aria-labelledby="close-title">
     <div><p class="section-label">Keep the decision with you</p><h2 id="close-title">Useful context travels.<br /><em>You stay in control.</em></h2></div>
-    <div class="hc-close__copy"><p>No clipboard watcher or automatic paste. Key requests need paired endpoints and your native approval. Keep the Mac awake and the relevant service running.</p><p class="hc-acceptance">The private 0.2.0 release and secret relay are live. Test a harmless value on your intended receiver before real keys; receiver and native GUI acceptance is still pending.</p><a class="hc-link" href="/docs/secret-requests#test-the-connection">Test your connection <span aria-hidden="true">→</span></a></div>
+    <div class="hc-close__copy"><p>No clipboard watcher or automatic paste. Pair with a temporary code, approve on your Mac, then reuse the saved connection. Start, inspect and stop with three short commands.</p><p class="hc-acceptance">The 0.3.0 setup flow requires the new private release and relay update. Test a harmless value on your intended receiver before real keys; receiver and native GUI acceptance remains pending.</p><a class="hc-link" href="/docs/secret-requests#test-the-connection">Test your connection <span aria-hidden="true">→</span></a></div>
   </section>
 </HolocronLayout>

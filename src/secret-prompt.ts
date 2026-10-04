@@ -18,6 +18,13 @@ export async function nativePairPrompt(prompt: string, approval: PairApproval, s
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length !== 0) throw new SecretFailure('invalid_prompt_response');
   return true;
 }
+export async function nativeCodePairPrompt(prompt: string, recipient: string, relay: string, expiry: number, verification: string, signal: AbortSignal): Promise<boolean> {
+  const response = await runPrompt(prompt, ['--pair-code', recipient, relay, new Date(expiry).toISOString()], signal);
+  if (response === null) return false;
+  const value = response as Record<string, unknown>;
+  if (Object.keys(value).length !== 1 || value.VERIFICATION_CODE !== verification) throw new SecretFailure('pairing_peer_mismatch');
+  return true;
+}
 async function runPrompt(executable: string, args: string[], signal: AbortSignal): Promise<unknown | null> {
   const child = spawn(executable, args, { shell: false, stdio: ['ignore', 'ignore', 'ignore', 'pipe'],
     env: { PATH: '/usr/bin:/bin', LANG: 'en_US.UTF-8' } });
