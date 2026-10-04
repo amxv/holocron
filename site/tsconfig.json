@@ -1,5 +1,8 @@
 {
   "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "rewriteRelativeImportExtensions": true
+  },
   "include": [
     ".astro/types.d.ts",
     "src/**/*",
