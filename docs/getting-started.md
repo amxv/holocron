@@ -7,6 +7,8 @@ category: "Start"
 
 Holocron runs on your Mac and shares selected immutable snapshots with connected ChatGPT. `holocron copy` explicitly captures clipboard text for sharing. It does not automatically fill another computer's clipboard. For normal Paste in a connected ChatGPT computer, that computer must also have the [supported Wayland helper and an explicitly authorized transfer](cloud-clipboard.md#mac-to-cloud).
 
+For API keys, use the separate [private secret request CLI](secret-requests.md). It needs a deployed encrypted relay, explicit requester pairing and a Mac native prompt service; ordinary snapshot sharing and an MCP connection alone do not provide private key delivery.
+
 ## 1. Install the CLI
 
 Activate **Node 24.21.0** with your existing Node manager. Install GitHub CLI (`gh`) and use your existing authenticated access to the **private** `amxv/holocron` repository. After the operator publishes the release and deploys the installer:

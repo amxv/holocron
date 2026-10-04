@@ -8,7 +8,8 @@ import { createServer } from 'node:net';
 import { createHash } from 'node:crypto';
 
 const temporary = await mkdtemp(join(await realpath('/tmp'), 'sc-package-'));
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const version = JSON.parse(await readFile('package.json', 'utf8')).version;
+
 try {
   const home = join(temporary, 'home'); await mkdir(home, { mode: 0o700 });
   const environment = { PATH: process.env.PATH, HOME: home, npm_config_cache: join(temporary, 'npm-cache'),
@@ -17,21 +18,25 @@ try {
   await mkdir(join(home, '.gg', 'codex'), { recursive: true, mode: 0o700 });
   const existingSettings = join(home, '.gg', 'codex', 'config.toml');
   await writeFile(existingSettings, 'unrelated-setting = true\n', { mode: 0o600 });
-  const packed = JSON.parse(execFileSync(npm, ['pack', '--json', '--silent', '--pack-destination', temporary], {
-    encoding: 'utf8', maxBuffer: 1024 * 1024,
-  }))[0];
-  const paths = packed.files.map((file) => file.path);
+  const filename = 'holocron-package.tgz';
+  // Canonical check already built dist. Avoid a second lifecycle build during packaging.
+  execFileSync('bun', ['pm', 'pack', '--filename', join(temporary, filename), '--ignore-scripts'], { encoding: 'utf8', maxBuffer: 1024 * 1024, timeout: 30000 });
+  const paths = execFileSync('tar', ['-tzf', join(temporary, filename)], { encoding: 'utf8' }).trim().split('\n')
+    .filter(path => !path.endsWith('/')).map(path => path.replace(/^package\//, ''));
+  const packed = { filename };
   assert.ok(paths.includes('dist/cli.js'));
   assert.ok(paths.includes('dist/file-snapshot.js'));
   assert.ok(paths.includes('dist/cloud-cli.js'));
   assert.ok(paths.includes('docs/cloud-clipboard.md'));
   assert.ok(paths.includes('docs/context-files.md'));
   assert.ok(paths.includes('docs/operations.md'));
+  assert.ok(paths.includes('native/HolocronSecrets.swift'));
+  assert.ok(paths.includes('docs/secret-requests.md'));
   assert.ok(paths.includes('plugins/holocron/plugin.json'));
   assert.ok(paths.includes('plugins/holocron/.app.json'));
-  const allowed = new Set(['README.md', 'package.json', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
+  const allowed = new Set(['README.md', 'package.json', 'native/HolocronSecrets.swift', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
     ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel',
-      'overview', 'getting-started', 'reference', 'troubleshooting'].map((name) => `docs/${name}.md`),
+      'overview', 'getting-started', 'reference', 'troubleshooting', 'secret-requests'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
   assert.deepEqual(new Set(paths), allowed);
   for (const path of paths) {
@@ -42,7 +47,7 @@ try {
   const clean = join(temporary, 'clean');
   await mkdir(clean);
   await writeFile(join(clean, 'package.json'), JSON.stringify({ name: 'clean-smoke-profile', private: true, type: 'module' }));
-  execFileSync(npm, ['install', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund', join(temporary, packed.filename)], {
+  execFileSync('bun', ['install', '--production', '--ignore-scripts', join(temporary, packed.filename)], {
     cwd: clean, env: environment, encoding: 'utf8', maxBuffer: 1024 * 1024,
   });
   const installed = join(clean, 'node_modules/@amxv/holocron');
@@ -54,11 +59,11 @@ try {
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard-cloud'), ['--help'], { encoding: 'utf8' }), /foreground owner|foreground ownership/);
   assert.match(cliRun(['--help']), /capture explicitly reads the Mac clipboard/);
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard'), ['--help'], { encoding: 'utf8' }), /share-text/);
-  assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.1');
+  assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), version);
   for (const name of ['holocron', 'holocron-cloud', 'board', 'shared-clipboard', 'shared-clipboard-probe', 'shared-clipboard-cloud']) {
     const bin = join(clean, 'node_modules/.bin', name);
     assert.match(execFileSync(bin, ['--help'], { env: environment, encoding: 'utf8' }), /Usage:/);
-    assert.equal(execFileSync(bin, ['--version'], { env: environment, encoding: 'utf8' }).trim(), '0.1.1');
+    assert.equal(execFileSync(bin, ['--version'], { env: environment, encoding: 'utf8' }).trim(), version);
   }
   const operatorConfig = {
     issuer: 'https://synthetic-issuer.invalid', jwksUrl: 'https://synthetic-issuer.invalid/jwks',
@@ -361,7 +366,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
     restartedServer.closeAllConnections(); await new Promise((resolve) => restartedServer.close(resolve));
   }
   // Removal uses the isolated prefix only and preserves unrelated profile settings and selected files.
-  execFileSync(npm, ['uninstall', '--ignore-scripts', '--no-audit', '--no-fund', '@amxv/holocron'],
+  execFileSync('bun', ['remove', '--ignore-scripts', '@amxv/holocron'],
     { cwd: clean, env: environment, encoding: 'utf8', maxBuffer: 1024 * 1024 });
   await assert.rejects(stat(installed));
   assert.equal(await readFile(existingSettings, 'utf8'), 'unrelated-setting = true\n');

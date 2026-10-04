@@ -19,7 +19,7 @@ cd "$SC_INSTALL"
 "$SC_NODE" "$SC_CLI" status --local-config "$SC_LOCAL"
 ```
 
-Check Node `24.21.0` and npm `11.19.0`, private config/state permissions, and whether the official tunnel client is still running with the installed `stdio --local-config` command. The tunnel launches the STDIO companion; stop and deliberately restart its dedicated runtime when needed. Keep the Mac awake. For the alternative HTTP route, use its `--config`, foreground `start` or explicitly managed login job; a login file alone does not prove current service health.
+Check Node `24.21.0` and Bun `1.4.0`, private config/state permissions, and whether the official tunnel client is still running with the installed `stdio --local-config` command. The tunnel launches the STDIO companion; stop and deliberately restart its dedicated runtime when needed. Keep the Mac awake. For the alternative HTTP route, use its `--config`, foreground `start` or explicitly managed login job; a login file alone does not prove current service health.
 
 Do not kill an unknown/reused PID or delete the database to bypass the runtime lease. Inspect conflicts before changing them. See [startup at login](operations.md#optional-startup-at-login).
 

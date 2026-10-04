@@ -63,7 +63,7 @@ for (const [path, html] of documents) {
 }
 
 const names = (await readdir(content)).filter((name) => name.endsWith('.md')).sort();
-assert.equal(names.length, 10, 'Unexpected canonical guide count; update this validation when adding a guide');
+assert.equal(names.length, 11, 'Unexpected canonical guide count; update this validation when adding a guide');
 for (const name of names) {
   const source = await readFile(join(content, name), 'utf8');
   const slug = name.slice(0, -3);
@@ -93,7 +93,7 @@ execFileSync('sh', ['-n', join(output, 'install.sh')]);
 
 // Cover both maintained source and public text bundles. Never scan/copy private runtime state.
 const maintained = [
-  ...await files(join(site, 'src')), ...await files(join(site, 'scripts')),
+  ...await files(join(site, 'src')), ...await files(join(site, 'scripts')), ...await files(join(site, 'api')),
   ...await files(join(site, 'public')),
   ...['package.json', 'package-lock.json', 'astro.config.mjs', 'vercel.json', 'README.md'].map((name) => join(site, name)),
   ...names.map((name) => join(content, name)), join(site, '..', 'README.md')
@@ -110,7 +110,7 @@ for (const path of new Set([...maintained, ...bundles])) {
 
 const rootPackage = JSON.parse(await readFile(join(site, '..', 'package.json'), 'utf8'));
 assert.equal(rootPackage.engines.node, '24.21.0');
-assert.equal(rootPackage.packageManager, 'npm@11.19.0');
+assert.equal(rootPackage.packageManager, 'bun@1.4.0');
 const reference = await readFile(join(content, 'reference.md'), 'utf8');
 assert.ok(reference.includes(rootPackage.name) && reference.includes(`\`${rootPackage.version}\``), 'Package reference drifted');
 for (const limit of [TEXT_LIMIT, FILE_LIMIT, AGGREGATE_LIMIT, READ_LIMIT]) {

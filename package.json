@@ -1,13 +1,13 @@
 {
   "name": "@amxv/holocron",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Private owner-authenticated text and selected UTF-8 file sharing with literal Mac clipboard MCP writes",
   "type": "module",
   "engines": {
     "node": "24.21.0"
   },
-  "packageManager": "npm@11.19.0",
+  "packageManager": "bun@1.4.0",
   "bin": {
     "holocron": "dist/holocron.js",
     "holocron-cloud": "dist/cloud-cli.js",
@@ -20,28 +20,32 @@
     "dist",
     "plugins/holocron",
     "docs",
-    "README.md"
+    "README.md",
+    "native"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test --test-concurrency=1 tests/*.test.ts",
     "start": "node dist/holocron.js",
-    "check": "npm run check:cli && npm run check:raycast && npm run check:site",
+    "check": "bun run check:cli && bun run check:raycast && bun run check:site",
     "source:check": "node scripts/source-check.mjs",
     "package:smoke": "node scripts/package-smoke.mjs",
-    "release:bundle": "npm run build && node scripts/release-bundle.mjs",
+    "release:bundle": "bun run build && node scripts/release-bundle.mjs",
     "installer:smoke": "node scripts/installer-smoke.mjs",
-    "prepack": "npm run build",
-    "check:cli": "npm run typecheck && npm run build && npm test && npm run package:smoke && npm run installer:smoke && npm run source:check",
-    "check:raycast": "npm --prefix raycast run check",
-    "check:site": "npm --prefix site run check",
-    "ci:all": "npm ci && npm --prefix raycast ci && npm --prefix site ci"
+    "prepack": "node scripts/build.mjs",
+    "check:cli": "bun run typecheck && bun run build && bun run test && bun run package:smoke && bun run installer:smoke && bun run source:check && bun run check:api",
+    "check:raycast": "bun run --cwd raycast check",
+    "check:site": "bun run --cwd site check",
+    "ci:all": "bun install --frozen-lockfile && bun install --cwd raycast --frozen-lockfile && bun install --cwd site --frozen-lockfile",
+    "secret:regression": "bun run build && node --test --test-concurrency=1 tests/secrets.test.ts tests/secret-enrollment.test.ts tests/secret-relay.test.ts tests/secret-cli.test.ts",
+    "check:api": "bun run --cwd site check:api"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.0",
     "jose": "6.2.12",
-    "zod": "4.6.5"
+    "zod": "4.6.5",
+    "tweetnacl": "1.0.3"
   },
   "devDependencies": {
     "@types/node": "24.19.1",

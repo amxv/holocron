@@ -1,18 +1,19 @@
 {
   "name": "@holocron/docs",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=24.0.0 <25"
   },
-  "packageManager": "npm@11.19.0",
+  "packageManager": "bun@1.4.0",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "validate": "npm run check && npm run build && node scripts/validate-site.mjs"
+    "check:api": "tsc --noEmit --strict --skipLibCheck --target ES2023 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions api/secrets.ts",
+    "validate": "bun run check && bun run check:api && bun run build && node scripts/validate-site.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.4",
@@ -23,5 +24,8 @@
     "astro": "7.3.5",
     "typescript": "5.9.3",
     "zuedocs": "0.1.26"
+  },
+  "dependencies": {
+    "@upstash/redis": "1.39.0"
   }
 }

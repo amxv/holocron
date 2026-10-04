@@ -11,7 +11,8 @@ for (const path of code) {
   const text = await readFile(path, 'utf8');
   assert.ok(text.split('\n').length <= 1001, `${path} exceeds 1000 lines`);
 }
-const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), 'README.md', 'package.json', 'package-lock.json'];
+const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), ...await files('native'), 'README.md', 'package.json', 'package-lock.json'];
+for (const path of await files('native')) assert.ok((await readFile(path, 'utf8')).split('\n').length <= 1001, `${path} exceeds 1000 lines`);
 for (const path of maintained) {
   const text = await readFile(path, 'utf8');
   assert.doesNotMatch(text, /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|plugin_asdk_app_[A-Za-z0-9]+|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);
@@ -32,7 +33,7 @@ assert.equal(packageManifest.name, '@amxv/holocron');
 assert.equal(manifest.name, 'holocron'); assert.equal(manifest.version, packageManifest.version);
 assert.equal(packageManifest.bin.holocron, 'dist/holocron.js');
 assert.equal(packageManifest.bin.board, 'dist/board.js');
-assert.deepEqual(packageManifest.files, ['dist', 'plugins/holocron', 'docs', 'README.md']);
+assert.deepEqual(packageManifest.files, ['dist', 'plugins/holocron', 'docs', 'README.md', 'native']);
 const raycast = JSON.parse(await readFile('raycast/package.json', 'utf8'));
 assert.equal(raycast.name, 'holocron'); assert.equal(raycast.title, 'Holocron');
 assert.equal(raycast.owner, 'zue-ai'); assert.equal(raycast.access, 'private');
@@ -40,10 +41,22 @@ assert.equal(raycast.icon, 'icon.png');
 assert.deepEqual(raycast.commands.map(({ name }) => name), ['share-clipboard', 'share-finder-file']);
 assert.equal(packageManifest.private, true);
 assert.equal(packageManifest.engines.node, '24.21.0');
-assert.equal(packageManifest.packageManager, 'npm@11.19.0');
+assert.equal(packageManifest.packageManager, 'bun@1.4.0');
 const lockfile = JSON.parse(await readFile('package-lock.json', 'utf8'));
 assert.deepEqual(lockfile.packages[''].bin, packageManifest.bin);
 assert.equal(await readFile('src/version.ts', 'utf8'), `export const VERSION = '${packageManifest.version}';\n`);
+assert.equal(lockfile.version, packageManifest.version);
+assert.equal(lockfile.packages[''].version, packageManifest.version);
+assert.match(await readFile('site/public/install.sh', 'utf8'), new RegExp('^holocron_version=' + packageManifest.version.replaceAll('.', '\\.') + '$', 'm'));
+for (const dir of ['site', 'raycast']) {
+  const p = JSON.parse(await readFile(dir + '/package.json', 'utf8'));
+  const lock = JSON.parse(await readFile(dir + '/package-lock.json', 'utf8'));
+  assert.equal(p.version, packageManifest.version);
+  assert.equal(p.packageManager, packageManifest.packageManager);
+  assert.equal(lock.version, p.version); assert.equal(lock.packages[''].version, p.version);
+  assert.ok((await readFile(dir + '/bun.lock', 'utf8')).length > 0);
+}
+assert.ok((await readFile('bun.lock', 'utf8')).length > 0);
 const loginSource = await readFile('src/login.ts', 'utf8');
 assert.doesNotMatch(loginSource, /node:child_process|\bspawn\(|\bexecFile\(|\bprocess\.kill\(/);
 assert.match(await readFile('docs/operations.md', 'utf8'), /KeepAlive=false/);

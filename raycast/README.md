@@ -6,20 +6,20 @@ Press a Raycast shortcut to explicitly share your current Mac text clipboard wit
 
 ## Install
 
-You need macOS, Raycast, Node.js 24.21.0 or newer, npm, and the Holocron CLI. Install and link the CLI using the Holocron project's installer first. The extension expects `~/.local/bin/holocron` by default, which must be an executable installed by Holocron. It does not download a CLI, start a server, or configure a tunnel.
+You need macOS, Raycast, Node.js 24.21.0 or newer, Bun 1.4.0, and the Holocron CLI. Install and link the CLI using the Holocron project's installer first. The extension expects `~/.local/bin/holocron` by default, which must be an executable installed by Holocron. It does not download a CLI, start a server, or configure a tunnel.
 
 Clone the canonical private monorepo using your existing GitHub access:
 
 ```sh
 git clone https://github.com/amxv/holocron.git
 cd holocron/raycast
-npm ci
-npm run lint
-npm run build
-npm run dev
+bun install --frozen-lockfile
+bun run lint
+bun run build
+bun run dev
 ```
 
-`npm run dev` imports the extension into Raycast. When it reports the extension is ready, press Control-C to stop development mode. The commands remain installed. Run `npm run dev` again after updating the source. You can also run Raycast's **Import Extension** command and select the monorepo's `raycast/` folder, then run `npm run dev` from that folder.
+`bun run dev` imports the extension into Raycast. When it reports the extension is ready, press Control-C to stop development mode. The commands remain installed. Run `bun run dev` again after updating the source. You can also run Raycast's **Import Extension** command and select the monorepo's `raycast/` folder, then run `bun run dev` from that folder.
 
 This is a local installation. The manifest declares the existing `zue-ai` owner and private access, but installing locally requires no store publication.
 
@@ -52,20 +52,20 @@ A share times out after 10 seconds. A timeout or invalid receipt can occur after
 ## Development checks
 
 ```sh
-npm ci
-npm run lint
-npm run build
-npm test
+bun install --frozen-lockfile
+bun run lint
+bun run build
+bun run test
 ```
 
 ## Migrate the existing local import
 
-Record the old Board extension preferences and bindings first. The verified clipboard hotkey was **Control+Option+Command+C**; the Finder command had no recorded hotkey. Clear/disable the old clipboard binding before importing `raycast/` from this monorepo. After `npm run dev` reports ready, stop it with Control-C, select **Holocron → Share Clipboard with Holocron** in Raycast Settings and assign Control+Option+Command+C. Check for duplicate old/new bindings. Disable/remove the old Board import once the new commands work. Raycast identifies the renamed extension separately, so preferences and hotkeys need explicit migration.
+Record the old Board extension preferences and bindings first. The verified clipboard hotkey was **Control+Option+Command+C**; the Finder command had no recorded hotkey. Clear/disable the old clipboard binding before importing `raycast/` from this monorepo. After `bun run dev` reports ready, stop it with Control-C, select **Holocron → Share Clipboard with Holocron** in Raycast Settings and assign Control+Option+Command+C. Check for duplicate old/new bindings. Disable/remove the old Board import once the new commands work. Raycast identifies the renamed extension separately, so preferences and hotkeys need explicit migration.
 
 Leave the executable preference blank for `~/.local/bin/holocron`, or set its actual custom absolute path. Re-enter the old absolute local config preference only if one was set; blank uses Holocron's saved profile, including its existing Board profile fallback. Import and assigning hotkeys do not require reading the current clipboard. Test only after deliberately copying a harmless marker. Keep the old standalone checkout available until the monorepo import is verified.
 
 Source provenance: imported from private `amxv/holocron-raycast` (formerly `amxv/board-raycast`) main commit `16bb04bdcbb19181cf33f22bc3ac2d0e6e689d42`. Its original repository retains source history. This folder contains maintained extension source and its existing PNG icon, with no nested Git repository or gitlink. CLI changes and extension contract tests now ship together in `amxv/holocron`. The manifest retains `owner: zue-ai`, `access: private` and the MIT license. No npm or Raycast store publication is performed by local development.
 
-Tests execute temporary mock CLI programs, use metadata fixtures and exercise the monorepo's built production CLI with isolated state and an injected clipboard adapter. Build the root CLI first (`npm run build` from the monorepo root), or run the complete root `npm run check` after `npm run ci:all`. They cover literal arguments, schema validation, file selection, process errors, timeout, and feedback without reading the user's clipboard, credentials, config, or live Holocron state.
+Tests execute temporary mock CLI programs, use metadata fixtures and exercise the monorepo's built production CLI with isolated state and an injected clipboard adapter. Build the root CLI first (`bun run build` from the monorepo root), or run the complete root `bun run check` after `bun run ci:all`. They cover literal arguments, schema validation, file selection, process errors, timeout, and feedback without reading the user's clipboard, credentials, config, or live Holocron state.
 
 Official references: [manifest](https://developers.raycast.com/information/manifest), [CLI and local development](https://developers.raycast.com/information/developer-tools/cli), [creating and installing a local extension](https://developers.raycast.com/basics/create-your-first-extension), and [Finder selection](https://developers.raycast.com/api-reference/environment).

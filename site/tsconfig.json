@@ -3,6 +3,7 @@
   "include": [
     ".astro/types.d.ts",
     "src/**/*",
+    "api/**/*",
     "astro.config.mjs"
   ]
 }

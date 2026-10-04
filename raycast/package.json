@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "holocron",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "title": "Holocron",
   "description": "Explicitly share a Mac clipboard snapshot or selected Finder file with Holocron for ChatGPT.",
   "icon": "icon.png",
@@ -32,7 +32,7 @@
     "lint": "ray lint",
     "test": "tsc --project tsconfig.tests.json && tsx --test tests/*.test.ts",
     "publish": "ray publish",
-    "check": "npm run lint && npm run build && npm test"
+    "check": "bun run lint && bun run build && bun run test"
   },
   "preferences": [
     {
@@ -78,5 +78,6 @@
     "prettier": "^3.9.9",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "bun@1.4.0"
 }

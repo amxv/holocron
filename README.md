@@ -6,6 +6,8 @@ Start with the [Holocron setup guide](https://holocron.ashray.xyz/docs/getting-s
 
 `holocron copy` shares a snapshot; normal Paste on the connected computer requires a separate explicit, digest-verified [Wayland helper operation](docs/cloud-clipboard.md#mac-to-cloud) in that viewed session. A connection alone does not deliver an OS clipboard. Historical `shared-clipboard` commands and the independent cloud helper remain available.
 
+For API keys, [private secret requests](docs/secret-requests.md#receiving-agent-handoff) use one blocking `holocron ask` on the receiving computer and a native secure Mac prompt. Receiver credentials originate and stay on that computer; setup exchanges a signed public descriptor, encrypted enrollment and explicitly compared fingerprints. A dedicated encrypted relay and native Mac pairing approval are required. Values go directly into short-lived private receiving-computer files, never ordinary snapshots or MCP/model-visible results. Private 0.2.0 publication, backend provisioning/deployment and actual remote acceptance remain pending operator work.
+
 Every authorized private STDIO tunnel/workspace caller acts as the same fixed local owner. Restrict tunnel access to people authorized to read your chosen snapshots and request clipboard writes. The separate [OAuth HTTP setup](docs/phase1-setup.md) retains configured owner/resource/scopes on every protected request. [Operations](docs/operations.md), [text and receipts](docs/text-bridge.md), [context files](docs/context-files.md) and the independent [Linux Wayland cloud helper](docs/cloud-clipboard.md) cover the other boundaries.
 
 Text/clipboard limit: 256 KiB. Context file limit: 10 MiB. Aggregate snapshots: 100 MiB. Reads: at most 64 KiB of UTF-8 per page. Shares expire after 24 hours. Files are immutable captures with SHA-256, not ongoing path grants or native attachments. Unsupported, binary or oversize inputs fail without truncation.
@@ -17,14 +19,14 @@ Actual ChatGPT/Dots discovery, real tunnel and viewed Mac/cloud clipboard outcom
 ## Validate locally
 
 ```sh
-mise exec node@24.21.0 -- npm run ci:all
-mise exec node@24.21.0 -- npm audit
-mise exec node@24.21.0 -- npm run check
+mise exec node@24.21.0 -- bun run ci:all
+mise exec node@24.21.0 -- bun audit
+HOLOCRON_TEST_REDIS_SERVER=/absolute/test/redis-server mise exec node@24.21.0 -- bun run check
 git diff --check
 ```
 
 The gate includes typecheck/build, OAuth security checks, official SDK STDIO subprocess tests, cancellation/failure/receipt recovery, 10 MiB file reconstruction, concurrent sharing/read/revoke stress, and a clean tarball installation without development dependencies. The package is private; public npm publishing is not part of installation.
 
-This private `amxv/holocron` monorepo contains the CLI in `src/`, canonical guides in `docs/`, the static website in `site/` and the [Raycast extension](https://github.com/amxv/holocron/blob/main/raycast/README.md) in `raycast/`. Each npm project has an independent lockfile. `npm run ci:all` installs all three; root `npm run check` validates CLI packaging/installer, Raycast lint/build/tests and Astro diagnostics. Scoped checks are `check:cli`, `check:raycast` and `check:site`; the site gate runs only `astro check`. Build the CLI before Raycast integration tests. Distribution includes only CLI production code/dependencies, guides and the unmapped plugin scaffold, excluding website and Raycast sources/dependencies.
+This private `amxv/holocron` monorepo contains the CLI in `src/`, canonical guides in `docs/`, the static website in `site/` and the [Raycast extension](https://github.com/amxv/holocron/blob/main/raycast/README.md) in `raycast/`. Each project has an independent Bun integrity lockfile; npm-format locks are retained for audit compatibility. `bun run ci:all` installs all three; root `bun run check` validates CLI packaging/installer, Raycast lint/build/tests and Astro diagnostics. Scoped checks are `check:cli`, `check:raycast` and `check:site`; the site gate runs only `astro check`. Build the CLI before Raycast integration tests. Distribution includes CLI production code/dependencies, guides, native AppKit source and the unmapped plugin scaffold, excluding website and Raycast sources/dependencies.
 
-The website consumes root `docs/` directly. Its Vercel root stays `site`, with `npm ci`, `npm run build`, output `dist` and outside-root source files enabled. See `site/README.md` for deployment settings. The canonical site is `https://holocron.ashray.xyz`.
+The website consumes root `docs/` directly. Its Vercel root stays `site`, with `bun install --frozen-lockfile`, `bun run build`, output `dist` and outside-root source files enabled. See `site/README.md` for deployment settings. The canonical site is `https://holocron.ashray.xyz`.

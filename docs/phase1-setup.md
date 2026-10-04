@@ -13,11 +13,11 @@ Actual provider/OAuth, intended Dots/plugin discovery, tunnel forwarding and vie
 
 Start with [Private installation and operation](operations.md) for the clean local tarball install, absolute installed CLI paths, optional login startup, restart/recovery/removal and complete user-run acceptance. This document configures the external connection separately. Neither package install nor config validation creates a provider, tunnel, account or connection.
 
-The runtime is pinned to Node `24.21.0` (LTS), npm `11.19.0`, the official `@modelcontextprotocol/sdk` `1.32.0`, `jose` `6.2.12`, and Zod `4.6.5`. TypeScript is `7.0.2`. Versions were checked against current package manifests and [Node releases](https://nodejs.org/en/about/previous-releases). The lockfile pins transitive dependencies.
+The runtime is pinned to Node `24.21.0` (LTS), Bun `1.4.0`, the official `@modelcontextprotocol/sdk` `1.32.0`, `jose` `6.2.12`, and Zod `4.6.5`. TypeScript is `7.0.2`. Versions were checked against current package manifests and [Node releases](https://nodejs.org/en/about/previous-releases). The lockfile pins transitive dependencies.
 
 ```sh
-mise exec node@24.21.0 -- npm run ci:all
-mise exec node@24.21.0 -- npm run check
+mise exec node@24.21.0 -- bun run ci:all
+mise exec node@24.21.0 -- bun run check
 ```
 
 Without mise, activate exactly the pinned runtime first. `check` performs typecheck, build, security/protocol/text/file/lifecycle tests, and a clean temporary package installation with authenticated/unauthorized text and bounded file reconstruction/digest smoke calls using injected clipboard adapters. No actual clipboard operations occur in checks. The package has an explicit distribution allowlist. Synthetic signing keys exist only in memory during tests; no test authorization server or production authentication bypass is shipped.

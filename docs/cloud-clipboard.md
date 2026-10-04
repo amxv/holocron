@@ -20,23 +20,23 @@ curl -fsSL https://holocron.ashray.xyz/install.sh | sh
 
 Use `holocron cloud read` or `holocron cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE` for the same literal formats and foreground ownership contract below. `holocron cloud` never reads the CLI profile or Mac config. A helper install provides no automatic pairing, share download or clipboard delivery. If this computer has no private repository access, the operator can explicitly provide the verified private artifact through an already-authorized private transfer; do not export Mac tunnel credentials or make the source public. The source/tarball route remains available:
 
-Use the same built package artifact as the Mac companion, with Node `24.21.0` and npm `11.19.0`. For a local artifact named `amxv-holocron-0.1.1.tgz`, install it explicitly on the cloud computer:
+Use the same built package artifact as the Mac companion, with Node `24.21.0` and Bun `1.4.0`. For a local artifact named `amxv-holocron-0.2.0.tgz`, install it explicitly on the cloud computer:
 
 ```sh
 umask 077
 SC_CLOUD="$HOME/.local/share/holocron-helper"
 # Use a fresh dedicated prefix; create its parent first if missing.
 mkdir "$SC_CLOUD"
-npm install --prefix "$SC_CLOUD" --omit=dev --ignore-scripts ./amxv-holocron-0.1.1.tgz
+bun install --cwd "$SC_CLOUD" --production --ignore-scripts ./amxv-holocron-0.2.0.tgz
 SC_HELPER="$SC_CLOUD/node_modules/.bin/holocron-cloud"
 "$SC_HELPER" --version
 "$SC_HELPER" --help
 "$SC_HELPER" probe
 ```
 
-The artifact must already contain `dist`; build/pack in the source checkout with `npm run ci:all`, `npm run check`, and `npm pack`. This is independent of plugin registration. Neither the plugin nor this helper installs the other or grants graphical-session access.
+The artifact must already contain `dist`; build/pack in the source checkout with `bun run ci:all`, `HOLOCRON_TEST_REDIS_SERVER=/absolute/test/redis-server bun run check`, and `bun pm pack --ignore-scripts`. This is independent of plugin registration. Neither the plugin nor this helper installs the other or grants graphical-session access.
 
-Activate exactly the pinned Node/npm before these commands. Subsequent examples use `holocron-cloud` for readability: substitute the recorded absolute `"$SC_HELPER"` or deliberately add only this dedicated bin directory to your task PATH. Never transfer the Mac operator configuration, generated connection mapping, tunnel profile/key or OAuth credentials with the tarball. For removal, gracefully stop the helper first, then `npm uninstall --prefix "$SC_CLOUD" --ignore-scripts @amxv/holocron`; preserve unrelated packages/task files and remove directories only if empty. [Private operations](operations.md) covers the separate Mac/plugin/tunnel lifecycle and live acceptance.
+Activate exactly the pinned Node/Bun before these source-install commands. Subsequent examples use `holocron-cloud` for readability: substitute the recorded absolute `"$SC_HELPER"` or deliberately add only this dedicated bin directory to your task PATH. Never transfer the Mac operator configuration, generated connection mapping, tunnel profile/key or OAuth credentials with the tarball. For removal, gracefully stop the helper first, then `bun remove --cwd "$SC_CLOUD" --ignore-scripts @amxv/holocron`; preserve unrelated packages/task files and remove directories only if empty. [Private operations](operations.md) covers the separate Mac/plugin/tunnel lifecycle and live acceptance.
 
 The single supported backend is Wayland `wl-clipboard`, using fixed `/usr/bin/wl-copy` and `/usr/bin/wl-paste`. Install that standard package through the cloud image's approved OS package workflow if needed, then start the helper in the intended graphical session's authorized task environment. Both executables must support `--type`; copy must support `--foreground`, and paste `--no-newline`. No custom executable selector or PATH search exists. X11-only sessions, macOS and Windows are unsupported. A distribution installing elsewhere needs an explicit implementation adaptation, not a command override.
 

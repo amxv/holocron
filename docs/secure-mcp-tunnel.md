@@ -29,14 +29,14 @@ You can instead supply `--local-config "/absolute/private/Holocron/local.json"` 
 
 ## Install the private package
 
-Activate Node `24.21.0` and npm `11.19.0`. From a checked-out Holocron repository:
+Activate Node `24.21.0` and Bun `1.4.0`. From a checked-out Holocron repository:
 
 ```sh
-npm run ci:all
-npm run check
-npm pack --pack-destination /absolute/private/artifacts
-npm install --prefix /absolute/private/holocron --omit=dev --ignore-scripts \
-  /absolute/private/artifacts/amxv-holocron-0.1.1.tgz
+bun run ci:all
+bun run check
+bun pm pack --destination /absolute/private/artifacts
+bun install --cwd /absolute/private/holocron --production --ignore-scripts \
+  /absolute/private/artifacts/amxv-holocron-0.2.0.tgz
 ```
 
 Create the artifact/install directories first. This package is private; use the local tarball, not public npm publication. The installed CLI is `/absolute/private/holocron/node_modules/@amxv/holocron/dist/cli.js`. Pin an absolute Node executable so a managed tunnel does not depend on an interactive shell or a version manager shim. The executable `holocron` is also installed under the prefix's `node_modules/.bin`.

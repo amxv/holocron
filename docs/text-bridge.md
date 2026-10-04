@@ -13,7 +13,7 @@ The companion implements local text sharing, selected UTF-8 context files and th
 
 [Private installation and operation](operations.md) provides the repeatable dedicated-prefix tarball install, foreground lifecycle, explicit optional next-login setup and scoped removal. Setup does not touch other ChatGPT/Codex settings or current clipboards.
 
-Use the pinned Node/npm versions and build first (`npm ci && npm run build`). The canonical `holocron` executable supports this explicit HTTP route. Legacy `shared-clipboard` and `shared-clipboard-probe` retain the direct CLI contract; `board` delegates to Holocron. Existing generated plugin mappings remain valid, while new mappings use `holocron`.
+Use the pinned Node/Bun versions and build first (`bun install --frozen-lockfile && bun run build`). The canonical `holocron` executable supports this explicit HTTP route. Legacy `shared-clipboard` and `shared-clipboard-probe` retain the direct CLI contract; `board` delegates to Holocron. Existing generated plugin mappings remain valid, while new mappings use `holocron`.
 
 An existing established provider must grant three distinct, actually configured scopes: status, shared-context read, and clipboard write. Add `writeScope` to the private operator JSON shown in [Connection setup](phase1-setup.md); it has no invented default. Configuration must be an absolute regular non-symlink file, mode `0600`, in a directory accessible only to the same unprivileged OS user. No token or client secret belongs in it. `check-config` checks its structure without network or clipboard access.
 

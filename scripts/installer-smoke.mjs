@@ -38,6 +38,8 @@ else process.exit(1);
   const holocron = join(home, '.local/bin/holocron');
   const cli = (args, input) => execFileSync(holocron, args, { cwd: home, env, encoding: 'utf8', ...(input !== undefined ? { input } : {}) });
   assert.equal(cli(['--version']).trim(), manifest.version);
+  assert.match(cli(['secrets', '--help']), /dedicated encrypted relay/);
+  assert.match(cli(['ask', '--help']), /private temporary directory/);
   assert.match(cli(['--help']), /Snapshots do not populate another computer/);
   assert.deepEqual(JSON.parse(cli(['init'])), { initialized: true });
   const literal = '\ufeffSnow 雪 🚀 "quotes" \'single\' `backticks` $(never-execute) $HOME\r\nnew line\n';
