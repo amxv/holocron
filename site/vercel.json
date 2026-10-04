@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "astro",
-  "installCommand": "bun install --frozen-lockfile",
-  "buildCommand": "bun run build",
+  "installCommand": "bunx bun@1.4.0 install --frozen-lockfile",
+  "buildCommand": "bunx bun@1.4.0 run build",
   "outputDirectory": "dist",
   "functions": { "api/secrets.ts": { "maxDuration": 15 } },
   "headers": [

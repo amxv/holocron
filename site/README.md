@@ -46,13 +46,15 @@ Use the repository as the source of a separate documentation project:
 | Include source files outside Root Directory in Build Step | Enabled, because canonical guides are in `../docs` |
 | Framework Preset | Astro |
 | Node.js Version | 24.x |
-| Install Command | `bun install --frozen-lockfile` |
-| Build Command | `bun run build` |
+| Install Command | `bunx bun@1.4.0 install --frozen-lockfile` |
+| Build Command | `bunx bun@1.4.0 run build` |
 | Output Directory | `dist` |
 | Environment variables | None for static docs; three private secret-relay variables for `/api/secrets` |
 | Production domain | `holocron.ashray.xyz` |
 
 `vercel.json` provides the framework/build/output configuration and basic response headers. Astro is explicitly static; no adapter is needed. `astro.config.mjs` uses the production domain for sitemap generation. The local document head uses it for canonical and social URLs. `public/robots.txt` points to the generated sitemap.
+
+Vercel build containers can default to Bun 1.3.14, which cannot parse our Bun 1.4 lockfile format. The explicit `bunx bun@1.4.0` install/build commands follow the [official build-version pin guidance](https://vercel.com/kb/guide/how-to-pin-a-specific-bun-version-for-vercel-builds); `packageManager` alone does not establish that build-container version. Keep this build-only pin separate from `bunVersion`, which [opts functions into the Bun runtime](https://vercel.com/docs/project-configuration/vercel-json#bunversion). The secret API remains Node 24.x. Repository `vercel.json` commands override dashboard commands.
 
 Build from the full repository checkout. Keep Vercel Git access, resource setup and custom-domain/DNS with the operator; this implementation creates no deployments, project links, accounts or DNS changes. The project serves static documentation and a separate `/api/secrets` ciphertext-only function. The companion, native prompt sidecar and official tunnel stay on the Mac; the optional credential-free clipboard helper stays in its intended Linux Wayland session. The secret relay holds public metadata/token hashes/ciphertext, never entered key plaintext or endpoint private keys. Existing clipboard/MCP/tunnel routes stay independent.
 
