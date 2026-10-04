@@ -6,7 +6,7 @@ async function files(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   return (await Promise.all(entries.map((entry) => entry.isDirectory() ? files(join(directory, entry.name)) : [join(directory, entry.name)]))).flat();
 }
-const code = (await Promise.all(['src', 'tests', 'scripts'].map(files))).flat().filter((path) => /\.(?:ts|mjs)$/.test(path));
+const code = (await Promise.all(['src', 'tests', 'scripts', 'raycast/src', 'raycast/tests'].map(files))).flat().filter((path) => /\.(?:ts|mjs)$/.test(path));
 for (const path of code) {
   const text = await readFile(path, 'utf8');
   assert.ok(text.split('\n').length <= 1001, `${path} exceeds 1000 lines`);
@@ -16,9 +16,9 @@ for (const path of maintained) {
   const text = await readFile(path, 'utf8');
   assert.doesNotMatch(text, /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----|sk-(?:proj|svcacct)-|\/Users\/|plugin_asdk_app_[A-Za-z0-9]+|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/);
 }
-const manifest = JSON.parse(await readFile('plugins/shared-clipboard/plugin.json', 'utf8'));
+const manifest = JSON.parse(await readFile('plugins/holocron/plugin.json', 'utf8'));
 assert.deepEqual(manifest.extensions['com.openai'].interface.capabilities, ['Read', 'Write']);
-assert.deepEqual(JSON.parse(await readFile('plugins/shared-clipboard/.app.json', 'utf8')), { apps: {} });
+assert.deepEqual(JSON.parse(await readFile('plugins/holocron/.app.json', 'utf8')), { apps: {} });
 assert.match(await readFile('README.md', 'utf8'), /deferred and unverified/);
 assert.match(await readFile('docs/text-bridge.md', 'utf8'), /never access an existing OS clipboard/);
 for (const path of ['src/cloud-clipboard.ts', 'src/cloud-cli-main.ts', 'src/cloud-cli.ts', 'src/cloud-input.ts', 'src/cloud-process.ts']) {
@@ -28,6 +28,16 @@ for (const path of ['src/cloud-clipboard.ts', 'src/cloud-cli-main.ts', 'src/clou
 assert.match(await readFile('docs/cloud-clipboard.md', 'utf8'), /deferred and unverified/);
 const packageManifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.equal(packageManifest.bin['shared-clipboard-cloud'], 'dist/cloud-cli.js');
+assert.equal(packageManifest.name, '@amxv/holocron');
+assert.equal(manifest.name, 'holocron'); assert.equal(manifest.version, packageManifest.version);
+assert.equal(packageManifest.bin.holocron, 'dist/holocron.js');
+assert.equal(packageManifest.bin.board, 'dist/board.js');
+assert.deepEqual(packageManifest.files, ['dist', 'plugins/holocron', 'docs', 'README.md']);
+const raycast = JSON.parse(await readFile('raycast/package.json', 'utf8'));
+assert.equal(raycast.name, 'holocron'); assert.equal(raycast.title, 'Holocron');
+assert.equal(raycast.owner, 'zue-ai'); assert.equal(raycast.access, 'private');
+assert.equal(raycast.icon, 'icon.png');
+assert.deepEqual(raycast.commands.map(({ name }) => name), ['share-clipboard', 'share-finder-file']);
 assert.equal(packageManifest.private, true);
 assert.equal(packageManifest.engines.node, '24.21.0');
 assert.equal(packageManifest.packageManager, 'npm@11.19.0');

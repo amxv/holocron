@@ -1,6 +1,6 @@
-# Board documentation site
+# Holocron documentation site
 
-A static Astro site using the published `zuedocs@0.1.26` package. Its native header, footer, documentation article, sidebar, table of contents, code/page copy controls, theme controls, production Pagefind search and sitemap integration provide the shared documentation UI. The local document layout adds canonical/social metadata, self-hosted fonts, a skip link and Board branding.
+A static Astro site using the published `zuedocs@0.1.26` package. Its native header, footer, documentation article, sidebar, table of contents, code/page copy controls, theme controls, production Pagefind search and sitemap integration provide the shared documentation UI. The local document layout adds canonical/social metadata, self-hosted fonts, a skip link and Holocron branding.
 
 ## Develop and validate
 
@@ -14,13 +14,13 @@ npm --prefix site run dev
 Final checks:
 
 ```sh
-npm --prefix site run validate
+npm --prefix site run check
 npm --prefix site audit --audit-level=low
 npm run check
 git diff --check
 ```
 
-`validate` runs Astro diagnostics, a production build, then verifies internal links/assets/anchors, metadata, sitemap, search coverage, identical raw Markdown, package/tool/limit references and public-content scans. Root checks also validate the canonical docs shipped in the private companion package. Preview the production build, including search, with:
+The required site gate runs only `astro check`. Root checks also validate the canonical docs shipped in the private companion package. `npm --prefix site run build` is separate for deployment. Optional `npm --prefix site run validate` builds and checks production links/assets/anchors, metadata, sitemap, search coverage, identical raw Markdown and public-content scans. Preview an existing production build, including search, with:
 
 ```sh
 npm --prefix site run preview -- --host 127.0.0.1 --port 4321
@@ -31,7 +31,7 @@ npm --prefix site run preview -- --host 127.0.0.1 --port 4321
 - **`../docs/*.md` is the sole source for maintained guides.** Astro's collection loader reads it directly. Frontmatter defines title, description, ordering and category. These same files remain in the CLI tarball.
 - Keep relative `guide.md#heading` links in canonical Markdown so repository/package readers can navigate. `scripts/docs-links.mjs` maps these to website routes during rendering.
 - `src/pages/docs/[...slug].md.ts` publishes the original bytes at `/docs/<slug>.md`; native page-copy and Markdown actions use those routes.
-- `src/data/docs.ts` owns Board metadata, navigation and categories. The homepage holds the short product introduction; it links to canonical setup rather than duplicating installation steps.
+- `src/data/docs.ts` owns Holocron metadata, navigation and categories. The homepage holds the short product introduction; it links to canonical setup rather than duplicating installation steps.
 - Add new guides to the explicit package smoke allowlist in `../scripts/package-smoke.mjs` and update the expected guide count in `scripts/validate-site.mjs`. Keep all content public-safe. No runtime directory is loaded by the build.
 
 The site does not need environment variables, tokens, OAuth configuration, plugin mapping IDs or a server runtime. Do not copy private config/state or generated mappings into this project. Self-hosted DM Sans and Instrument Serif font notices are preserved at `public/font-notices.txt`.
@@ -50,12 +50,12 @@ Use the repository as the source of a separate documentation project:
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
 | Environment variables | None |
-| Production domain | `clipboard.ashray.xyz` |
+| Production domain | `holocron.ashray.xyz` |
 
 `vercel.json` provides the framework/build/output configuration and basic response headers. Astro is explicitly static; no adapter is needed. `astro.config.mjs` uses the production domain for sitemap generation. The local document head uses it for canonical and social URLs. `public/robots.txt` points to the generated sitemap.
 
 Build from the full repository checkout. Keep Vercel Git access and custom-domain/DNS setup with the operator; this implementation creates no deployments, project links, accounts or DNS changes. A Vercel deployment serves documentation only. The companion and official tunnel stay on the Mac, and the optional credential-free helper stays in the intended Linux Wayland session.
 
-The public bootstrap at `public/install.sh` is copied unchanged to `/install.sh` by Astro; validation checks bytes and shell syntax. It requires Node 24.21.0 and existing authenticated `gh` read access to the private repository. It fetches the fixed `board-v0.1.0` release, checks GitHub's authenticated asset SHA-256/size, then installs the private production bundle locally. The default path needs no repository setting changes; signed immutable-release attestations are optional with `--attestation`. Never place the bundle, Node modules, repository archive, runtime config or credentials under `public/`.
+The public bootstrap at `public/install.sh` is copied unchanged to `/install.sh` by Astro; validation checks bytes and shell syntax. It requires Node 24.21.0 and existing authenticated `gh` read access to the private repository. It fetches the fixed `holocron-v0.1.1` release, checks GitHub's authenticated asset SHA-256/size, then installs the private production bundle locally. The default path needs no repository setting changes; signed immutable-release attestations are optional with `--attestation`. Never place the bundle, Node modules, repository archive, runtime config or credentials under `public/`.
 
 Publish the private release first using `docs/operations.md#publish-the-private-cli-release-and-installer`, then deploy this static site from the same approved content. Operator acceptance is a real authenticated install in an isolated prefix/bin plus fetched `/install.sh` byte comparison and `--help`. Until both succeed, the documented command remains pending publication/deployment. The companion's live runtime is not reconfigured or restarted by site deployment or CLI installation.

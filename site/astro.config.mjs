@@ -5,7 +5,7 @@ import docsLinks from "./scripts/docs-links.mjs";
 
 export default defineConfig({
   output: "static",
-  site: "https://clipboard.ashray.xyz",
+  site: "https://holocron.ashray.xyz",
   integrations: [zueDocs()],
   markdown: { processor: satteri({ hastPlugins: [docsLinks()] }) }
 });

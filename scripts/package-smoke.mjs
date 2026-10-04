@@ -27,9 +27,9 @@ try {
   assert.ok(paths.includes('docs/cloud-clipboard.md'));
   assert.ok(paths.includes('docs/context-files.md'));
   assert.ok(paths.includes('docs/operations.md'));
-  assert.ok(paths.includes('plugins/shared-clipboard/plugin.json'));
-  assert.ok(paths.includes('plugins/shared-clipboard/.app.json'));
-  const allowed = new Set(['README.md', 'package.json', 'plugins/shared-clipboard/plugin.json', 'plugins/shared-clipboard/.app.json',
+  assert.ok(paths.includes('plugins/holocron/plugin.json'));
+  assert.ok(paths.includes('plugins/holocron/.app.json'));
+  const allowed = new Set(['README.md', 'package.json', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
     ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel',
       'overview', 'getting-started', 'reference', 'troubleshooting'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
@@ -45,20 +45,20 @@ try {
   execFileSync(npm, ['install', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund', join(temporary, packed.filename)], {
     cwd: clean, env: environment, encoding: 'utf8', maxBuffer: 1024 * 1024,
   });
-  const installed = join(clean, 'node_modules/@shared-clipboard/dots-probe');
+  const installed = join(clean, 'node_modules/@amxv/holocron');
   for (const path of paths) assert.deepEqual(await readFile(join(installed, path)), await readFile(path));
   for (const developmentOnly of ['typescript', '@types/node']) await assert.rejects(stat(join(clean, 'node_modules', developmentOnly)));
   const cli = join(installed, 'dist/cli.js');
-  const board = join(installed, 'dist/board.js');
+  const holocron = join(installed, 'dist/holocron.js');
   const cliRun = (args, input) => execFileSync(process.execPath, [cli, ...args], { env: environment, encoding: 'utf8', ...(input !== undefined ? { input } : {}) });
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard-cloud'), ['--help'], { encoding: 'utf8' }), /foreground owner|foreground ownership/);
   assert.match(cliRun(['--help']), /capture explicitly reads the Mac clipboard/);
   assert.match(execFileSync(join(clean, 'node_modules/.bin/shared-clipboard'), ['--help'], { encoding: 'utf8' }), /share-text/);
-  assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.0');
-  for (const name of ['board', 'shared-clipboard', 'shared-clipboard-probe', 'shared-clipboard-cloud']) {
+  assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.1');
+  for (const name of ['holocron', 'holocron-cloud', 'board', 'shared-clipboard', 'shared-clipboard-probe', 'shared-clipboard-cloud']) {
     const bin = join(clean, 'node_modules/.bin', name);
     assert.match(execFileSync(bin, ['--help'], { env: environment, encoding: 'utf8' }), /Usage:/);
-    assert.equal(execFileSync(bin, ['--version'], { env: environment, encoding: 'utf8' }).trim(), '0.1.0');
+    assert.equal(execFileSync(bin, ['--version'], { env: environment, encoding: 'utf8' }).trim(), '0.1.1');
   }
   const operatorConfig = {
     issuer: 'https://synthetic-issuer.invalid', jwksUrl: 'https://synthetic-issuer.invalid/jwks',
@@ -74,7 +74,7 @@ try {
   assert.match(execFileSync(process.execPath, [cli, 'check-config', '--config', configPath], { encoding: 'utf8' }), /remain unverified/);
   const pluginOutput = join(temporary, 'mapped-plugin');
   execFileSync(process.execPath, [cli, 'prepare-plugin', '--connection-id', 'plugin_asdk_app_SYNTHETICTESTONLY', '--output', pluginOutput]);
-  assert.equal(JSON.parse(await readFile(join(pluginOutput, '.app.json'), 'utf8')).apps['shared-clipboard-probe'].id, 'plugin_asdk_app_SYNTHETICTESTONLY');
+  assert.equal(JSON.parse(await readFile(join(pluginOutput, '.app.json'), 'utf8')).apps['holocron'].id, 'plugin_asdk_app_SYNTHETICTESTONLY');
 
   const text = '\ufeffSnow 雪 🚀 "quotes" \'single\' `backticks` $(never-execute) $HOME\nnew line\n';
   const command = (name, ...extra) => [name, ...extra, '--config', configPath];
@@ -124,14 +124,14 @@ try {
   const localConfigPath = join(temporary, 'local.json');
   await writeFile(localConfigPath, JSON.stringify({ transport: 'stdio', stateDirectory: join(temporary, 'stdio-state') }), { mode: 0o600 });
   const localArgs = (name, ...extra) => [name, ...extra, '--local-config', localConfigPath];
-  const boardRun = (args, input) => execFileSync(process.execPath, [board, ...args], {
+  const holocronRun = (args, input) => execFileSync(process.execPath, [holocron, ...args], {
     cwd: '/', env: environment, encoding: 'utf8', ...(input !== undefined ? { input } : {}),
   });
-  const localItem = JSON.parse(boardRun(localArgs('share'), text));
+  const localItem = JSON.parse(holocronRun(localArgs('share'), text));
   const localSelected = join(temporary, 'stdio-selected-context');
   await writeFile(localSelected, text);
   const localDigest = createHash('sha256').update(text).digest('hex');
-  const localFile = JSON.parse(boardRun(localArgs('share-file', localSelected)));
+  const localFile = JSON.parse(holocronRun(localArgs('share-file', localSelected)));
   const writeLog = join(temporary, 'stdio-write-events');
   const fixture = join(temporary, 'stdio-injected-adapter.mjs');
   await writeFile(fixture, `import { appendFile } from 'node:fs/promises';
@@ -143,7 +143,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
   let localReceipt;
   const localRequest = { request_id: 'installed_stdio_receipt_01', text, expected_sha256: localDigest,
     valid_until: new Date(Date.now() + 60000).toISOString() };
-  for (const entry of [cli, board, fixture, fixture]) {
+  for (const entry of [cli, holocron, fixture, fixture]) {
     const transport = new StdioClientTransport({ command: process.execPath,
       args: [entry, ...localArgs('stdio')], env: environment, stderr: 'pipe' });
     let errors = ''; transport.stderr.on('data', (bytes) => { errors += bytes.toString(); });
@@ -183,7 +183,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
   const login = (action) => runCli(command('login-' + action), loginIO, noClipboard, loginEnvironment);
   assert.equal(await login('status'), 0); assert.equal(loginLines.at(-1).nextLogin, 'disabled');
   assert.equal(await login('install'), 0); assert.equal(loginLines.at(-1).launchd, 'unverified');
-  const job = join(home, 'Library', 'LaunchAgents', 'org.shared-clipboard.companion.plist');
+  const job = join(home, 'Library', 'LaunchAgents', 'org.holocron.companion.plist');
   assert.equal((await stat(job)).mode & 0o777, 0o600);
   const jobText = await readFile(job, 'utf8'); assert.ok(jobText.includes(cli));
   assert.equal(await login('install'), 0); assert.equal(await readFile(job, 'utf8'), jobText);
@@ -317,7 +317,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
     assert.equal((await call('read_shared_item', { id: snapshot.id })).isError, true);
     cliRun(command('share-text'), 'clear this');
     assert.equal(JSON.parse(cliRun(command('clear'))).cleared, 1);
-    assert.deepEqual(JSON.parse(await readFile(join(installed, 'plugins/shared-clipboard/.app.json'), 'utf8')), { apps: {} });
+    assert.deepEqual(JSON.parse(await readFile(join(installed, 'plugins/holocron/.app.json'), 'utf8')), { apps: {} });
   } finally {
     await bridge.stop(); store.close();
     server.closeAllConnections();
@@ -361,7 +361,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
     restartedServer.closeAllConnections(); await new Promise((resolve) => restartedServer.close(resolve));
   }
   // Removal uses the isolated prefix only and preserves unrelated profile settings and selected files.
-  execFileSync(npm, ['uninstall', '--ignore-scripts', '--no-audit', '--no-fund', '@shared-clipboard/dots-probe'],
+  execFileSync(npm, ['uninstall', '--ignore-scripts', '--no-audit', '--no-fund', '@amxv/holocron'],
     { cwd: clean, env: environment, encoding: 'utf8', maxBuffer: 1024 * 1024 });
   await assert.rejects(stat(installed));
   assert.equal(await readFile(existingSettings, 'utf8'), 'unrelated-setting = true\n');

@@ -42,7 +42,13 @@ export async function privateFile(path: string, create = false, allowUnlinked = 
 
 export async function stateDirectory(configured?: string): Promise<string> {
   const home = await realpath(homedir());
-  const path = configured ?? join(home, 'Library', 'Application Support', 'shared-clipboard');
+  let path = configured ?? join(home, 'Library', 'Application Support', 'Holocron');
+  if (configured === undefined) {
+    // Preserve historical HTTP state in place when it exists, without copying data.
+    const legacy = join(home, 'Library', 'Application Support', 'shared-clipboard');
+    try { await lstat(legacy); path = legacy; }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+  }
   const fromCwd = relative(resolve(process.cwd()), path);
   if (fromCwd === '' || (!fromCwd.startsWith('..' + '/') && !isAbsolute(fromCwd))) {
     throw new Error('State must be outside the working directory');

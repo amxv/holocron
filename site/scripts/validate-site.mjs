@@ -8,7 +8,7 @@ import { TEXT_LIMIT, FILE_LIMIT, AGGREGATE_LIMIT, READ_LIMIT, SHARE_TTL_MS, REQU
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = join(site, 'dist');
 const content = join(site, '..', 'docs');
-const origin = 'https://clipboard.ashray.xyz';
+const origin = 'https://holocron.ashray.xyz';
 
 async function files(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -40,7 +40,7 @@ for (const [path, html] of documents) {
   const relative = path.slice(output.length).replace(/\/index\.html$/, '/') || '/';
   const canonical = relative === '/404.html' ? '/404' : relative.replace(/\/$/, '') || '/';
   assert.match(html, /<html[^>]+lang="en"/, `${path}: missing language`);
-  assert.match(html, /<title>[^<]*Board[^<]*<\/title>/, `${path}: missing Board title`);
+  assert.match(html, /<title>[^<]*Holocron[^<]*<\/title>/, `${path}: missing Holocron title`);
   assert.match(html, /<meta name="description" content="[^"]+"/, `${path}: missing description`);
   assert.ok(html.includes(`rel="canonical" href="${origin}${canonical}"`), `${path}: wrong canonical`);
   assert.match(html, /property="og:description"/, `${path}: missing social metadata`);

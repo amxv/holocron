@@ -1,10 +1,10 @@
-# Board
+# Holocron
 
-Board shares text and selected UTF-8 context files with ChatGPT and can copy requested literal text to your Mac clipboard. You paste it yourself and decide whether to run it. Shares are explicit immutable snapshots, with no clipboard watcher, automatic paste, command execution, remote live clipboard read or arbitrary filesystem access.
+Holocron shares text and selected UTF-8 context files with ChatGPT and can copy requested literal text to your Mac clipboard. You paste it yourself and decide whether to run it. Shares are explicit immutable snapshots, with no clipboard watcher, automatic paste, command execution, remote live clipboard read or arbitrary filesystem access.
 
-Start with the [Board setup guide](https://clipboard.ashray.xyz/docs/getting-started), or the offline `docs/getting-started.md` guide. The [one-command installer](docs/operations.md#one-command-cli-installation) uses existing authenticated GitHub CLI access to the private release, verifies GitHub-recorded SHA-256 and installs a convenient `board` executable. After publication/deployment: `curl -fsSL https://clipboard.ashray.xyz/install.sh | sh`. It requires Node 24.21.0 and reads no existing runtime config/state. Link an existing setup explicitly with `board link --local-config /absolute/private/local.json`, then `board copy` to share your copied text once. The complete [private Secure MCP Tunnel guide](docs/secure-mcp-tunnel.md) covers owner-only config, direct STDIO launch and your existing tunnel. No external OAuth provider is needed for that private transport.
+Start with the [Holocron setup guide](https://holocron.ashray.xyz/docs/getting-started), or the offline `docs/getting-started.md` guide. The [one-command installer](docs/operations.md#one-command-cli-installation) uses existing authenticated GitHub CLI access to the private release, verifies GitHub-recorded SHA-256 and installs a convenient `holocron` executable. After publication/deployment: `curl -fsSL https://holocron.ashray.xyz/install.sh | sh`. It requires Node 24.21.0 and reads no existing runtime config/state. Link an existing setup explicitly with `holocron link --local-config /absolute/private/local.json`, then `holocron copy` to share your copied text once. The complete [private Secure MCP Tunnel guide](docs/secure-mcp-tunnel.md) covers owner-only config, direct STDIO launch and your existing tunnel. No external OAuth provider is needed for that private transport.
 
-`board copy` shares a snapshot; normal Paste on the connected computer requires a separate explicit, digest-verified [Wayland helper operation](docs/cloud-clipboard.md#mac-to-cloud) in that viewed session. A connection alone does not deliver an OS clipboard. Historical `shared-clipboard` commands and the independent cloud helper remain available.
+`holocron copy` shares a snapshot; normal Paste on the connected computer requires a separate explicit, digest-verified [Wayland helper operation](docs/cloud-clipboard.md#mac-to-cloud) in that viewed session. A connection alone does not deliver an OS clipboard. Historical `shared-clipboard` commands and the independent cloud helper remain available.
 
 Every authorized private STDIO tunnel/workspace caller acts as the same fixed local owner. Restrict tunnel access to people authorized to read your chosen snapshots and request clipboard writes. The separate [OAuth HTTP setup](docs/phase1-setup.md) retains configured owner/resource/scopes on every protected request. [Operations](docs/operations.md), [text and receipts](docs/text-bridge.md), [context files](docs/context-files.md) and the independent [Linux Wayland cloud helper](docs/cloud-clipboard.md) cover the other boundaries.
 
@@ -17,7 +17,7 @@ Actual ChatGPT/Dots discovery, real tunnel and viewed Mac/cloud clipboard outcom
 ## Validate locally
 
 ```sh
-mise exec node@24.21.0 -- npm ci
+mise exec node@24.21.0 -- npm run ci:all
 mise exec node@24.21.0 -- npm audit
 mise exec node@24.21.0 -- npm run check
 git diff --check
@@ -25,4 +25,6 @@ git diff --check
 
 The gate includes typecheck/build, OAuth security checks, official SDK STDIO subprocess tests, cancellation/failure/receipt recovery, 10 MiB file reconstruction, concurrent sharing/read/revoke stress, and a clean tarball installation without development dependencies. The package is private; public npm publishing is not part of installation.
 
-The documentation website lives in `site/` and consumes canonical root `docs/` files directly. Its dedicated Vercel project root is `site`, with `npm ci`, `npm run build` and output `dist`; enable outside-root source files so the build can read `../docs`. See `site/README.md` for exact website build/deploy settings when that directory is present.
+This private `amxv/holocron` monorepo contains the CLI in `src/`, canonical guides in `docs/`, the static website in `site/` and the [Raycast extension](https://github.com/amxv/holocron/blob/main/raycast/README.md) in `raycast/`. Each npm project has an independent lockfile. `npm run ci:all` installs all three; root `npm run check` validates CLI packaging/installer, Raycast lint/build/tests and Astro diagnostics. Scoped checks are `check:cli`, `check:raycast` and `check:site`; the site gate runs only `astro check`. Build the CLI before Raycast integration tests. Distribution includes only CLI production code/dependencies, guides and the unmapped plugin scaffold, excluding website and Raycast sources/dependencies.
+
+The website consumes root `docs/` directly. Its Vercel root stays `site`, with `npm ci`, `npm run build`, output `dist` and outside-root source files enabled. See `site/README.md` for deployment settings. The canonical site is `https://holocron.ashray.xyz`.

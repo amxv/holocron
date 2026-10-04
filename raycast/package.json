@@ -1,0 +1,82 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "holocron",
+  "version": "0.1.1",
+  "title": "Holocron",
+  "description": "Explicitly share a Mac clipboard snapshot or selected Finder file with Holocron for ChatGPT.",
+  "icon": "icon.png",
+  "author": "amxv",
+  "owner": "zue-ai",
+  "access": "private",
+  "license": "MIT",
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Productivity",
+    "Developer Tools"
+  ],
+  "keywords": [
+    "holocron",
+    "clipboard",
+    "share",
+    "chatgpt",
+    "shortcut"
+  ],
+  "engines": {
+    "node": ">=24.21.0"
+  },
+  "scripts": {
+    "dev": "ray develop",
+    "build": "ray build -e dist",
+    "lint": "ray lint",
+    "test": "tsc --project tsconfig.tests.json && tsx --test tests/*.test.ts",
+    "publish": "ray publish",
+    "check": "npm run lint && npm run build && npm test"
+  },
+  "preferences": [
+    {
+      "name": "executablePath",
+      "title": "Holocron CLI Executable",
+      "description": "Leave blank for ~/.local/bin/holocron, or enter the absolute path to an installed Holocron CLI. Shell commands are not supported.",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "/Users/you/.local/bin/holocron"
+    },
+    {
+      "name": "localConfigPath",
+      "title": "Local Holocron Config",
+      "description": "Optional absolute path to a Holocron local JSON config. Leave blank to use the CLI's existing private config reference.",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "/absolute/path/to/holocron-local.json"
+    }
+  ],
+  "commands": [
+    {
+      "name": "share-clipboard",
+      "title": "Share Clipboard with Holocron",
+      "subtitle": "Holocron",
+      "description": "Capture the current Mac text clipboard once and share it with Holocron for ChatGPT. This does not fill a remote computer clipboard.",
+      "mode": "no-view"
+    },
+    {
+      "name": "share-finder-file",
+      "title": "Share Selected Finder File with Holocron",
+      "subtitle": "Holocron",
+      "description": "Explicitly share one selected Finder UTF-8 file up to 10 MiB with Holocron for ChatGPT.",
+      "mode": "no-view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "2.6.2"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "2.2.0",
+    "@types/node": "22.19.17",
+    "eslint": "^9.39.2",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

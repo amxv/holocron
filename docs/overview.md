@@ -1,11 +1,11 @@
 ---
-title: "What is Board?"
+title: "What is Holocron?"
 description: "Explicit context sharing between your Mac and ChatGPT Dots."
 order: 1
 category: "Start"
 ---
 
-Board is a personal Mac companion for sharing selected text and UTF-8 context files with ChatGPT Dots. A connected dot can read those snapshots and, when you ask, copy literal text to your Mac clipboard. You paste it yourself.
+Holocron is a personal Mac companion for sharing selected text and UTF-8 context files with ChatGPT Dots. A connected dot can read those snapshots and, when you ask, copy literal text to your Mac clipboard. You paste it yourself.
 
 [Start the setup guide](getting-started.md) to install the companion, connect your account and share your first item.
 
@@ -27,7 +27,7 @@ The primary [private STDIO tunnel](secure-mcp-tunnel.md) needs no external OAuth
 ## Choose what you share
 
 - **Text:** [Capture your Mac clipboard once](text-bridge.md) or share literal UTF-8 stdin. Later clipboard changes are not visible to the dot.
-- **Files:** [Select one UTF-8 context file](context-files.md). Board captures a frozen copy, hides the source path and reads it in bounded pages.
+- **Files:** [Select one UTF-8 context file](context-files.md). Holocron captures a frozen copy, hides the source path and reads it in bounded pages.
 - **Replies:** Ask the dot to copy a response to the Mac. The text stays literal; a completed copy does not mean a command ran.
 - **Cloud clipboard:** [Install the independent helper](cloud-clipboard.md) if the actual viewed session supports Wayland. Preserve the original digest when moving bytes between computers.
 

@@ -1,24 +1,42 @@
 {
-  "name": "@shared-clipboard/dots-probe",
-  "version": "0.1.0",
+  "name": "@amxv/holocron",
+  "version": "0.1.1",
   "private": true,
   "description": "Private owner-authenticated text and selected UTF-8 file sharing with literal Mac clipboard MCP writes",
   "type": "module",
-  "engines": { "node": "24.21.0" },
+  "engines": {
+    "node": "24.21.0"
+  },
   "packageManager": "npm@11.19.0",
-  "bin": { "board": "dist/board.js", "shared-clipboard": "dist/cli.js", "shared-clipboard-probe": "dist/cli.js", "shared-clipboard-cloud": "dist/cloud-cli.js" },
-  "files": ["dist", "plugins/shared-clipboard", "docs", "README.md"],
+  "bin": {
+    "holocron": "dist/holocron.js",
+    "holocron-cloud": "dist/cloud-cli.js",
+    "board": "dist/board.js",
+    "shared-clipboard": "dist/cli.js",
+    "shared-clipboard-probe": "dist/cli.js",
+    "shared-clipboard-cloud": "dist/cloud-cli.js"
+  },
+  "files": [
+    "dist",
+    "plugins/holocron",
+    "docs",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test --test-concurrency=1 tests/*.test.ts",
-    "start": "node dist/cli.js",
-    "check": "npm run typecheck && npm run build && npm test && npm run package:smoke && npm run installer:smoke && npm run source:check",
+    "start": "node dist/holocron.js",
+    "check": "npm run check:cli && npm run check:raycast && npm run check:site",
     "source:check": "node scripts/source-check.mjs",
     "package:smoke": "node scripts/package-smoke.mjs",
     "release:bundle": "npm run build && node scripts/release-bundle.mjs",
     "installer:smoke": "node scripts/installer-smoke.mjs",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "check:cli": "npm run typecheck && npm run build && npm test && npm run package:smoke && npm run installer:smoke && npm run source:check",
+    "check:raycast": "npm --prefix raycast run check",
+    "check:site": "npm --prefix site run check",
+    "ci:all": "npm ci && npm --prefix raycast ci && npm --prefix site ci"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.0",
@@ -28,5 +46,10 @@
   "devDependencies": {
     "@types/node": "24.19.1",
     "typescript": "7.0.2"
+  },
+  "homepage": "https://holocron.ashray.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amxv/holocron.git"
   }
 }

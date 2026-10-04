@@ -2,41 +2,41 @@
 title: Cloud clipboard helper
 description: Install and operate the independent Linux Wayland clipboard helper.
 order: 8
-category: Use Board
+category: Use Holocron
 ---
 
-The independent helper works with [private STDIO tunnel](secure-mcp-tunnel.md) or OAuth HTTP Board connections. Private STDIO callers share the local owner authority. The helper receives no tunnel/provider credentials and is installed separately in the selected cloud graphical session.
+The independent helper works with [private STDIO tunnel](secure-mcp-tunnel.md) or OAuth HTTP Holocron connections. Private STDIO callers share the local owner authority. The helper receives no tunnel/provider credentials and is installed separately in the selected cloud graphical session.
 
-`shared-clipboard-cloud` is an optional, independent Linux helper. It has no network client, OAuth/tunnel configuration, tokens, automatic installation, clipboard watcher, keyboard events or command execution. Existing Mac clipboard and context tools work without it. Standard backend support and local injected-process tests are implemented. **Actual intended Dots, provider/tunnel and viewed graphical clipboard compatibility are deferred and unverified.**
+`holocron-cloud` is an optional, independent Linux helper. It has no network client, OAuth/tunnel configuration, tokens, automatic installation, clipboard watcher, keyholocron events or command execution. Existing Mac clipboard and context tools work without it. Standard backend support and local injected-process tests are implemented. **Actual intended Dots, provider/tunnel and viewed graphical clipboard compatibility are deferred and unverified.**
 
 ## Install and probe explicitly
 
-With existing authenticated `gh` read access to the private Board repository, the [one-command installer](operations.md#one-command-cli-installation) also runs in supported Linux helper contexts. It requires Node `24.21.0`, downloads the verified private production bundle, and needs no Mac/operator/tunnel config. After publication and installer deployment:
+With existing authenticated `gh` read access to the private Holocron repository, the [one-command installer](operations.md#one-command-cli-installation) also runs in supported Linux helper contexts. It requires Node `24.21.0`, downloads the verified private production bundle, and needs no Mac/operator/tunnel config. After publication and installer deployment:
 
 ```sh
-curl -fsSL https://clipboard.ashray.xyz/install.sh | sh
-"$HOME/.local/bin/board" cloud probe
+curl -fsSL https://holocron.ashray.xyz/install.sh | sh
+"$HOME/.local/bin/holocron" cloud probe
 ```
 
-Use `board cloud read` or `board cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE` for the same literal formats and foreground ownership contract below. `board cloud` never reads the CLI profile or Mac config. A helper install provides no automatic pairing, share download or clipboard delivery. If this computer has no private repository access, the operator can explicitly provide the verified private artifact through an already-authorized private transfer; do not export Mac tunnel credentials or make the source public. The source/tarball route remains available:
+Use `holocron cloud read` or `holocron cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE` for the same literal formats and foreground ownership contract below. `holocron cloud` never reads the CLI profile or Mac config. A helper install provides no automatic pairing, share download or clipboard delivery. If this computer has no private repository access, the operator can explicitly provide the verified private artifact through an already-authorized private transfer; do not export Mac tunnel credentials or make the source public. The source/tarball route remains available:
 
-Use the same built package artifact as the Mac companion, with Node `24.21.0` and npm `11.19.0`. For a local artifact named `shared-clipboard-dots-probe-0.1.0.tgz`, install it explicitly on the cloud computer:
+Use the same built package artifact as the Mac companion, with Node `24.21.0` and npm `11.19.0`. For a local artifact named `amxv-holocron-0.1.1.tgz`, install it explicitly on the cloud computer:
 
 ```sh
 umask 077
-SC_CLOUD="$HOME/.local/share/shared-clipboard-helper"
+SC_CLOUD="$HOME/.local/share/holocron-helper"
 # Use a fresh dedicated prefix; create its parent first if missing.
 mkdir "$SC_CLOUD"
-npm install --prefix "$SC_CLOUD" --omit=dev --ignore-scripts ./shared-clipboard-dots-probe-0.1.0.tgz
-SC_HELPER="$SC_CLOUD/node_modules/.bin/shared-clipboard-cloud"
+npm install --prefix "$SC_CLOUD" --omit=dev --ignore-scripts ./amxv-holocron-0.1.1.tgz
+SC_HELPER="$SC_CLOUD/node_modules/.bin/holocron-cloud"
 "$SC_HELPER" --version
 "$SC_HELPER" --help
 "$SC_HELPER" probe
 ```
 
-The artifact must already contain `dist`; build/pack in the source checkout with `npm ci`, `npm run check`, and `npm pack`. This is independent of plugin registration. Neither the plugin nor this helper installs the other or grants graphical-session access.
+The artifact must already contain `dist`; build/pack in the source checkout with `npm run ci:all`, `npm run check`, and `npm pack`. This is independent of plugin registration. Neither the plugin nor this helper installs the other or grants graphical-session access.
 
-Activate exactly the pinned Node/npm before these commands. Subsequent examples use `shared-clipboard-cloud` for readability: substitute the recorded absolute `"$SC_HELPER"` or deliberately add only this dedicated bin directory to your task PATH. Never transfer the Mac operator configuration, generated connection mapping, tunnel profile/key or OAuth credentials with the tarball. For removal, gracefully stop the helper first, then `npm uninstall --prefix "$SC_CLOUD" --ignore-scripts @shared-clipboard/dots-probe`; preserve unrelated packages/task files and remove directories only if empty. [Private operations](operations.md) covers the separate Mac/plugin/tunnel lifecycle and live acceptance.
+Activate exactly the pinned Node/npm before these commands. Subsequent examples use `holocron-cloud` for readability: substitute the recorded absolute `"$SC_HELPER"` or deliberately add only this dedicated bin directory to your task PATH. Never transfer the Mac operator configuration, generated connection mapping, tunnel profile/key or OAuth credentials with the tarball. For removal, gracefully stop the helper first, then `npm uninstall --prefix "$SC_CLOUD" --ignore-scripts @amxv/holocron`; preserve unrelated packages/task files and remove directories only if empty. [Private operations](operations.md) covers the separate Mac/plugin/tunnel lifecycle and live acceptance.
 
 The single supported backend is Wayland `wl-clipboard`, using fixed `/usr/bin/wl-copy` and `/usr/bin/wl-paste`. Install that standard package through the cloud image's approved OS package workflow if needed, then start the helper in the intended graphical session's authorized task environment. Both executables must support `--type`; copy must support `--foreground`, and paste `--no-newline`. No custom executable selector or PATH search exists. X11-only sessions, macOS and Windows are unsupported. A distribution installing elsewhere needs an explicit implementation adaptation, not a command override.
 
@@ -52,10 +52,10 @@ The limit is 256 KiB of exact UTF-8 bytes. Empty text, BOM, Unicode, quotes, bac
 
 ```sh
 # DATA_FILE already contains exact verified bytes; use the actual original digest.
-shared-clipboard-cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE
+holocron-cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE
 
 # Explicitly capture once; stdout is sensitive literal data, not a general log.
-shared-clipboard-cloud read > cloud-read.json
+holocron-cloud read > cloud-read.json
 ```
 
 `read` emits one JSON object to stdout with `backend: "wayland"`, exact `text`, UTF-8 `byteCount`, lowercase `sha256`, and `viewedDesktop: "unverified"`. The JSON line's framing newline is not part of `text`. Decode the JSON string and UTF-8 encode that string; do not hash the escaped JSON source or raw stdout. An initial text BOM remains inside `text`. Save the result privately through the task's data/file tools. Error JSON on stderr contains only a safe code, no clipboard contents, environment, paths or tokens. A failed operation exits nonzero. Explicit read never watches or writes a clipboard.
@@ -78,7 +78,7 @@ Only after the user explicitly shares a Mac snapshot and requests cloud clipboar
 
 1. Use authenticated `list_shared_items` and `read_shared_item`. Save the exact structured page objects as data through the dot's existing tools, not by retyping their text. Follow the returned UTF-8 byte `nextOffset` until complete. A context file can also be used if it fits the clipboard limit.
 2. Check one immutable ID/kind, matching `sha256`/`byteCount`, contiguous byte offsets, one final complete page, total bytes and full digest. UTF-8 encode and concatenate exact `text`, preserving BOM and every newline. See [Context file materialization](context-files.md) for the full page-verification example; the same chain applies to `kind: "text"` with the 256 KiB bound. Save only the verified bytes into a chosen cloud data file.
-3. Manually invoke `shared-clipboard-cloud write --sha256` with the **original snapshot digest** and `--file` with that file. The helper independently validates bytes and digest before any mutation, then verifies backend readback and holds ownership. Preserve the owner process while pasting. On mismatch, reread/rematerialize rather than changing the expected digest.
+3. Manually invoke `holocron-cloud write --sha256` with the **original snapshot digest** and `--file` with that file. The helper independently validates bytes and digest before any mutation, then verifies backend readback and holds ownership. Preserve the owner process while pasting. On mismatch, reread/rematerialize rather than changing the expected digest.
 4. The user takes over the intended viewed cloud desktop and pastes into a benign editor to validate exact bytes before choosing whether to execute anything. This live check remains deferred.
 
 The chain is original immutable snapshot SHA-256 → exact structured pages → verified materialized bytes → required helper expected digest → exact backend readback. Model transcription cannot silently pass with the original digest. Returning content does not itself authorize writing a clipboard, executing the text, or treating it as an attachment.

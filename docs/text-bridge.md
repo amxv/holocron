@@ -2,10 +2,10 @@
 title: Text sharing and clipboard writes
 description: Explicit text snapshots, literal clipboard writes, bounds and durable receipts.
 order: 6
-category: Use Board
+category: Use Holocron
 ---
 
-For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Board/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
+For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Holocron/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
 
 The companion implements local text sharing, selected UTF-8 context files and the authenticated MCP flow. See [Selected context files](context-files.md) for explicit file selection and exact digest-verified materialization. Actual provider/OAuth callback, tunnel, registered plugin in the intended dot, real Mac clipboard/editor, dot file reconstruction and viewed cloud clipboard validation are deferred and unverified. Local source and clean installed-package checks use injected clipboard adapters. They never access an existing OS clipboard.
 
@@ -13,11 +13,11 @@ The companion implements local text sharing, selected UTF-8 context files and th
 
 [Private installation and operation](operations.md) provides the repeatable dedicated-prefix tarball install, foreground lifecycle, explicit optional next-login setup and scoped removal. Setup does not touch other ChatGPT/Codex settings or current clipboards.
 
-Use the pinned Node/npm versions and build first (`npm ci && npm run build`). Both installed bin names, `shared-clipboard` and the existing `shared-clipboard-probe` alias, run the same CLI. The package and portable mapping retain their existing identifiers for compatibility.
+Use the pinned Node/npm versions and build first (`npm ci && npm run build`). The canonical `holocron` executable supports this explicit HTTP route. Legacy `shared-clipboard` and `shared-clipboard-probe` retain the direct CLI contract; `board` delegates to Holocron. Existing generated plugin mappings remain valid, while new mappings use `holocron`.
 
 An existing established provider must grant three distinct, actually configured scopes: status, shared-context read, and clipboard write. Add `writeScope` to the private operator JSON shown in [Connection setup](phase1-setup.md); it has no invented default. Configuration must be an absolute regular non-symlink file, mode `0600`, in a directory accessible only to the same unprivileged OS user. No token or client secret belongs in it. `check-config` checks its structure without network or clipboard access.
 
-State defaults to `~/Library/Application Support/shared-clipboard`, outside the checkout. An optional absolute `stateDirectory` selects another private external directory. The service refuses state/config symlinks, unsafe permissions, nonregular/hardlinked database files and unsafe SQLite journal files. Ancestors must not be writable by other users, except system-owned sticky temporary directories. Root operation is refused. Local management is separate from remote OAuth: filesystem access and a `0600` Unix socket in the `0700` state directory restrict it to the same OS user.
+State defaults to `~/Library/Application Support/holocron`, outside the checkout. An optional absolute `stateDirectory` selects another private external directory. The service refuses state/config symlinks, unsafe permissions, nonregular/hardlinked database files and unsafe SQLite journal files. Ancestors must not be writable by other users, except system-owned sticky temporary directories. Root operation is refused. Local management is separate from remote OAuth: filesystem access and a `0600` Unix socket in the `0700` state directory restrict it to the same OS user.
 
 ```sh
 node dist/cli.js check-config --config /absolute/private/operator.json
@@ -45,7 +45,7 @@ node dist/cli.js stop --config /absolute/private/operator.json
 
 CLI list displays up to 20 share records; remote list supports cursor pagination. Management prints only safe metadata and generic errors, never share/clipboard contents, local paths, owner subjects or tokens. A label is 1 to 80 printable ASCII letters/digits/spaces/dots/underscores/hyphens, starts with a letter/digit and has no trailing space. Capture with an invalid label fails before reading the clipboard. `share-text` reads stdin until EOF and does not accept a path or command argument.
 
-Native Mac operations invoke only `/usr/bin/pbpaste -Prefer txt` and `/usr/bin/pbcopy`, with bytes through stdout/stdin, no shell interpolation or keyboard events. Clipboard text never executes. Non-Mac platforms report the Mac adapter unavailable. On Mac, status reports it configured, with live OS verification still unverified. Stop or revoke leaves unrelated clipboard contents alone. Disconnecting the remote connection is managed in ChatGPT, and stopping the local service disables its endpoint.
+Native Mac operations invoke only `/usr/bin/pbpaste -Prefer txt` and `/usr/bin/pbcopy`, with bytes through stdout/stdin, no shell interpolation or keyholocron events. Clipboard text never executes. Non-Mac platforms report the Mac adapter unavailable. On Mac, status reports it configured, with live OS verification still unverified. Stop or revoke leaves unrelated clipboard contents alone. Disconnecting the remote connection is managed in ChatGPT, and stopping the local service disables its endpoint.
 
 ## Dot workflow and authorization
 

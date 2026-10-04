@@ -16,7 +16,7 @@ Start with [Private installation and operation](operations.md) for the clean loc
 The runtime is pinned to Node `24.21.0` (LTS), npm `11.19.0`, the official `@modelcontextprotocol/sdk` `1.32.0`, `jose` `6.2.12`, and Zod `4.6.5`. TypeScript is `7.0.2`. Versions were checked against current package manifests and [Node releases](https://nodejs.org/en/about/previous-releases). The lockfile pins transitive dependencies.
 
 ```sh
-mise exec node@24.21.0 -- npm ci
+mise exec node@24.21.0 -- npm run ci:all
 mise exec node@24.21.0 -- npm run check
 ```
 
@@ -70,13 +70,13 @@ Follow the current [Secure MCP Tunnel documentation](https://developers.openai.c
 3. Install the official full `tunnel-client` from the OpenAI Homebrew tap on macOS (`brew install openai/tools/tunnel-client`), or follow Platform settings/the latest official release for your platform. Use the supported current download and inspect its installed help. Start with `tunnel-client help quickstart`. The HTTP/OAuth starter is `sample_mcp_with_dcr`; its name does not select or verify a DCR provider. Use a fresh profile directory/name, without `--force`:
 
 ```sh
-tunnel-client init --sample sample_mcp_with_dcr --profile shared-clipboard-probe \
+tunnel-client init --sample sample_mcp_with_dcr --profile holocron \
   --profile-dir /absolute/path/to/new-private-profile-directory \
   --tunnel-id ACTUAL_TUNNEL_ID --mcp-server-url http://127.0.0.1:4317/mcp \
   --control-plane-api-key-ref env:CONTROL_PLANE_API_KEY --health-listen-addr 127.0.0.1:0
 ```
 
-Add only the actual canonical resource/metadata origin and external provider discovery origins to `mcp.oauth_trusted_origins` in this new profile before running `doctor --profile shared-clipboard-probe --profile-dir /absolute/path/to/new-private-profile-directory --explain` and `run` with the same profile/directory. Current client discovery otherwise trusts only the configured loopback MCP origin. The runtime also exposes repeatable `--mcp.oauth-trusted-origin` flags for those exact origins. Keep unsafe raw HTTP logging, payload capture, remote admin UI, generic proxy/Harpoon targets, and static MCP Authorization overrides disabled. User bearer tokens must reach the probe intact; no shared static bearer token substitutes for owner OAuth. No unrelated profile or configuration is changed.
+Add only the actual canonical resource/metadata origin and external provider discovery origins to `mcp.oauth_trusted_origins` in this new profile before running `doctor --profile holocron --profile-dir /absolute/path/to/new-private-profile-directory --explain` and `run` with the same profile/directory. Current client discovery otherwise trusts only the configured loopback MCP origin. The runtime also exposes repeatable `--mcp.oauth-trusted-origin` flags for those exact origins. Keep unsafe raw HTTP logging, payload capture, remote admin UI, generic proxy/Harpoon targets, and static MCP Authorization overrides disabled. User bearer tokens must reach the probe intact; no shared static bearer token substitutes for owner OAuth. No unrelated profile or configuration is changed.
 4. Keep the probe and tunnel client running. With GG, launch long-lived services using managed processes. The tunnel runtime key is only for the tunnel client; it is not a user bearer token for this MCP server.
 5. Add the developer connection at ChatGPT Plugins, choose Tunnel, select the actual tunnel, and review discovered tools. Establish the canonical resource identifier used by this connection/provider and verify OAuth discovery through the tunnel. Do not invent an endpoint or assume the tunnel's forwarding of Host/Origin/token headers works before the live test.
 6. Copy the **exact** OAuth redirect URI displayed on the connection's management page into the provider allowlist. Current docs describe stable redirects only for providers satisfying issuer identification; others use a callback-specific URI. Record the actual URI, registration mode, public discovery URLs, resource/audience, scopes, and algorithm/type that succeeded. Do not preselect a callback by guessing from documentation.
@@ -86,7 +86,7 @@ Add only the actual canonical resource/metadata origin and external provider dis
 node dist/cli.js prepare-plugin --connection-id ACTUAL_REGISTERED_ID --output /absolute/path/to/new-private-plugin
 ```
 
-Use a canonical absolute new directory outside the checkout, inside an owner-only private parent such as the operator directory from the installation guide. This creates root `plugin.json` and `.app.json`, both mode `0600`, in a `0700` directory, with `apps.shared-clipboard-probe.id`. It refuses unsafe parents/existing output and never edits marketplace/Codex settings. ID validation checks syntax only; the actual connection must exist and be tested independently. The committed `.app.json` has `apps: {}` and registers nothing. Put the genuine technical ID only in the generated private package, never the distributable scaffold. On this machine, preserve `~/.gg/codex` and all unrelated settings/plugins. The [portable plugin packaging documentation](https://developers.openai.com/plugins/build/plugins) uses `extensions.com.openai.apps` to reference this mapping.
+Use a canonical absolute new directory outside the checkout, inside an owner-only private parent such as the operator directory from the installation guide. This creates root `plugin.json` and `.app.json`, both mode `0600`, in a `0700` directory, with `apps.holocron.id`. It refuses unsafe parents/existing output and never edits marketplace/Codex settings. ID validation checks syntax only; the actual connection must exist and be tested independently. The committed `.app.json` has `apps: {}` and registers nothing. Put the genuine technical ID only in the generated private package, never the distributable scaffold. On this machine, preserve `~/.gg/codex` and all unrelated settings/plugins. The [portable plugin packaging documentation](https://developers.openai.com/plugins/build/plugins) uses `extensions.com.openai.apps` to reference this mapping.
 
 Install and enable the private plugin in the actual product surface that the intended dot can access. Local marketplace availability varies by surface. A Codex-local plugin installation does not prove that the cloud dot sees it. Refresh the connection after metadata changes and repeat the calls in a fresh actual dot conversation.
 
@@ -103,19 +103,19 @@ mkdir "$SC_MARKET"
 mkdir "$SC_MARKET/plugins"
 mkdir -p "$SC_MARKET/.agents/plugins"
 "$SC_NODE" "$SC_CLI" prepare-plugin --connection-id ACTUAL_REGISTERED_ID \
-  --output "$SC_MARKET/plugins/shared-clipboard"
+  --output "$SC_MARKET/plugins/holocron"
 ```
 
 Create a new `"$SC_MARKET/.agents/plugins/marketplace.json"` with mode `0600` and this catalog. Relative paths are resolved from the marketplace root; no real ID or credential belongs in the catalog itself:
 
 ```json
 {
-  "name": "shared-clipboard-personal",
+  "name": "holocron-personal",
   "interface": { "displayName": "Personal Shared Clipboard" },
   "plugins": [
     {
-      "name": "shared-clipboard-probe",
-      "source": { "source": "local", "path": "./plugins/shared-clipboard" },
+      "name": "holocron",
+      "source": { "source": "local", "path": "./plugins/holocron" },
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
       "category": "Productivity"
     }
@@ -123,9 +123,9 @@ Create a new `"$SC_MARKET/.agents/plugins/marketplace.json"` with mode `0600` an
 }
 ```
 
-On a surface supporting the current official Codex marketplace CLI, explicitly register this new root with `codex plugin marketplace add "$SC_MARKET"`, then use `codex plugin marketplace list` to inspect it. This supported add is a separate user-run opt-in; the bridge generator never modifies Codex configuration. Keep this machine's existing `~/.gg/codex` configuration in place, and do not replace another marketplace. Restart the ChatGPT desktop app, open Plugins Directory, choose Personal Shared Clipboard, install/enable the plugin and authorize its actual connection. For updated metadata, refresh the developer connection and use a fresh chat; for a catalog update, the supported command is `codex plugin marketplace upgrade shared-clipboard-personal`.
+On a surface supporting the current official Codex marketplace CLI, explicitly register this new root with `codex plugin marketplace add "$SC_MARKET"`, then use `codex plugin marketplace list` to inspect it. This supported add is a separate user-run opt-in; the bridge generator never modifies Codex configuration. Keep this machine's existing `~/.gg/codex` configuration in place, and do not replace another marketplace. Restart the ChatGPT desktop app, open Plugins Directory, choose Personal Shared Clipboard, install/enable the plugin and authorize its actual connection. For updated metadata, refresh the developer connection and use a fresh chat; for a catalog update, the supported command is `codex plugin marketplace upgrade holocron-personal`.
 
-This documented desktop path remains untested in the actual intended dot/account. If its product surface has no local marketplace support or does not expose the plugin to that dot, report that concrete compatibility gap; broad computer access or a local Inspector result cannot substitute. Removal disables/uninstalls this plugin in its actual surface and uses `codex plugin marketplace remove shared-clipboard-personal` only for this dedicated source, then deletes its own private files after inspecting them. Neither marketplace removal nor file deletion revokes the external provider/tunnel/registered connection.
+This documented desktop path remains untested in the actual intended dot/account. If its product surface has no local marketplace support or does not expose the plugin to that dot, report that concrete compatibility gap; broad computer access or a local Inspector result cannot substitute. Removal disables/uninstalls this plugin in its actual surface and uses `codex plugin marketplace remove holocron-personal` only for this dedicated source, then deletes its own private files after inspecting them. Neither marketplace removal nor file deletion revokes the external provider/tunnel/registered connection.
 
 The listener binds only IPv4 loopback. Host must exactly equal `127.0.0.1:<actual-port>`; forwarded-host headers are ignored. Missing Origin is accepted for nonbrowser tunnel traffic; present Origin requires an exact configured HTTPS origin. No wildcard CORS, cookie auth, query tokens, session authority, arbitrary path, generic fetch, shell, or remote clipboard capture is exposed. `/mcp` accepts one bounded UTF-8 JSON-RPC POST, with JSON responses through the official Streamable HTTP transport. GET/DELETE streaming sessions are disabled because the service is stateless. The HTTP body limit is `6 × 256 KiB + 16 KiB` for worst-case escaped text; decoded text is still limited to 256 KiB. Headers remain 8 KiB, active authorized/verification requests 16, sockets 64, and full-request deadline ten seconds. Preflight is restricted to POST and known MCP headers. The actual tunnel must preserve bearer authorization and supported MCP protocol/Accept headers and forward a loopback Host (or the boundary must be deliberately adapted and retested based on observed evidence).
 
@@ -143,8 +143,8 @@ Use an explicitly authorized task on the intended dot's cloud computer. Local sh
 
 After access is provided, inspect the desktop the user actually sees and choose its helper/backend based on that session. Establish session permission and any clipboard ownership lifetime. Only then use harmless markers:
 
-- Ask the authorized helper to write literal `shared-clipboard-phase1-paste-2026-10-04` to that graphical session's clipboard. Take over the same viewed desktop and paste into a benign text field. Record the visible exact result without submitting or executing it.
-- In that same viewed session, copy `shared-clipboard-phase1-capture-2026-10-04` from a benign field. Capture it through the authorized helper and compare exact bytes. Record the visible session identity and helper result without reading unrelated existing clipboard content.
+- Ask the authorized helper to write literal `holocron-phase1-paste-2026-10-04` to that graphical session's clipboard. Take over the same viewed desktop and paste into a benign text field. Record the visible exact result without submitting or executing it.
+- In that same viewed session, copy `holocron-phase1-capture-2026-10-04` from a benign field. Capture it through the authorized helper and compare exact bytes. Record the visible session identity and helper result without reading unrelated existing clipboard content.
 
 Do not declare viewed-session compatibility from `DISPLAY`, an OS name, installed commands, or a helper's exit status alone. Record the actual paste and capture, task/session, date, helper invocation and backend, access restrictions, and ownership constraints. Backend detection does not complete these live checks.
 

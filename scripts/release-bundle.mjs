@@ -7,7 +7,7 @@ const root = process.cwd();
 const output = resolve(process.argv[2] ?? 'tmp/gg/releases');
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 if (process.version !== 'v24.21.0') throw new Error('Activate Node 24.21.0');
-const temporary = await mkdtemp(join(await realpath('/tmp'), 'board-release-'));
+const temporary = await mkdtemp(join(await realpath('/tmp'), 'holocron-release-'));
 try {
   const bundle = join(temporary, 'package'); await mkdir(bundle, { mode: 0o700 });
   for (const name of ['package.json', 'package-lock.json', 'README.md', 'dist', 'docs', 'plugins']) {
@@ -26,11 +26,11 @@ try {
     }
   }
   await noLinks(bundle);
-  execFileSync(process.execPath, [join(bundle, 'dist/board.js'), '--version'], { stdio: 'inherit' });
+  execFileSync(process.execPath, [join(bundle, 'dist/holocron.js'), '--version'], { stdio: 'inherit' });
   execFileSync(process.execPath, [join(bundle, 'dist/cli.js'), '--help'], { stdio: 'ignore' });
   execFileSync(process.execPath, [join(bundle, 'dist/cloud-cli.js'), '--help'], { stdio: 'ignore' });
   await mkdir(output, { recursive: true });
-  const asset = `board-${manifest.version}.tgz`; const destination = join(output, asset);
+  const asset = `holocron-${manifest.version}.tgz`; const destination = join(output, asset);
   try { await lstat(destination); throw new Error('Release artifact already exists; choose a fresh output directory'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   execFileSync('tar', ['-czf', destination, '-C', temporary, 'package']);

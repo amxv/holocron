@@ -16,14 +16,14 @@ import type { Readable, Writable } from 'node:stream';
 import { loadLocalConfig, localOwnerId } from './local-config.ts';
 import { startStdio } from './stdio.ts';
 
-const help = `Usage: shared-clipboard <start|stop|status|check-config|capture|share-text|list|clear> --config <private JSON file>
-       shared-clipboard <capture|share-text> --config <private JSON file> [--name <safe label>]
-       shared-clipboard share-file <selected UTF-8 file> --config <private JSON file> [--name <safe label>]
-       shared-clipboard revoke <share ID> --config <private JSON file>
-       shared-clipboard prepare-plugin --connection-id <registered ID> --output <new directory>
-       shared-clipboard <login-install|login-status|login-remove> --config <absolute private JSON file>
-       shared-clipboard stdio --local-config <absolute private JSON file>
-       shared-clipboard <check-config|capture|share-text|share-file|list|revoke|clear|status|stop> --local-config <absolute private JSON file> [selection/label]
+const help = `Usage: holocron <start|stop|status|check-config|capture|share-text|list|clear> --config <private JSON file>
+       holocron <capture|share-text> --config <private JSON file> [--name <safe label>]
+       holocron share-file <selected UTF-8 file> --config <private JSON file> [--name <safe label>]
+       holocron revoke <share ID> --config <private JSON file>
+       holocron prepare-plugin --connection-id <registered ID> --output <new directory>
+       holocron <login-install|login-status|login-remove> --config <absolute private JSON file>
+       holocron stdio --local-config <absolute private JSON file>
+       holocron <check-config|capture|share-text|share-file|list|revoke|clear|status|stop> --local-config <absolute private JSON file> [selection/label]
 capture explicitly reads the Mac clipboard. share-text reads UTF-8 stdin only.
 share-file snapshots one explicitly selected regular UTF-8 file, at most 10 MiB, without exposing its path.
 start runs in the foreground; stop uses an owner-only local socket. No automatic clipboard reads, paste, or command execution.

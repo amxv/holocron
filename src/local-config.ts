@@ -12,6 +12,7 @@ export const localConfigSchema = z.strictObject({
 export type LocalConfig = z.infer<typeof localConfigSchema>;
 
 export function localOwnerId(): string {
+  // Stable persisted owner namespace: renaming it would orphan shares and retry receipts.
   return createHash('sha256').update(JSON.stringify(['shared-clipboard-local-stdio-v1', currentUid()])).digest('hex');
 }
 

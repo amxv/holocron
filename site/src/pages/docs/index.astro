@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import BoardLayout from "../../layouts/BoardLayout.astro";
+import HolocronLayout from "../../layouts/HolocronLayout.astro";
 import { docCategories, siteConfig } from "../../data/docs";
 
 const entries = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
@@ -10,7 +10,7 @@ const grouped = docCategories.map((category) => ({
 }));
 ---
 
-<BoardLayout
+<HolocronLayout
   title={`${siteConfig.name} Docs`}
   description={siteConfig.description}
 >
@@ -20,7 +20,7 @@ const grouped = docCategories.map((category) => ({
     <p>
       Install the Mac companion, connect your intended ChatGPT account and choose the context you share.
     </p>
-    <a class="button button--solid" href="/docs/getting-started">Set up Board <span aria-hidden="true">↗</span></a>
+    <a class="button button--solid" href="/docs/getting-started">Set up Holocron <span aria-hidden="true">↗</span></a>
   </section>
 
   <section class="shell docs-index">
@@ -40,4 +40,4 @@ const grouped = docCategories.map((category) => ({
       </section>
     ))}
   </section>
-</BoardLayout>
+</HolocronLayout>

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "holocron",
+  "version": "0.1.1",
+  "description": "Private owner-authenticated explicit text and selected UTF-8 file snapshots, plus literal Mac clipboard writes. Live provider, tunnel, Dots and OS verification is deferred.",
+  "extensions": {
+    "com.openai": {
+      "apps": "./.app.json",
+      "interface": {
+        "displayName": "Holocron",
+        "shortDescription": "Selected context and literal copying",
+        "longDescription": "Read explicitly shared immutable text and selected UTF-8 file snapshots with bounded pages and SHA-256 verification. Copy literal text to the Mac on request, with optional expected_sha256 checked before mutation. Cloud transfers require the separately installed holocron-cloud Wayland helper, explicit user permission and manual task execution; see docs/cloud-clipboard.md. Preserve exact structured data and original digests, keep foreground ownership running to paste. No execution, automatic capture, credentials to the helper or remote file paths. Actual OAuth provider, tunnel, intended dot and viewed OS clipboards remain unverified.",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": ["List context files and text I explicitly shared", "Copy this literal text to my Mac clipboard"]
+      }
+    }
+  }
+}

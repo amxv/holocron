@@ -4,9 +4,10 @@ import { requireDigest } from './digest.ts';
 import { BridgeFailure } from './text.ts';
 import { VERSION } from './version.ts';
 
-const help = `Usage: shared-clipboard-cloud probe
-       shared-clipboard-cloud read
-       shared-clipboard-cloud write --sha256 <exact lowercase SHA-256> [--file <literal data file>]
+const help = `Usage: holocron cloud probe
+       holocron cloud read
+       holocron cloud write --sha256 <exact lowercase SHA-256> [--file <literal data file>]
+The holocron-cloud and legacy shared-clipboard-cloud executables accept the same arguments.
 write reads literal UTF-8 stdin to EOF, or one already-created regular data file (no symlinks).
 Linux Wayland only: /usr/bin/wl-copy and /usr/bin/wl-paste, named WAYLAND_DISPLAY and XDG_RUNTIME_DIR socket.
 probe only checks prerequisites; it never reads or changes a clipboard and is not a viewed-desktop test.

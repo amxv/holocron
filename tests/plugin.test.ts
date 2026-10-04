@@ -14,7 +14,7 @@ test('registered mapping is opt-in and never overwrites another plugin or config
   const manifest = JSON.parse(await readFile(join(output, 'plugin.json'), 'utf8'));
   assert.equal(manifest.extensions['com.openai'].apps, './.app.json');
   assert.deepEqual(JSON.parse(await readFile(join(output, '.app.json'), 'utf8')), {
-    apps: { 'shared-clipboard-probe': { id: syntheticId } },
+    apps: { 'holocron': { id: syntheticId } },
   });
   assert.equal((await stat(output)).mode & 0o777, 0o700);
   assert.equal((await stat(join(output, '.app.json'))).mode & 0o777, 0o600);
@@ -41,9 +41,9 @@ test('private plugin generation rejects relative/checkout output and unsafe pare
 });
 
 test('committed scaffold has accurate explicit Read/Write metadata and no invented connection', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../plugins/shared-clipboard/plugin.json', import.meta.url), 'utf8'));
+  const manifest = JSON.parse(await readFile(new URL('../plugins/holocron/plugin.json', import.meta.url), 'utf8'));
   assert.equal(manifest.$schema, 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
-  assert.equal(manifest.name, 'shared-clipboard-probe');
+  assert.equal(manifest.name, 'holocron');
   assert.deepEqual(manifest.extensions['com.openai'].interface.capabilities, ['Read', 'Write']);
-  assert.deepEqual(JSON.parse(await readFile(new URL('../plugins/shared-clipboard/.app.json', import.meta.url), 'utf8')), { apps: {} });
+  assert.deepEqual(JSON.parse(await readFile(new URL('../plugins/holocron/.app.json', import.meta.url), 'utf8')), { apps: {} });
 });

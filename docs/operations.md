@@ -11,24 +11,24 @@ Actual Dots/plugin discovery, tunnel and viewed Mac/cloud clipboard compatibilit
 
 ## One-command CLI installation
 
-On macOS or Linux, activate **Node 24.21.0** using your existing Node manager. Install GitHub CLI (`gh`) and authenticate it yourself with read access to the **private** `amxv/shared-clipboard` repository. No public npm package or anonymous release download is available. The bootstrap is public-safe; the implementation bundle remains private. After the operator publishes `board-v0.1.0` and deploys this installer:
+On macOS or Linux, activate **Node 24.21.0** using your existing Node manager. Install GitHub CLI (`gh`) and authenticate it yourself with read access to the **private** `amxv/holocron` repository. No public npm package or anonymous release download is available. The bootstrap is public-safe; the implementation bundle remains private. After the operator publishes `holocron-v0.1.1` and deploys this installer:
 
 ```sh
-curl -fsSL https://clipboard.ashray.xyz/install.sh | sh
+curl -fsSL https://holocron.ashray.xyz/install.sh | sh
 ```
 
-Do not use sudo. The installer requires `node`, `gh`, `tar` and `mktemp`; it reports missing prerequisites or unavailable releases. It downloads the fixed-version `board-0.1.0.tgz` through your existing authenticated `gh`, checks its bytes against the SHA-256 and size recorded by GitHub's authenticated release API, rejects unsafe archive paths/types and installs its already-built production dependencies. It runs no npm installation scripts and collects no credentials. Missing digests, failed downloads or mismatched bytes fail before installation. This verifies authenticated GitHub origin and content integrity, not an independent publisher signature. A mutable release can still be changed by a repository maintainer; an already-installed version with different bytes is refused.
+Do not use sudo. The installer requires `node`, `gh`, `tar` and `mktemp`; it reports missing prerequisites or unavailable releases. It downloads the fixed-version `holocron-0.1.1.tgz` through your existing authenticated `gh`, checks its bytes against the SHA-256 and size recorded by GitHub's authenticated release API, rejects unsafe archive paths/types and installs its already-built production dependencies. It runs no npm installation scripts and collects no credentials. Missing digests, failed downloads or mismatched bytes fail before installation. This verifies authenticated GitHub origin and content integrity, not an independent publisher signature. A mutable release can still be changed by a repository maintainer; an already-installed version with different bytes is refused.
 
-The default dedicated prefix is `~/.local/share/board-cli`; the executable is `~/.local/bin/board`. It pins the actual absolute Node executable. Keep that Node installation available. Add `~/.local/bin` to your shell PATH if necessary, or invoke the absolute executable from shortcuts. The installer does not edit shell files, config, tunnel profiles, plugin mappings, state, login jobs or clipboards; it starts/stops nothing. Existing custom installations are preserved, and an unrelated/edited `board` executable or nonempty unrecognized prefix is refused.
+The default dedicated prefix is `~/.local/share/holocron-cli`; the executable is `~/.local/bin/holocron`. It pins the actual absolute Node executable. Keep that Node installation available. Add `~/.local/bin` to your shell PATH if necessary, or invoke the absolute executable from shortcuts. The installer does not edit shell files, config, tunnel profiles, plugin mappings, state, login jobs or clipboards; it starts/stops nothing. Existing custom installations are preserved, and an unrelated/edited `holocron` executable or nonempty unrecognized prefix is refused.
 
 To inspect the public bootstrap first or select custom canonical absolute paths:
 
 ```sh
-curl -fsSL https://clipboard.ashray.xyz/install.sh -o /tmp/board-install.sh
-sh /tmp/board-install.sh --help
-sh /tmp/board-install.sh --version 0.1.0 \
-  --prefix "$HOME/.local/share/board-cli" --bin-dir "$HOME/.local/bin"
-rm /tmp/board-install.sh
+curl -fsSL https://holocron.ashray.xyz/install.sh -o /tmp/holocron-install.sh
+sh /tmp/holocron-install.sh --help
+sh /tmp/holocron-install.sh --version 0.1.1 \
+  --prefix "$HOME/.local/share/holocron-cli" --bin-dir "$HOME/.local/bin"
+rm /tmp/holocron-install.sh
 ```
 
 Repeating an identical install is a no-op. To upgrade, explicitly select a newly published version with `--version X.Y.Z`. The executable switches after complete staging; previous release directories remain for running processes and pinned tunnel commands. No live runtime is restarted or reconfigured. Reconnect your own tunnel deliberately if you want its next subprocess to use the new CLI. Concurrent installations are refused; inspect a stale `.install-lock` only after verifying no installer is running. On failure, temporary downloads and owned staging files are removed. An interrupted installation may leave a lock or unreferenced release for inspection; there is no force-overwrite or automatic recursive cleanup of existing data.
@@ -38,45 +38,61 @@ An optional `--attestation` additionally requires `gh release verify-asset` to v
 For an **existing private STDIO setup**, explicitly link its actual local config:
 
 ```sh
-"$HOME/.local/bin/board" link --local-config /absolute/private/Board/local.json
-"$HOME/.local/bin/board" copy --name "Copied text"
-"$HOME/.local/bin/board" list
+"$HOME/.local/bin/holocron" link --local-config /absolute/private/Holocron/local.json
+"$HOME/.local/bin/holocron" copy --name "Copied text"
+"$HOME/.local/bin/holocron" list
 ```
 
-`link` validates only the owner-only local config and saves its absolute path in `~/.config/board/cli.json`; it never opens state or starts a runtime. It does not adopt an OAuth HTTP config. `BOARD_CLI_HOME` selects a custom canonical absolute private profile directory; `BOARD_LOCAL_CONFIG` or a command's `--local-config` overrides the saved link. Config permissions and fixed-owner separation remain enforced.
+`link` validates only the owner-only local config and saves its absolute path in the selected profile's `cli.json`; it never opens state or starts a runtime. It does not adopt an OAuth HTTP config. `HOLOCRON_CLI_HOME` selects a custom canonical absolute private profile directory, with `BOARD_CLI_HOME` retained as a fallback. `--local-config` takes precedence over `HOLOCRON_LOCAL_CONFIG`, legacy `BOARD_LOCAL_CONFIG` and the saved link. Config permissions and fixed-owner separation remain enforced.
 
-For a **new setup**, `board init` creates a new private `~/.config/board/local.json`, state reference and CLI link, refusing existing config/link files. State is created only by a later explicit state command. Use the absolute `board stdio` command in [tunnel setup](secure-mcp-tunnel.md); initialization alone connects nothing. The wrapper runs from its installed code directory, resolving selected relative file paths before changing directory. Normal `board` use works from your home, `/` or the state directory without weakening the private-state guard. Historical `shared-clipboard` commands keep their original working-directory requirement.
+For a **new setup**, `holocron init` creates a new private `~/.config/holocron/local.json`, state reference and CLI link, refusing existing config/link files. State is created only by a later explicit state command. Use the absolute `holocron stdio` command in [tunnel setup](secure-mcp-tunnel.md); initialization alone connects nothing. The wrapper runs from its installed code directory, resolving selected relative file paths before changing directory. Normal `holocron` use works from your home, `/` or the state directory without weakening the private-state guard. Historical direct `shared-clipboard` commands keep their original working-directory requirement.
 
-`board copy` shares an immutable text snapshot. It does **not** fill the connected computer's OS clipboard. Connected ChatGPT must read the share, preserve and verify exact bytes, then explicitly operate the [Wayland helper](cloud-clipboard.md) in that computer's intended graphical session while the user pastes. A standalone receiver has no credential-free tunnel pull API here. Ordinary Paste on another personal computer is not implemented by snapshot sharing.
+`holocron copy` shares an immutable text snapshot. It does **not** fill the connected computer's OS clipboard. Connected ChatGPT must read the share, preserve and verify exact bytes, then explicitly operate the [Wayland helper](cloud-clipboard.md) in that computer's intended graphical session while the user pastes. A standalone receiver has no credential-free tunnel pull API here. Ordinary Paste on another personal computer is not implemented by snapshot sharing.
+
+## Migrate an existing Board setup
+
+Install Holocron into its new default `~/.local/share/holocron-cli` prefix and `~/.local/bin/holocron`. The installer leaves `~/.local/share/board-cli`, its `.board-install.json`, the existing `~/.local/bin/board` launcher and all old release directories intact. Do not reuse the old Board prefix for the new installer. Published `board-v0.1.0` assets remain immutable, available from the renamed private repository for existing installs.
+
+Holocron selects an existing `~/.config/board` profile when no `~/.config/holocron` profile exists, reading the original link in place. It retains `BOARD_CLI_HOME` and `BOARD_LOCAL_CONFIG` as fallback environment names. `HOLOCRON_CLI_HOME` and `HOLOCRON_LOCAL_CONFIG` take precedence. No config, token or database is copied. If the live tunnel uses another config, explicitly run `holocron link --local-config /actual/existing/private/local.json`. Keep the original path, state directory and permissions; do not rename the config just because the product changed names. `init` is for fresh setups and refuses existing linked profiles.
+
+Local STDIO owner IDs, share IDs, SQLite tables, receipt fingerprints and configured state paths are preserved. Existing HTTP default state and managed `org.shared-clipboard.companion` login jobs remain compatible in place. A new login job uses `org.holocron.companion`; when an old job file exists, commands validate/manage that exact legacy file instead, refusing conflicts or two labels. Read the returned `label` before using launchctl. Do not replace an old job with a new label while it is loaded.
+
+Leave the live tunnel on its recorded old executable/config until a deliberate operator reconnect. At that time, update only its existing MCP command to `"/actual/home/.local/bin/holocron" stdio --local-config "/actual/existing/private/local.json"`, keeping its tunnel ID, association, key reference and native profile/runtime identity. Stop the known old runtime before reconnecting it; do not run a second companion against the same state. Verify native process/health/readiness and actual tool discovery separately. Existing private plugin mappings continue to work; generate a fresh Holocron mapping only when deliberately updating its installation, using the same registered connection ID.
+
+## Raycast shortcuts in the monorepo
+
+The maintained extension now lives in `raycast/` of private `amxv/holocron`. See the [extension installation guide](https://github.com/amxv/holocron/blob/main/raycast/README.md). Install/link the Holocron CLI first, then run `npm --prefix raycast ci`, `npm --prefix raycast run lint`, `npm --prefix raycast run build` and `npm --prefix raycast run dev` from the checkout. Import the `raycast/` folder, then stop development with Control-C after ready; imported commands remain installed. Local import does not publish to the private `zue-ai` store.
+
+The renamed extension has a new Raycast identity. Before import, record the old Board preferences and hotkeys. Clear or disable the old **Share Clipboard with Board** binding before assigning **Share Clipboard with Holocron** the verified existing Control+Option+Command+C shortcut. Check both extensions for duplicate bindings, then disable/remove the old imported extension after the new commands work. Finder sharing had no recorded hotkey; assign one only if desired. Preferences/hotkeys do not automatically transfer across extension names. Blank executable preference uses the absolute home-derived `~/.local/bin/holocron`; preserve an existing custom absolute config path if needed. Neither import nor hotkey assignment should capture the current clipboard. Test later only with a deliberately copied harmless marker and one selected UTF-8 file.
 
 ## Pack and install the Mac companion
 
-Use exactly Node `24.21.0` and npm `11.19.0`; check both versions in the activated runtime. Install/activate that runtime through your existing Node manager. Keep its absolute Node path available for the optional login job. The private package is `@shared-clipboard/dots-probe` version `0.1.0`; the historical name and `shared-clipboard-probe` alias are retained. Public registry publication is outside scope.
+Use exactly Node `24.21.0` and npm `11.19.0`; check both versions in the activated runtime. Install/activate that runtime through your existing Node manager. Keep its absolute Node path available for the optional login job. The private package is `@amxv/holocron` version `0.1.1`; legacy command aliases remain available for migration. Public registry publication is outside scope.
 
 In the source checkout, choose fresh dedicated directories outside it. `mkdir` intentionally refuses existing directories on first setup; do not repurpose an unrelated installation or private directory. For upgrades, reuse only your own recorded bridge directories.
 
 ```sh
 umask 077
-SC_INSTALL="$HOME/Library/Application Support/shared-clipboard-package"
-SC_PRIVATE="$HOME/Library/Application Support/shared-clipboard-operator"
+SC_INSTALL="$HOME/Library/Application Support/holocron-package"
+SC_PRIVATE="$HOME/Library/Application Support/holocron-operator"
 mkdir "$SC_INSTALL" "$SC_PRIVATE"
 mise exec node@24.21.0 -- node --version
 mise exec node@24.21.0 -- npm --version
-mise exec node@24.21.0 -- npm ci
+mise exec node@24.21.0 -- npm run ci:all
 mise exec node@24.21.0 -- npm run check
 mise exec node@24.21.0 -- npm pack --pack-destination "$SC_PRIVATE"
 mise exec node@24.21.0 -- npm install --prefix "$SC_INSTALL" --omit=dev --ignore-scripts \
-  "$SC_PRIVATE/shared-clipboard-dots-probe-0.1.0.tgz"
+  "$SC_PRIVATE/amxv-holocron-0.1.1.tgz"
 SC_NODE="$(mise where node@24.21.0)/bin/node"
-SC_CLI="$SC_INSTALL/node_modules/@shared-clipboard/dots-probe/dist/cli.js"
+SC_CLI="$SC_INSTALL/node_modules/@amxv/holocron/dist/cli.js"
 SC_CONFIG="$SC_PRIVATE/operator.json"
 "$SC_NODE" "$SC_CLI" --version
 "$SC_NODE" "$SC_CLI" --help
 ```
 
-If the parent `Library/Application Support` is missing, create it first. With another manager, use its actual absolute Node executable after confirming the exact version. The dedicated prefix avoids changing global npm/Codex settings. Four bins are installed in its `node_modules/.bin`: `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`. The last is independently usable on Linux without Mac/operator credentials. Absolute Node/CLI invocation avoids an interactive shell PATH. The tarball contains built `dist`, docs, README and the unmapped plugin scaffold; it contains no tests, shared state or secrets.
+If the parent `Library/Application Support` is missing, create it first. With another manager, use its actual absolute Node executable after confirming the exact version. The dedicated prefix avoids changing global npm/Codex settings. Six bins are installed in its `node_modules/.bin`: `holocron`, `holocron-cloud`, `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`. The last is independently usable on Linux without Mac/operator credentials. Absolute Node/CLI invocation avoids an interactive shell PATH. The tarball contains built `dist`, docs, README and the unmapped plugin scaffold; it contains no tests, shared state or secrets.
 
-Create `operator.json` in the private directory using the complete public-input example in [Connection setup](phase1-setup.md), replacing all placeholders with your actual provider/connection values. Keep mode `0600` and parent mode `0700`. It contains public issuer/JWKS/resource/owner/scopes, not tokens or client secrets. An optional `stateDirectory` must be canonical absolute and private, outside the checkout; the default is `~/Library/Application Support/shared-clipboard`. Schema validation makes no provider/clipboard/network calls.
+Create `operator.json` in the private directory using the complete public-input example in [Connection setup](phase1-setup.md), replacing all placeholders with your actual provider/connection values. Keep mode `0600` and parent mode `0700`. It contains public issuer/JWKS/resource/owner/scopes, not tokens or client secrets. An optional `stateDirectory` must be canonical absolute and private, outside the checkout; new default state is `~/Library/Application Support/Holocron`; an existing `~/Library/Application Support/shared-clipboard` directory is reused in place. Schema validation makes no provider/clipboard/network calls.
 
 Launch the companion or tunnel, and run local sharing/status/stop commands, from the installed package directory (for example, `cd "$SC_INSTALL"` when state is outside that prefix). State must also be outside the current working directory: launching from state or any ancestor of state is refused before opening it. Configure a supervisor's actual working directory accordingly. `check-config` alone does not exercise this guard. See [STDIO tunnel setup](secure-mcp-tunnel.md) for the private transport's exact commands.
 
@@ -96,36 +112,36 @@ Status checks the owner-only local control socket and retained-share counts. `av
 
 ## Publish the private CLI release and installer
 
-These are operator-run publication steps, not installer side effects. Keep `amxv/shared-clipboard` private. Build from the final approved clean commit with Node `24.21.0` and npm `11.19.0`:
+These are operator-run publication steps, not installer side effects. Keep `amxv/holocron` private. Build from the final approved clean commit with Node `24.21.0` and npm `11.19.0`:
 
 ```sh
-npm ci
+npm run ci:all
 npm run check
 npm --prefix site ci
-npm --prefix site run validate
+npm --prefix site run check
 npm --prefix site audit --audit-level=low
 git diff --check
-npm run release:bundle -- "$PWD/tmp/gg/release-0.1.0"
+npm run release:bundle -- "$PWD/tmp/gg/release-0.1.1"
 ```
 
-The root gate includes clean npm tarball installation and a complete production-bundle/installer smoke with injected GitHub transport, isolated config/state and literal digest checks. `release:bundle` writes `board-0.1.0.tgz` and `SHA256SUMS` into the selected fresh output directory. It uses the committed dependency lockfile, production-only `npm ci --ignore-scripts`, rejects symlinks/special files and includes no Node runtime or development dependencies. It runs installed help/version checks without touching any clipboard. Do not copy private configs, plugin mappings, tunnel profiles or state into the artifact. The separate pinned Node prerequisite is deliberate.
+The root gate includes clean npm tarball installation and a complete production-bundle/installer smoke with injected GitHub transport, isolated config/state and literal digest checks. `release:bundle` writes `holocron-0.1.1.tgz` and `SHA256SUMS` into the selected fresh output directory. It uses the committed dependency lockfile, production-only `npm ci --ignore-scripts`, rejects symlinks/special files and includes no Node runtime or development dependencies. It runs installed help/version checks without touching any clipboard. Do not copy private configs, plugin mappings, tunnel profiles or state into the artifact. The separate pinned Node prerequisite is deliberate.
 
 Before publication, prepare concise release notes at `tmp/gg/release-notes.md`, tag the exact approved commit and upload the bundle through authenticated GitHub CLI:
 
 ```sh
-git tag -a board-v0.1.0 APPROVED_COMMIT_SHA -m "Board CLI 0.1.0"
-git push origin board-v0.1.0
-gh release create board-v0.1.0 \
-  tmp/gg/release-0.1.0/board-0.1.0.tgz tmp/gg/release-0.1.0/SHA256SUMS \
-  --repo amxv/shared-clipboard --verify-tag --title "Board CLI 0.1.0" \
+git tag -a holocron-v0.1.1 APPROVED_COMMIT_SHA -m "Holocron CLI 0.1.1"
+git push origin holocron-v0.1.1
+gh release create holocron-v0.1.1 \
+  tmp/gg/release-0.1.1/holocron-0.1.1.tgz tmp/gg/release-0.1.1/SHA256SUMS \
+  --repo amxv/holocron --verify-tag --title "Holocron CLI 0.1.1" \
   --notes-file tmp/gg/release-notes.md
-gh api repos/amxv/shared-clipboard/releases/tags/board-v0.1.0 \
+gh api repos/amxv/holocron/releases/tags/holocron-v0.1.1 \
   --jq '.assets[] | {name,digest,size}'
 ```
 
 Replace placeholders and choose a new version/tag/output directory for later releases; do not overwrite a published version. Verify the API digest matches `SHA256SUMS`, then exercise the installer against the actual published release in a fresh dedicated private prefix/bin. That proves private access and hosted asset readiness beyond the injected smoke. Existing mutable-release settings are supported. Signed release attestation verification is an optional stronger path only when an operator has deliberately enabled/published immutable releases; no Actions artifact-attestation plan is required for normal installation.
 
-Deploy the static docs project from the same approved repository content with Root Directory `site`, outside-root source files enabled, Node `24.x`, install command `npm ci`, build command `npm run build` and output `dist`. The checkout's `site/README.md` carries the complete project settings. `site/public/install.sh` becomes `https://clipboard.ashray.xyz/install.sh`; site validation checks identical served bytes, shell syntax and public-safe content. The Vercel project serves only public docs and this bootstrap, never the private bundle/source. After deployment, fetch `install.sh`, compare it with the maintained file, and run `--help`. Only describe the one-command URL as ready once the private release and deployed bootstrap both pass these checks. Publication, DNS, repository settings and the user's actual CLI installation remain explicit operator actions.
+Deploy the static docs project from the same approved repository content with Root Directory `site`, outside-root source files enabled, Node `24.x`, install command `npm ci`, build command `npm run build` and output `dist`. The checkout's `site/README.md` carries the complete project settings. `site/public/install.sh` becomes `https://holocron.ashray.xyz/install.sh`; site validation checks identical served bytes, shell syntax and public-safe content. The Vercel project serves only public docs and this bootstrap, never the private bundle/source. After deployment, fetch `install.sh`, compare it with the maintained file, and run `--help`. Only describe the one-command URL as ready once the private release and deployed bootstrap both pass these checks. Publication, DNS, repository settings and the user's actual CLI installation remain explicit operator actions.
 
 Sources checked October 4, 2026: [GitHub release downloads](https://cli.github.com/manual/gh_release_download), [release-asset API and digest](https://docs.github.com/en/rest/releases/assets), [release creation](https://cli.github.com/manual/gh_release_create), [optional signed asset verification](https://cli.github.com/manual/gh_release_verify-asset).
 
@@ -138,15 +154,15 @@ Nothing installs or enables login startup during npm install, build, check, stat
 "$SC_NODE" "$SC_CLI" login-status --config "$SC_CONFIG"
 ```
 
-This generates only `~/Library/LaunchAgents/org.shared-clipboard.companion.plist`, mode `0600`, using actual canonical absolute installed Node/CLI and config paths. XML-escaped arguments remain literal argv; no shell, payload, secret, PATH shim or tunnel credential appears. Existing safe user directories keep their permissions. Symlinks, hardlinks, shared-write ancestors, XML-invalid paths and conflicting/edited same-label files are refused. Repeating the same install is a no-op; no other job or setting is changed.
+This generates only `~/Library/LaunchAgents/org.holocron.companion.plist`, mode `0600`, using actual canonical absolute installed Node/CLI and config paths. XML-escaped arguments remain literal argv; no shell, payload, secret, PATH shim or tunnel credential appears. Existing safe user directories keep their permissions. Symlinks, hardlinks, shared-write ancestors, XML-invalid paths and conflicting/edited same-label files are refused. Repeating the same install is a no-op; no other job or setting is changed.
 
 The job runs once when loaded at the next graphical login (`RunAtLoad`, `KeepAlive=false`). It does not start now, restart after stop/crash, install a tunnel, refresh credentials or reconnect a plugin. `login-status` reports only the managed file's next-login intent; launchd/current companion remain unverified/unchanged. These commands never invoke launchctl. Job stdout/stderr go to `/dev/null`; troubleshoot with foreground `check-config`/`start` and local status.
 
 To load now, stop any foreground companion first. In your own terminal, use only the exact dedicated job:
 
 ```sh
-SC_JOB="$HOME/Library/LaunchAgents/org.shared-clipboard.companion.plist"
-SC_TARGET="gui/$(id -u)/org.shared-clipboard.companion"
+SC_JOB="$HOME/Library/LaunchAgents/org.holocron.companion.plist"
+SC_TARGET="gui/$(id -u)/org.holocron.companion"
 launchctl print "$SC_TARGET"
 # If absent, load only the generated file into your graphical login domain.
 launchctl bootstrap "gui/$(id -u)" "$SC_JOB"
@@ -171,7 +187,7 @@ Disconnect the connection/disable the plugin in ChatGPT to stop its remote avail
 
 ## Clear and remove
 
-For an installer-managed CLI, first disconnect/stop its explicitly managed runtime through your recorded tunnel controls if removing the code it uses. Inspect `~/.local/share/board-cli/.board-install.json` to identify its exact managed executable and retained release directories. Remove only the unchanged managed `board` wrapper and those dedicated code releases after all users of their paths have exited. Do not automatically delete `~/.config/board`, linked external local configs, private state/receipts, original selected files or a custom installation. Remove an unused `cli.json` link explicitly if desired. Old releases are deliberately retained through upgrades so installing a CLI never breaks a running subprocess. The installer has no destructive uninstall/force flag. The source/npm-prefix route's removal steps below remain separate.
+For an installer-managed CLI, first disconnect/stop its explicitly managed runtime through your recorded tunnel controls if removing the code it uses. Inspect `~/.local/share/holocron-cli/.holocron-install.json` to identify its exact managed executable and retained release directories. Remove only the unchanged managed `holocron` wrapper and those dedicated code releases after all users of their paths have exited. Do not automatically delete `~/.config/holocron`, linked external local configs, private state/receipts, original selected files or a custom installation. Remove an unused `cli.json` link explicitly if desired. Old releases are deliberately retained through upgrades so installing a CLI never breaks a running subprocess. The installer has no destructive uninstall/force flag. The source/npm-prefix route's removal steps below remain separate.
 
 `revoke SHARE_ID` and `clear` remove the current owner's retained shares, leaving retry receipts/current clipboard alone. They cannot erase copies in dot context, task files, another application or clipboard manager. Owner-only local snapshots are **plaintext**, not encryption at rest. SQLite DELETE journals, FULL commits and secure deletion do not erase backups or guarantee forensic removal from SSD storage. Protect the OS account/backups. Receipt fingerprints/metadata persist seven days; deleting receipts alone is not normal cleanup.
 
@@ -180,7 +196,7 @@ Remove only your recorded bridge-owned resources, in this order:
 1. Disable/disconnect the actual plugin/connection and revoke only its provider grant and tunnel key/association if desired. Gracefully stop your dedicated tunnel managed process. External controls remain independent of local removal.
 2. Clear shares if desired, stop the companion, unload the known login job if loaded, then `login-remove`. Stop cloud helpers with SIGINT/SIGTERM or whole managed process-group termination; SIGKILL of only the helper may orphan its backend. Leave unrelated clipboard contents alone.
 3. After all bridge/CLI processes using the state have exited, inspect ownership/type and delete only `bridge.sqlite`, any private `bridge.sqlite-journal`, `bridge.sqlite-wal`, `bridge.sqlite-shm`, or stale `control.sock` in the recorded state directory. Never follow symlinks, recurse over unknown contents or kill an unknown/reused PID. Remove the directory only if empty. Full removal discards shares and receipt history; expired envelopes still cannot write after reinstall.
-4. Run `mise exec node@24.21.0 -- npm uninstall --prefix "$SC_INSTALL" --ignore-scripts @shared-clipboard/dots-probe`. Remove only your generated private plugin's `plugin.json`/`.app.json`, operator JSON, private tarball and dedicated tunnel profile/secret reference after confirming no other consumer uses them. Remove directories only when empty. Preserve original selected files, unrelated settings/plugins/jobs and current clipboards.
+4. Run `mise exec node@24.21.0 -- npm uninstall --prefix "$SC_INSTALL" --ignore-scripts @amxv/holocron`. Remove only your generated private plugin's `plugin.json`/`.app.json`, operator JSON, private tarball and dedicated tunnel profile/secret reference after confirming no other consumer uses them. Remove directories only when empty. Preserve original selected files, unrelated settings/plugins/jobs and current clipboards.
 5. On cloud replacement, explicitly reinstall/probe the helper in the new intended session. It has no persistent pairing, credential or network state. Removing its package leaves task files until you explicitly remove those copies too.
 
 ## User-run live acceptance, still deferred

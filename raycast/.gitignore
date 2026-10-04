@@ -1,0 +1,10 @@
+.agents/gg/queue.md
+tmp/
+node_modules/
+dist/
+raycast-env.d.ts
+*.rayext
+.DS_Store
+.env
+.env.*
+coverage/

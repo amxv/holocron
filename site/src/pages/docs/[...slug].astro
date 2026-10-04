@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
-import BoardLayout from "../../layouts/BoardLayout.astro";
+import HolocronLayout from "../../layouts/HolocronLayout.astro";
 import DocsPageLayout from "zuedocs/layouts/DocsPageLayout.astro";
 import { docCategories, siteConfig } from "../../data/docs";
 
@@ -25,13 +25,13 @@ const grouped = docCategories
   .filter((group) => group.entries.length > 0);
 ---
 
-<BoardLayout
+<HolocronLayout
   title={`${entry.data.title} | ${siteConfig.name} Docs`}
   description={entry.data.description}
 >
   <section class="shell docs-shell">
     <aside class="docs-sidebar" id="docs-sidebar" aria-label="Documentation">
-      <p class="docs-sidebar__eyebrow">Board documentation</p>
+      <p class="docs-sidebar__eyebrow">Holocron documentation</p>
       {grouped.map((group) => (
         <div class="docs-sidebar__group">
           <p>{group.category}</p>
@@ -73,4 +73,4 @@ const grouped = docCategories
       </ul>
     </aside>
   </section>
-</BoardLayout>
+</HolocronLayout>

@@ -5,13 +5,13 @@ order: 10
 category: "Reference"
 ---
 
-Board is the public product name. Package and protocol identifiers remain compatible with the existing CLI: `@shared-clipboard/dots-probe` `0.1.0`, `shared-clipboard`, its `shared-clipboard-probe` alias, and `shared-clipboard-cloud`. The new friendly executable is `board`.
+Holocron is the product and canonical executable. The private package is `@amxv/holocron` `0.1.1`. Its production release is `holocron-v0.1.1`, asset `holocron-0.1.1.tgz`, in the private `amxv/holocron` repository. The independent helper is available as `holocron cloud` or `holocron-cloud`. Intentional compatibility aliases are `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`.
 
 ## Mac CLI
 
 Run with Node `24.21.0` and npm `11.19.0`. For the primary private STDIO route, explicit local management uses `--local-config` with the strict private `{ "transport": "stdio", "stateDirectory": "/absolute/private/state" }` JSON. The alternative OAuth HTTP route uses `--config` with its separate operator JSON. Do not mix identities/state or config flags. With a dedicated install, use the recorded absolute `"$SC_NODE" "$SC_CLI"` invocation.
 
-For historical `shared-clipboard` commands that open state, the working directory must not be the state directory or any ancestor of it. Use `cd "$SC_INSTALL"` with the installed package prefix separate from state, and set the same directory for tunnel/native supervision. The friendly `board` wrapper anchors to installed code automatically. `check-config` validates configuration without opening state. See [setup](getting-started.md).
+For direct `dist/cli.js` invocation and historical `shared-clipboard` commands that open state, the working directory must not be the state directory or any ancestor of it. Use `cd "$SC_INSTALL"` with the installed package prefix separate from state, and set the same directory for tunnel/native supervision. The `holocron` wrapper anchors to installed code automatically. `check-config` validates configuration without opening state. See [setup](getting-started.md).
 
 | Command | Purpose |
 | --- | --- |
@@ -75,38 +75,38 @@ The pinned MCP SDK `1.32.0` uses the legacy `initialize` / `notifications/initia
 
 The read limit covers decoded UTF-8 bytes, with JSON/MCP overhead separate. Pages may end early to preserve Unicode boundaries. Do not use character indexes as offsets. Unsupported/binary/oversize data fails without truncation or normalization.
 
-## Friendly Board CLI
+## Friendly Holocron CLI
 
-The private package also installs `board`. The [one-command installer](operations.md#one-command-cli-installation) places its absolute pinned-Node wrapper at `~/.local/bin/board`; custom bin/prefix paths are supported. CLI sharing uses only private STDIO config, preserving the old commands and OAuth HTTP boundary.
+The [one-command installer](operations.md#one-command-cli-installation) places the absolute pinned-Node wrapper at `~/.local/bin/holocron`; custom bin/prefix paths are supported. Commands without `--config` use private STDIO config. An explicit `--config` selects the separate OAuth HTTP route and never adopts local STDIO authority.
 
 | Command | Explicit action |
 | --- | --- |
-| `board link --local-config ABS_JSON` | Validate local config only and save its private path reference |
-| `board init` | Create a new private config/link, refusing existing files; start nothing |
-| `board copy [--name LABEL]` | Capture Mac clipboard text once into a snapshot |
-| `board share [--name LABEL]` | Capture exact UTF-8 stdin to EOF |
-| `board share-file PATH [--name LABEL]` | Snapshot the one selected UTF-8 file |
-| `board list`, `board revoke ID`, `board clear` | List/revoke/clear retained snapshots; leave clipboards/receipts alone |
-| `board status`, `board check-config` | Query local state/control or validate config only |
-| `board stdio` | Protocol-only MCP subprocess; let the existing tunnel launch it |
-| `board cloud probe`, `board cloud read`, `board cloud write --sha256 DIGEST [--file FILE]` | Delegate the independent Wayland helper |
+| `holocron link --local-config ABS_JSON` | Validate local config only and save its private path reference |
+| `holocron init` | Create a new private config/link, refusing existing files; start nothing |
+| `holocron copy [--name LABEL]` | Capture Mac clipboard text once into a snapshot |
+| `holocron share [--name LABEL]` | Capture exact UTF-8 stdin to EOF |
+| `holocron share-file PATH [--name LABEL]` | Snapshot the one selected UTF-8 file |
+| `holocron list`, `holocron revoke ID`, `holocron clear` | List/revoke/clear retained snapshots; leave clipboards/receipts alone |
+| `holocron status`, `holocron check-config` | Query local state/control or validate config only |
+| `holocron stdio` | Protocol-only MCP subprocess; let the existing tunnel launch it |
+| `holocron cloud probe`, `holocron cloud read`, `holocron cloud write --sha256 DIGEST [--file FILE]` | Delegate the independent Wayland helper |
 
-For sharing/status/STDIO commands, `--local-config ABS_JSON` overrides `BOARD_LOCAL_CONFIG`, which overrides the saved `~/.config/board/cli.json` link. `BOARD_CLI_HOME` selects a canonical absolute private profile directory. Cloud operations do not read this link or Mac config. Relative selected data paths are resolved from the invoking directory before the executable anchors to installed code. The original state guard still rejects state beneath that code directory.
+For sharing/status/STDIO commands, config selection is `--local-config ABS_JSON`, then `HOLOCRON_LOCAL_CONFIG`, then legacy `BOARD_LOCAL_CONFIG`, then the saved link. Profile selection is `HOLOCRON_CLI_HOME`, then legacy `BOARD_CLI_HOME`, then `~/.config/holocron` if present, otherwise an existing `~/.config/board`, otherwise a new `~/.config/holocron`. Existing profiles are used in place without copying secrets. Cloud operations do not read profiles or Mac config. Relative selected data paths are resolved before anchoring to installed code; state beneath that code directory remains forbidden.
 
-Shortcut contract: invoke an **absolute executable with literal argv**, e.g. `board copy --name "Raycast clipboard" --local-config ABS_JSON`. `copy`, `share` and `share-file` emit one JSON line with exactly `id`, `name`, `kind`, `byteCount`, `sha256`, `createdAt`, `expiresAt`. IDs are UUIDv4, digest is 64 lowercase hexadecimal SHA-256, times are canonical UTC with milliseconds, and expiry is 24 hours after capture. `copy`/`share` always return `kind: "text"`; `share-file` returns `"file"`. Empty text/files are valid. Labels are 1–80 ASCII characters: first alphanumeric, subsequent alphanumeric, spaces, dot, underscore or hyphen, with no trailing space. Output contains metadata only, never snapshot contents, source paths or credentials.
+Shortcut contract: invoke an **absolute executable with literal argv**, e.g. `holocron copy --name "Raycast clipboard" --local-config ABS_JSON`. `copy`, `share` and `share-file` emit one JSON line with exactly `id`, `name`, `kind`, `byteCount`, `sha256`, `createdAt`, `expiresAt`. IDs are UUIDv4, digest is 64 lowercase hexadecimal SHA-256, times are canonical UTC with milliseconds, and expiry is 24 hours after capture. `copy`/`share` always return `kind: "text"`; `share-file` returns `"file"`. Empty text/files are valid. Labels are 1–80 ASCII characters: first alphanumeric, subsequent alphanumeric, spaces, dot, underscore or hyphen, with no trailing space. Output contains metadata only, never snapshot contents, source paths or credentials.
 
-Exit codes are `0` for success, `2` for invalid arguments and `1` for operational failure. Errors use stderr; do not expose captured stdout/stderr wholesale in a shortcut UI. There is no `board exec`, HTTP start, login job or stop command. Use historical commands for their explicit lifecycle operations. `board copy` reports a shared snapshot, **not** remote clipboard delivery. Use the [original-digest receiving workflow](cloud-clipboard.md#mac-to-cloud) for a supported connected graphical computer.
+Exit codes are `0` for success, `2` for invalid arguments and `1` for operational failure. Errors use stderr; do not expose captured stdout/stderr wholesale in a shortcut UI. `holocron start --config` and login commands use only the HTTP route; `holocron stop` uses the selected local route. There is no execution command. `holocron copy` reports a shared snapshot; remote clipboard delivery requires the [original-digest receiving workflow](cloud-clipboard.md#mac-to-cloud).
 
 ## Cloud CLI
 
 The helper requires Linux Wayland, fixed `/usr/bin/wl-copy` and `/usr/bin/wl-paste`, and the intended session's `XDG_RUNTIME_DIR`/`WAYLAND_DISPLAY`.
 
 ```sh
-shared-clipboard-cloud --version
-shared-clipboard-cloud --help
-shared-clipboard-cloud probe
-shared-clipboard-cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE
-shared-clipboard-cloud read > cloud-read.json
+holocron-cloud --version
+holocron-cloud --help
+holocron-cloud probe
+holocron-cloud write --sha256 ORIGINAL_DIGEST --file DATA_FILE
+holocron-cloud read > cloud-read.json
 ```
 
 `probe` reads no clipboard. `write` takes exact literal stdin or a selected regular data file, checks the original digest and holds foreground ownership after verified backend readback. `read` captures once and returns exact JSON text/byte count/digest; its framing newline is not content. Keep helper outputs private. See the full [cloud transfer workflow](cloud-clipboard.md).

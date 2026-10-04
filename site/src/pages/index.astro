@@ -1,5 +1,5 @@
 ---
-import BoardLayout from "../layouts/BoardLayout.astro";
+import HolocronLayout from "../layouts/HolocronLayout.astro";
 import { siteConfig } from "../data/docs";
 import "../styles/landing.css";
 
@@ -10,53 +10,53 @@ const paths = [
 ];
 ---
 
-<BoardLayout title="Board | Context between your Mac and ChatGPT Dots" description={siteConfig.description}>
-  <section class="board-hero shell" aria-labelledby="hero-title">
-    <div class="board-hero__copy">
-      <p class="board-eyebrow"><span class="board-mark" aria-hidden="true"></span> A personal bridge for ChatGPT Dots</p>
+<HolocronLayout title="Holocron | Context between your Mac and ChatGPT Dots" description={siteConfig.description}>
+  <section class="holocron-hero shell" aria-labelledby="hero-title">
+    <div class="holocron-hero__copy">
+      <p class="holocron-eyebrow"><span class="holocron-mark" aria-hidden="true"></span> A personal bridge for ChatGPT Dots</p>
       <h1 id="hero-title">Give your dot<br />the <em>right context.</em></h1>
-      <p class="board-hero__lede">The text you copied. The file you chose. Board shares selected context from your Mac and brings a requested reply back to your clipboard.</p>
-      <div class="board-hero__actions">
-        <a class="button button--solid" href="/docs/getting-started">Set up Board <span aria-hidden="true">↗</span></a>
-        <a class="board-text-link" href="/docs/overview">How it works <span aria-hidden="true">→</span></a>
+      <p class="holocron-hero__lede">The text you copied. The file you chose. Holocron shares selected context from your Mac and brings a requested reply back to your clipboard.</p>
+      <div class="holocron-hero__actions">
+        <a class="button button--solid" href="/docs/getting-started">Set up Holocron <span aria-hidden="true">↗</span></a>
+        <a class="holocron-text-link" href="/docs/overview">How it works <span aria-hidden="true">→</span></a>
       </div>
-      <p class="board-hero__footnote">You choose what to share. You decide what to paste.</p>
+      <p class="holocron-hero__footnote">You choose what to share. You decide what to paste.</p>
     </div>
-    <div class="board-flow" role="group" aria-label="How a share travels between your Mac and ChatGPT">
-      <div class="board-flow__heading"><span>From your Mac, with intention</span><span aria-hidden="true">↗</span></div>
-      <div class="board-flow__stage">
-        <span class="board-flow__number">01</span>
-        <div class="board-flow__body"><span class="board-flow__label">Your Mac</span><strong>Select a little context</strong>
-          <div class="board-snapshot"><span class="board-snapshot__icon" aria-hidden="true">≡</span><div><strong>Project context</strong><span>UTF-8 file · Immutable snapshot</span></div><span class="board-snapshot__check" aria-hidden="true">✓</span></div>
+    <div class="holocron-flow" role="group" aria-label="How a share travels between your Mac and ChatGPT">
+      <div class="holocron-flow__heading"><span>From your Mac, with intention</span><span aria-hidden="true">↗</span></div>
+      <div class="holocron-flow__stage">
+        <span class="holocron-flow__number">01</span>
+        <div class="holocron-flow__body"><span class="holocron-flow__label">Your Mac</span><strong>Select a little context</strong>
+          <div class="holocron-snapshot"><span class="holocron-snapshot__icon" aria-hidden="true">≡</span><div><strong>Project context</strong><span>UTF-8 file · Immutable snapshot</span></div><span class="holocron-snapshot__check" aria-hidden="true">✓</span></div>
         </div>
       </div>
-      <div class="board-flow__connection"><span aria-hidden="true">↓</span><span>Private tunnel · Your local owner</span></div>
-      <div class="board-flow__stage">
-        <span class="board-flow__number">02</span>
-        <div class="board-flow__body"><span class="board-flow__label">ChatGPT Dots</span><strong>Read. Understand. Respond.</strong><p>Only the snapshots you explicitly shared.</p></div>
+      <div class="holocron-flow__connection"><span aria-hidden="true">↓</span><span>Private tunnel · Your local owner</span></div>
+      <div class="holocron-flow__stage">
+        <span class="holocron-flow__number">02</span>
+        <div class="holocron-flow__body"><span class="holocron-flow__label">ChatGPT Dots</span><strong>Read. Understand. Respond.</strong><p>Only the snapshots you explicitly shared.</p></div>
       </div>
-      <div class="board-flow__return"><span aria-hidden="true">↳</span><p>A requested reply returns as literal text.<br /><strong>You paste it on your Mac.</strong></p></div>
-      <div class="board-flow__caption">Workflow diagram · Companion runs on your Mac</div>
+      <div class="holocron-flow__return"><span aria-hidden="true">↳</span><p>A requested reply returns as literal text.<br /><strong>You paste it on your Mac.</strong></p></div>
+      <div class="holocron-flow__caption">Workflow diagram · Companion runs on your Mac</div>
     </div>
   </section>
 
-  <section class="board-principle shell" aria-label="Board's sharing model">
+  <section class="holocron-principle shell" aria-label="Holocron's sharing model">
     <p class="section-label">A deliberate connection</p>
     <p>Useful context travels.<br /><em>The rest stays with you.</em></p>
     <span>Selected snapshots. Private tunnel.<br />Manual paste.</span>
   </section>
 
-  <section class="board-start shell" aria-labelledby="start-title">
-    <div class="board-section-heading"><div><p class="section-label">Getting started</p><h2 id="start-title">Three steps to your first share.</h2></div><a class="board-text-link" href="/docs/getting-started">Follow the setup guide <span aria-hidden="true">→</span></a></div>
-    <div class="board-steps">{paths.map((path) => (
-      <a class="board-step" href={path.href}><span class="board-step__number">{path.number}</span><h3>{path.title}</h3><p>{path.description}</p><span class="board-step__link">{path.label} <span aria-hidden="true">↗</span></span></a>
+  <section class="holocron-start shell" aria-labelledby="start-title">
+    <div class="holocron-section-heading"><div><p class="section-label">Getting started</p><h2 id="start-title">Three steps to your first share.</h2></div><a class="holocron-text-link" href="/docs/getting-started">Follow the setup guide <span aria-hidden="true">→</span></a></div>
+    <div class="holocron-steps">{paths.map((path) => (
+      <a class="holocron-step" href={path.href}><span class="holocron-step__number">{path.number}</span><h3>{path.title}</h3><p>{path.description}</p><span class="holocron-step__link">{path.label} <span aria-hidden="true">↗</span></span></a>
     ))}</div>
   </section>
 
-  <section class="board-tools shell" aria-labelledby="tools-title">
-    <div class="board-tools__copy"><p class="section-label">Your everyday workflow</p><h2 id="tools-title">One selection.<br /><em>One snapshot.</em></h2><p>Capture the clipboard once or pick a context file. Ask your dot to read it, summarize it or copy a reply. Clipboard text stays literal until you decide what to do with it.</p><a class="board-text-link" href="/docs/text-bridge">Share your first text <span aria-hidden="true">→</span></a></div>
-    <div class="board-tools__example"><p class="board-code-label">After installing Board and linking your config</p><div class="docs-copy"><pre><code class="language-sh">board copy --name "Project notes"</code></pre></div><p class="board-code-caption">Share once. Your dot can read the snapshot; its clipboard needs an explicit receiving operation.</p><a href="/docs/cloud-clipboard">Need the cloud clipboard too? <span aria-hidden="true">→</span></a></div>
+  <section class="holocron-tools shell" aria-labelledby="tools-title">
+    <div class="holocron-tools__copy"><p class="section-label">Your everyday workflow</p><h2 id="tools-title">One selection.<br /><em>One snapshot.</em></h2><p>Capture the clipboard once or pick a context file. Ask your dot to read it, summarize it or copy a reply. Clipboard text stays literal until you decide what to do with it.</p><a class="holocron-text-link" href="/docs/text-bridge">Share your first text <span aria-hidden="true">→</span></a></div>
+    <div class="holocron-tools__example"><p class="holocron-code-label">After installing Holocron and linking your config</p><div class="docs-copy"><pre><code class="language-sh">holocron copy --name "Project notes"</code></pre></div><p class="holocron-code-caption">Share once. Your dot can read the snapshot; its clipboard needs an explicit receiving operation.</p><a href="/docs/cloud-clipboard">Need the cloud clipboard too? <span aria-hidden="true">→</span></a></div>
   </section>
 
-  <section class="board-readiness shell" aria-label="Connection readiness"><span class="board-readiness__label">Before you rely on it</span><p>Local implementation checks are in place. Your intended account, tunnel and viewed clipboard still need live verification.</p><a class="board-text-link" href="/docs/secure-mcp-tunnel">Connection checklist <span aria-hidden="true">↗</span></a></section>
-</BoardLayout>
+  <section class="holocron-readiness shell" aria-label="Connection readiness"><span class="holocron-readiness__label">Before you rely on it</span><p>Local implementation checks are in place. Your intended account, tunnel and viewed clipboard still need live verification.</p><a class="holocron-text-link" href="/docs/secure-mcp-tunnel">Connection checklist <span aria-hidden="true">↗</span></a></section>
+</HolocronLayout>

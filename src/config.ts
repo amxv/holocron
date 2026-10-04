@@ -47,6 +47,6 @@ export function protectedResourceMetadata(config: ProbeConfig) {
     authorization_servers: [config.issuer],
     scopes_supported: [config.statusScope, config.readScope, config.writeScope],
     bearer_methods_supported: ['header'],
-    resource_name: 'Shared Clipboard explicit text bridge',
+    resource_name: 'Holocron explicit text bridge',
   };
 }

@@ -1,7 +1,7 @@
 // Keep repository/package Markdown links portable while rendering website routes.
 export default function docsLinks() {
   return {
-    name: 'board-docs-links',
+    name: 'holocron-docs-links',
     element: {
       filter: ['a'],
       visit(node, ctx) {

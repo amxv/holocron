@@ -2,10 +2,10 @@
 title: Selected UTF-8 context files
 description: Share immutable selected UTF-8 file snapshots with bounded reads and digest verification.
 order: 7
-category: Use Board
+category: Use Holocron
 ---
 
-For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Board/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
+For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Holocron/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
 
 The companion supports explicit local selection of one regular UTF-8 file per command. The authenticated plugin lists and reads its immutable snapshot. Actual intended-dot summarization/reconstruction, OAuth provider, tunnel, registered plugin installation and viewed clipboard checks remain deferred and unverified. Local tests reconstruct source and clean installed-package fixtures with exact byte counts and digests, using no real clipboard.
 
@@ -14,10 +14,10 @@ The companion supports explicit local selection of one regular UTF-8 file per co
 Build or install the pinned package and use the same private operator configuration as [Text bridge usage](text-bridge.md). In a local terminal:
 
 ```sh
-shared-clipboard share-file /absolute/path/to/selected-context.txt \
+holocron share-file /absolute/path/to/selected-context.txt \
   --config /absolute/private/operator.json --name "Project context"
-shared-clipboard list --config /absolute/private/operator.json
-shared-clipboard revoke SHARE_ID --config /absolute/private/operator.json
+holocron list --config /absolute/private/operator.json
+holocron revoke SHARE_ID --config /absolute/private/operator.json
 ```
 
 The path is supplied only to this explicit local command. One path is accepted; the companion does not expand patterns or recurse. Default label is `Context file`, so even the basename is not disclosed automatically. An optional label follows the same safe ASCII rules as text shares. Choose a label without private path information. Results contain only an opaque ID, label, `kind: "file"`, exact byte count, SHA-256, creation time and 24-hour expiry. The source path is never stored in the snapshot database or returned remotely, and filesystem errors expose safe codes only.

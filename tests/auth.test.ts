@@ -76,7 +76,7 @@ test('provider input is constrained, metadata advertises resource and actual sco
   assert.deepEqual(protectedResourceMetadata(config), {
     resource: config.resource, authorization_servers: [config.issuer],
     scopes_supported: [config.statusScope, config.readScope, config.writeScope], bearer_methods_supported: ['header'],
-    resource_name: 'Shared Clipboard explicit text bridge',
+    resource_name: 'Holocron explicit text bridge',
   });
   assert.equal(metadataUrl(config), 'https://synthetic-resource.invalid/.well-known/oauth-protected-resource/mcp');
   assert.ok(challenge(config, 'invalid_token', [config.statusScope]).includes(`resource_metadata="${metadataUrl(config)}"`));
