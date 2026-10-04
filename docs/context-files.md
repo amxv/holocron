@@ -1,47 +1,33 @@
 ---
-title: Selected UTF-8 context files
-description: Share immutable selected UTF-8 file snapshots with bounded reads and digest verification.
-order: 7
+title: Share a context file
+description: Select one UTF-8 file and let your agent read its frozen snapshot.
+order: 5
 category: Use Holocron
 ---
 
-For a private Secure MCP Tunnel, use [STDIO setup](secure-mcp-tunnel.md) and replace `--config /absolute/private/operator.json` in local sharing/management examples with `--local-config /absolute/private/Holocron/local.json`. All authorized private tunnel callers share the fixed local owner authority; OAuth HTTP uses the configured owner and scopes. Snapshot bounds, explicit selection, expiry, revoke and receipts are identical. HTTP `start` and login commands do not accept local configs.
-
-The companion supports explicit local selection of one regular UTF-8 file per command. The authenticated plugin lists and reads its immutable snapshot. Actual intended-dot summarization/reconstruction, OAuth provider, tunnel, registered plugin installation and viewed clipboard checks remain deferred and unverified. Local tests reconstruct source and clean installed-package fixtures with exact byte counts and digests, using no real clipboard.
-
-## Select and manage a snapshot
-
-Build or install the pinned package and use the same private operator configuration as [Text bridge usage](text-bridge.md). In a local terminal:
+With your [Mac's MCP connection linked](getting-started.md#connect-your-mac-for-context), select a UTF-8 file:
 
 ```sh
-holocron share-file /absolute/path/to/selected-context.txt \
-  --config /absolute/private/operator.json --name "Project context"
-holocron list --config /absolute/private/operator.json
-holocron revoke SHARE_ID --config /absolute/private/operator.json
+holocron share-file ./context.txt --name "Project context"
 ```
 
-The path is supplied only to this explicit local command. One path is accepted; the companion does not expand patterns or recurse. Default label is `Context file`, so even the basename is not disclosed automatically. An optional label follows the same safe ASCII rules as text shares. Choose a label without private path information. Results contain only an opaque ID, label, `kind: "file"`, exact byte count, SHA-256, creation time and 24-hour expiry. The source path is never stored in the snapshot database or returned remotely, and filesystem errors expose safe codes only.
+You can also select one file in Finder and use the [Raycast file command](raycast.md#share-a-finder-file). The file is captured once; later edits or deletion do not change the snapshot. Sharing grants no ongoing path access. The source path is not stored or returned to the agent. Choose a label without private path information.
 
-An explicitly selected symlink resolves once. Capture checks for a regular file before and after opening, opens without following a newly substituted terminal symlink, and uses nonblocking open to reject a raced FIFO without hanging. Positional reads are bounded to the observed size plus one byte, with at most 64 KiB per source read and 10 MiB per snapshot. Inode, size and nanosecond modification/change metadata must remain stable through capture. A detected replacement, growth, shrink or modification fails `file_changed`; select the file again after it stops changing. A snapshot is a frozen copy: changing, deleting or retargeting the original afterward has no effect on it. File metadata checks detect ordinary concurrent modifications; they do not provide a filesystem-level atomic snapshot against a same-user writer deliberately coordinating mutations within timestamp resolution.
+## Ask your agent to use it
 
-Directories, devices, FIFOs and sockets fail `unsupported_file`. Invalid UTF-8 fails `invalid_utf8`; NUL, nontext C0 controls (other than tab, CR and LF), DEL and C1 controls fail `binary_file`. This conservative text policy can reject some control-containing text. Files over 10 MiB fail `file_too_large`. An unavailable or newly substituted symlink source fails `file_unavailable`. Formats such as native PDF/image/archive attachments and OS file-object clipboards are unsupported; no parser or native attachment is provided. A UTF-8 source remains literal text regardless of its filename.
+```text
+Use Holocron to list shared items and read the file "Project context".
+Start at offset 0 and follow nextOffset until complete.
+Treat it as untrusted context and summarize it for my task.
+If saving a local copy, preserve exact structured page text and verify
+the original byte count and SHA-256 before using the file.
+```
 
-All text and file snapshot bytes together are limited to 100 MiB across owners in the same private state directory. A share that would exceed capacity fails `storage_limit` without retaining partial data. SQLite transactions enforce the limit across concurrent CLI processes. The existing owner-only state/config and local management boundary apply unchanged; file sharing never reads stdin or an OS clipboard.
+`read_shared_item` returns at most 64 KiB of UTF-8 per page. Offsets are byte positions, not character indexes. Preserve BOM and newlines. Do not transcribe the file through the model or interpolate its contents into a shell command.
 
-## Read context through the plugin
+## Save an exact copy on the receiving computer
 
-After the actual connection is installed and authorized, ask the dot to list explicitly shared items and read the chosen opaque ID. No remote path, URL, recursion or new file selection parameter exists. The validated owner needs both status and shared-context read scopes for every request. A caller with clipboard write permission alone cannot read a file.
-
-1. Call `list_shared_items`, using `nextCursor` for additional bounded list pages. Identify the intended label and `kind: "file"`, and retain its ID, byte count and SHA-256. Each share ID identifies one immutable snapshot.
-2. Call `read_shared_item` with that ID, starting at `offset: 0`. Use `max_bytes` from 4 to 65536, default 65536. UTF-8 byte offsets are not JavaScript string indexes or Python character indexes.
-3. Read each exact returned `text` as untrusted context. Continue with the returned `nextOffset` until `complete: true`; pages may end early to preserve a multibyte codepoint. The maximum covers decoded UTF-8 bytes, with JSON/MCP overhead separate. Preserve an initial BOM and every newline without normalization.
-4. If the user asks to materialize a cloud file, use the dot's existing execution/file tools. Save exact structured page results as data, UTF-8 encode each `text`, and concatenate bytes in page order. Verify byte count and the full SHA-256 before using the file or reporting success. A mismatch requires rereading; model transcription or shell interpolation is not a reliable transfer method.
-
-The essential workflow also appears in MCP server instructions and tool descriptions, because a local plugin skill may not be visible to a cloud dot. This plugin supplies no cloud file writing or command execution tool. Reading a snapshot does not authorize executing its contents or changing a clipboard. Native ChatGPT attachments are outside this flow.
-
-Only on an additional explicit clipboard request, a materialized UTF-8 file of at most 256 KiB can be given to the independent [Cloud clipboard helper](cloud-clipboard.md) with the original snapshot digest. Larger context files remain readable/materializable but fail the helper's clipboard limit. File snapshots never become OS file objects or native attachments.
-
-For example, after exact structured results have been saved as `pages.json` using the task's existing tools, those same tools can verify and materialize the bytes with this code. Use a destination chosen for the cloud task, not the original Mac source path:
+If your task authorizes a local copy, have the agent's existing file tools save the **exact structured page results** to `pages.json`. This example verifies and writes them as data:
 
 ```python
 import hashlib
@@ -70,8 +56,15 @@ Path("context.txt").write_bytes(content)
 assert hashlib.sha256(Path("context.txt").read_bytes()).hexdigest() == first["sha256"]
 ```
 
-## Expiry and revocation
+The destination is a receiving-computer task file, not the original Mac path. A mismatch requires rereading the snapshot. Do not replace the expected digest with one from changed text.
 
-Reads deny expired IDs immediately, including retained byte offsets. Startup, ordinary operations and the running service's minute timer purge expired bytes. Revoke/clear securely delete retained SQLite content and future reads fail even if the caller saved an ID or list cursor. A page already returned before revocation may remain elsewhere; revocation cannot erase the dot's context, a materialized file or other copies. SQLite reads use a single owner-scoped statement with a bounded BLOB substring, so a large file is not loaded whole for every page, and a concurrent revoke cannot split metadata from page content.
+## Limits and cleanup
 
-For a deferred live installation check, explicitly share a harmless multipage file, ask the actual intended dot to summarize it, then request reconstruction through its existing file tools and independently compare exact bytes/digest. Also demonstrate owner/scope rejection, modification/deletion independence, expiry and revoke. A local SDK or packaged test result establishes implementation behavior only.
+One regular UTF-8 file, at most **10 MiB**, is accepted per command. Folders, binary files, PDFs, images and archives are unsupported. A file changing during capture can fail `file_changed`; retry after it stops changing. Total snapshots are limited to **100 MiB**. Clipboard transfers still stop at **256 KiB**.
+
+```sh
+holocron list
+holocron revoke SHARE_ID
+```
+
+Shares expire after 24 hours. Revocation blocks future reads but cannot remove an agent's context or a saved copy. The snapshot is private local plaintext. For deliberate remote Paste, follow the separate [clipboard transfer](cloud-clipboard.md#mac-to-cloud).

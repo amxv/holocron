@@ -1,44 +1,44 @@
 ---
-title: "What is Holocron?"
-description: "Explicit context sharing between your Mac and ChatGPT Dots."
-order: 1
-category: "Start"
+title: How Holocron works
+description: Selected context through MCP, and approved encrypted keys to a paired receiver.
+order: 2
+category: Start
 ---
 
-Holocron is a personal Mac companion for sharing selected text and UTF-8 context files with ChatGPT Dots. A connected dot can read those snapshots and, when you ask, copy literal text to your Mac clipboard. You paste it yourself.
+Holocron connects your Mac to an agent on another computer. You share the text and files you select. When that agent needs API keys, it asks and you approve a native Mac prompt.
 
-[Start the setup guide](getting-started.md) to install the companion, connect your account and share your first item.
+[Install Holocron](getting-started.md), then choose the connection your task needs.
 
-## How it fits together
+## Context you select
 
-| Component | Where it runs | What it does |
+`holocron copy` captures your Mac text clipboard once. `holocron share-file` captures one selected UTF-8 file. A connected agent reads the frozen snapshot through your private MCP tunnel. Later changes to your clipboard or source file are not shared.
+
+Use a [Raycast shortcut](raycast.md) for the same explicit action. Shares expire after 24 hours; you can revoke them sooner. Text is limited to 256 KiB, files to 10 MiB, and total snapshots to 100 MiB.
+
+Sharing does not populate another computer's clipboard. [Remote Paste](cloud-clipboard.md) needs a separately authorized receiving operation in a supported Linux Wayland session. A connected agent can also copy a requested literal reply to your Mac; you paste it yourself.
+
+## Keys you approve
+
+The [receiving computer](secret-requests.md) generates its own credentials. You exchange a public descriptor and encrypted enrollment, compare fingerprints and approve pairing on the Mac. Its agent then runs `holocron ask` with key names and a non-secret purpose.
+
+You review the recipient and request in the native Mac prompt, enter values and choose **Approve and send**. Encrypted delivery creates short-lived private files on the receiver. Its authorized program reads them directly; key values stay out of chat, MCP results and clipboard snapshots.
+
+The [Mac secret service](secret-operations.md) is separate from the context companion. API keys do not need an MCP tunnel; context sharing does not grant secret delivery.
+
+## What runs where
+
+| Component | Location | Purpose |
 | --- | --- | --- |
-| Mac companion | Your Mac | Captures selected context, stores snapshots and handles authorized Mac copy requests |
-| Secure MCP Tunnel | Your Mac | Runs the private STDIO MCP companion and connects it through an outbound connection |
-| OAuth provider, HTTP alternative | Your existing provider | Authenticates the configured owner for the separate HTTP route |
-| Registered plugin | The intended ChatGPT account/workspace | Makes the companion's MCP tools available to the dot |
-| Cloud helper, optional | The intended Linux Wayland session | Explicitly reads or holds literal text on that session's clipboard |
-| This website | Vercel | Serves documentation only |
+| Context companion + private MCP tunnel | Your Mac | Serve your selected snapshots and requested Mac clipboard writes |
+| Paired secret service + native prompt | Your awake Mac | Review pairing and approve individual key requests |
+| Receiving CLI | Agent's macOS or Linux computer | Create receiver credentials and deliver approved keys as private files |
+| Hosted site + secret relay | Holocron's domain | Serve docs/installer and relay public metadata and encrypted key deliveries |
+| Optional clipboard helper | Agent's Linux Wayland session | Explicit clipboard reads or writes for that graphical session |
 
-Keep the Mac awake and both the companion and tunnel running. Hosting this website does not run the Mac companion, connect your account or provide a clipboard relay.
+## Your control and its limits
 
-The primary [private STDIO tunnel](secure-mcp-tunnel.md) needs no external OAuth provider or public listener. The companion acts as one fixed local OS owner; every authorized tunnel/workspace caller shares that authority. Restrict tunnel and workspace access accordingly. The separate [HTTP OAuth route](phase1-setup.md) retains owner and per-tool scope enforcement.
+There is no clipboard watcher, automatic paste, command execution or remote live Mac clipboard access. Files are selected snapshots, not ongoing filesystem grants or native attachments.
 
-## Choose what you share
+Context snapshots are private local **plaintext**. Approved keys exist in private receiver files and endpoint memory. Protect both OS accounts. Revocation prevents future access but cannot erase copies already received. Interrupted clipboard writes are not replayed automatically.
 
-- **Text:** [Capture your Mac clipboard once](text-bridge.md) or share literal UTF-8 stdin. Later clipboard changes are not visible to the dot.
-- **Files:** [Select one UTF-8 context file](context-files.md). Holocron captures a frozen copy, hides the source path and reads it in bounded pages.
-- **Replies:** Ask the dot to copy a response to the Mac. The text stays literal; a completed copy does not mean a command ran.
-- **Cloud clipboard:** [Install the independent helper](cloud-clipboard.md) if the actual viewed session supports Wayland. Preserve the original digest when moving bytes between computers.
-
-## Defaults and boundaries
-
-Text and clipboard writes are limited to **256 KiB**. Each context file can be **10 MiB**, with **100 MiB** total snapshot storage. Shares expire after **24 hours**. See the [reference](reference.md) for exact paging and request rules.
-
-There is no clipboard watcher, automatic paste, command execution, remote live Mac clipboard read or arbitrary filesystem access. File snapshots are text context, not native attachments or ongoing path grants.
-
-Snapshots are private local **plaintext**. Protect your OS account and backups. Revoking or clearing a share blocks future reads, but cannot erase copies already returned to a dot or another application. The bridge has no offline write queue; interrupted writes are never replayed automatically.
-
-## Connection readiness
-
-The implementation has local security and package checks. Actual intended Dots, private tunnel, registered plugin and viewed Mac/cloud clipboard compatibility remain **deferred and unverified**. Complete the [private tunnel setup and live checks](secure-mcp-tunnel.md) in your own account before relying on it. The alternative HTTP OAuth provider/callback/resource also need separate verification if you choose that route.
+The private 0.2.0 release and secret relay are live; a production synthetic relay probe passed. Actual intended receiver/native GUI acceptance is still pending, and context discovery/viewed clipboard behavior must be checked in your own installation. [Test a harmless key](secret-requests.md#test-the-connection) before real values.

@@ -3,60 +3,82 @@ import HolocronLayout from "../layouts/HolocronLayout.astro";
 import { siteConfig } from "../data/docs";
 import "../styles/landing.css";
 
-const paths = [
-  { number: "01", title: "Set up your Mac", description: "Install the private companion and keep it running locally.", href: "/docs/operations", label: "Mac companion" },
-  { number: "02", title: "Connect your dot", description: "Connect your private MCP companion through Secure MCP Tunnel.", href: "/docs/secure-mcp-tunnel", label: "Private tunnel setup" },
-  { number: "03", title: "Choose the context", description: "Capture text or select a UTF-8 file. Your dot reads that frozen snapshot.", href: "/docs/context-files", label: "Sharing context" }
+const tasks = [
+  { number: "01", title: "Install on your computer", text: "Use Node 24.21.0 and your own GitHub login with access to the private release.", href: "/docs/getting-started#install-holocron", label: "Installation guide" },
+  { number: "02", title: "Connect the right endpoint", text: "Pair the receiving agent for keys. Connect the Mac’s private MCP tunnel for context.", href: "/docs/getting-started#choose-your-workflow", label: "Choose your workflow" },
+  { number: "03", title: "Share with intention", text: "Approve a key request on your Mac, or share the clipboard text and files you select.", href: "/docs/secret-requests", label: "Request your first key" }
 ];
 ---
 
-<HolocronLayout title="Holocron | Context between your Mac and ChatGPT Dots" description={siteConfig.description}>
-  <section class="holocron-hero shell" aria-labelledby="hero-title">
-    <div class="holocron-hero__copy">
-      <p class="holocron-eyebrow"><span class="holocron-mark" aria-hidden="true"></span> A personal bridge for ChatGPT Dots</p>
-      <h1 id="hero-title">Give your dot<br />the <em>right context.</em></h1>
-      <p class="holocron-hero__lede">The text you copied. The file you chose. Holocron shares selected context from your Mac and brings a requested reply back to your clipboard.</p>
-      <div class="holocron-hero__actions">
-        <a class="button button--solid" href="/docs/getting-started">Set up Holocron <span aria-hidden="true">↗</span></a>
-        <a class="holocron-text-link" href="/docs/overview">How it works <span aria-hidden="true">→</span></a>
+<HolocronLayout title="Holocron | Your context. Your keys. Your call." description={siteConfig.description}>
+  <section class="hc-hero shell" aria-labelledby="hero-title">
+    <div class="hc-hero__copy">
+      <p class="hc-eyebrow"><span class="hc-seal" aria-hidden="true">◇</span> For the agent on your other computer</p>
+      <h1 id="hero-title">Your context.<br />Your keys.<br /><em>Your call.</em></h1>
+      <p class="hc-hero__lede">Give your agent the text it needs and privately provide the API keys it asks for. You choose the context. You approve the keys on your Mac.</p>
+      <div class="hc-actions">
+        <a class="button button--solid" href="/docs/getting-started">Install Holocron <span aria-hidden="true">↗</span></a>
+        <a class="hc-link" href="/docs/secret-requests">Pair your agent <span aria-hidden="true">→</span></a>
       </div>
-      <p class="holocron-hero__footnote">You choose what to share. You decide what to paste.</p>
+      <p class="hc-prerequisite">Private GitHub access · Node 24.21.0 · macOS + receiving computer</p>
     </div>
-    <div class="holocron-flow" role="group" aria-label="How a share travels between your Mac and ChatGPT">
-      <div class="holocron-flow__heading"><span>From your Mac, with intention</span><span aria-hidden="true">↗</span></div>
-      <div class="holocron-flow__stage">
-        <span class="holocron-flow__number">01</span>
-        <div class="holocron-flow__body"><span class="holocron-flow__label">Your Mac</span><strong>Select a little context</strong>
-          <div class="holocron-snapshot"><span class="holocron-snapshot__icon" aria-hidden="true">≡</span><div><strong>Project context</strong><span>UTF-8 file · Immutable snapshot</span></div><span class="holocron-snapshot__check" aria-hidden="true">✓</span></div>
-        </div>
+
+    <div class="hc-exchange" role="group" aria-label="Two explicit workflows: selected context through MCP, and approved encrypted keys to a paired receiver">
+      <div class="hc-exchange__top"><span class="hc-caption">A deliberate handoff</span><span class="hc-exchange__symbol" aria-hidden="true">◇</span></div>
+      <div class="hc-endpoints"><span>Your Mac</span><span aria-hidden="true">↔</span><span>Your agent</span></div>
+      <div class="hc-channel">
+        <div class="hc-channel__title"><span class="hc-channel__icon" aria-hidden="true">≡</span><h2>The context you select</h2><span class="hc-channel__tag">Share</span></div>
+        <p>Clipboard text & selected UTF-8 files</p>
+        <div class="hc-rail"><span>Explicit snapshot</span><span aria-hidden="true">→</span><span>Read through MCP</span></div>
       </div>
-      <div class="holocron-flow__connection"><span aria-hidden="true">↓</span><span>Private tunnel · Your local owner</span></div>
-      <div class="holocron-flow__stage">
-        <span class="holocron-flow__number">02</span>
-        <div class="holocron-flow__body"><span class="holocron-flow__label">ChatGPT Dots</span><strong>Read. Understand. Respond.</strong><p>Only the snapshots you explicitly shared.</p></div>
+      <div class="hc-channel hc-channel--keys">
+        <div class="hc-channel__title"><svg class="hc-channel__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="9" r="4" /><path d="m11 12 8 8m-4-4 3-3m-1 5 3-3" /></svg><h2>The keys you approve</h2><span class="hc-channel__tag">Approve</span></div>
+        <p>A native Mac prompt for a paired receiver</p>
+        <div class="hc-rail"><span>Encrypted delivery</span><span aria-hidden="true">→</span><span>Private key files</span></div>
       </div>
-      <div class="holocron-flow__return"><span aria-hidden="true">↳</span><p>A requested reply returns as literal text.<br /><strong>You paste it on your Mac.</strong></p></div>
-      <div class="holocron-flow__caption">Workflow diagram · Companion runs on your Mac</div>
+      <p class="hc-exchange__note">Keys stay out of chat.<br />Clipboard sharing happens only when you choose.</p>
+      <span class="hc-caption hc-exchange__caption">Workflow illustration</span>
     </div>
   </section>
 
-  <section class="holocron-principle shell" aria-label="Holocron's sharing model">
-    <p class="section-label">A deliberate connection</p>
-    <p>Useful context travels.<br /><em>The rest stays with you.</em></p>
-    <span>Selected snapshots. Private tunnel.<br />Manual paste.</span>
+  <section class="hc-boundaries shell" aria-label="How you stay in control">
+    <p><span aria-hidden="true">↗</span> Share selected context</p>
+    <p><span aria-hidden="true">◇</span> Approve each key request</p>
+    <p><span aria-hidden="true">⌘</span> Paste when you choose</p>
   </section>
 
-  <section class="holocron-start shell" aria-labelledby="start-title">
-    <div class="holocron-section-heading"><div><p class="section-label">Getting started</p><h2 id="start-title">Three steps to your first share.</h2></div><a class="holocron-text-link" href="/docs/getting-started">Follow the setup guide <span aria-hidden="true">→</span></a></div>
-    <div class="holocron-steps">{paths.map((path) => (
-      <a class="holocron-step" href={path.href}><span class="holocron-step__number">{path.number}</span><h3>{path.title}</h3><p>{path.description}</p><span class="holocron-step__link">{path.label} <span aria-hidden="true">↗</span></span></a>
+  <section class="hc-workflows shell" aria-labelledby="workflow-title">
+    <div class="hc-section-head"><p class="section-label">Two ways to help your agent</p><h2 id="workflow-title">A little context.<br /><em>A private handoff.</em></h2></div>
+    <div class="hc-workflow-grid">
+      <article class="hc-workflow">
+        <span class="hc-caption">01 / Everyday context</span>
+        <h3>Copy. Share. Keep working.</h3>
+        <p>Share your copied text once, or select a project file. Your connected agent reads that snapshot. A Raycast shortcut puts the same action a keypress away.</p>
+        <div class="docs-copy"><pre><code class="language-sh">holocron copy --name "Project notes"</code></pre></div>
+        <p class="hc-code-note">After linking your Mac’s MCP setup. Sharing does not fill the other computer’s clipboard.</p>
+        <div class="hc-workflow__links"><a class="hc-link" href="/docs/text-bridge">Share context <span aria-hidden="true">→</span></a><a class="hc-link" href="/docs/raycast">Set up Raycast <span aria-hidden="true">↗</span></a></div>
+      </article>
+      <article class="hc-workflow hc-workflow--keys">
+        <span class="hc-caption">02 / Private API keys</span>
+        <h3>Your agent asks. You approve.</h3>
+        <p>The paired receiving agent requests named keys with a purpose. Review the native Mac prompt and enter the values. Its program reads short-lived private files directly.</p>
+        <div class="docs-copy"><pre><code class="language-sh">holocron ask --pairing-file receiver.json \
+  -m "Run my approved task" OPENAI_API_KEY</code></pre></div>
+        <p class="hc-code-note">After endpoint pairing. Values stay out of chat, clipboard shares and command output.</p>
+        <a class="hc-link" href="/docs/secret-requests">Pair & request keys <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </section>
+
+  <section class="hc-start shell" aria-labelledby="start-title">
+    <div class="hc-section-head hc-section-head--row"><div><p class="section-label">Start here</p><h2 id="start-title">Make the connection.</h2></div><a class="hc-link" href="/docs/getting-started">Open the setup guide <span aria-hidden="true">→</span></a></div>
+    <div class="hc-steps">{tasks.map((task) => (
+      <a class="hc-step" href={task.href}><span class="hc-caption">{task.number}</span><h3>{task.title}</h3><p>{task.text}</p><span class="hc-step__link">{task.label} <span aria-hidden="true">↗</span></span></a>
     ))}</div>
   </section>
 
-  <section class="holocron-tools shell" aria-labelledby="tools-title">
-    <div class="holocron-tools__copy"><p class="section-label">Your everyday workflow</p><h2 id="tools-title">One selection.<br /><em>One snapshot.</em></h2><p>Capture the clipboard once or pick a context file. Ask your dot to read it, summarize it or copy a reply. Clipboard text stays literal until you decide what to do with it.</p><a class="holocron-text-link" href="/docs/text-bridge">Share your first text <span aria-hidden="true">→</span></a></div>
-    <div class="holocron-tools__example"><p class="holocron-code-label">After installing Holocron and linking your config</p><div class="docs-copy"><pre><code class="language-sh">holocron copy --name "Project notes"</code></pre></div><p class="holocron-code-caption">Share once. Your dot can read the snapshot; its clipboard needs an explicit receiving operation.</p><a href="/docs/cloud-clipboard">Need the cloud clipboard too? <span aria-hidden="true">→</span></a></div>
+  <section class="hc-close shell" aria-labelledby="close-title">
+    <div><p class="section-label">Keep the decision with you</p><h2 id="close-title">Useful context travels.<br /><em>You stay in control.</em></h2></div>
+    <div class="hc-close__copy"><p>No clipboard watcher or automatic paste. Key requests need paired endpoints and your native approval. Keep the Mac awake and the relevant service running.</p><p class="hc-acceptance">The private 0.2.0 release and secret relay are live. Test a harmless value on your intended receiver before real keys; receiver and native GUI acceptance is still pending.</p><a class="hc-link" href="/docs/secret-requests#test-the-connection">Test your connection <span aria-hidden="true">→</span></a></div>
   </section>
-
-  <section class="holocron-readiness shell" aria-label="Connection readiness"><span class="holocron-readiness__label">Before you rely on it</span><p>Local implementation checks are in place. Your intended account, tunnel and viewed clipboard still need live verification.</p><a class="holocron-text-link" href="/docs/secure-mcp-tunnel">Connection checklist <span aria-hidden="true">↗</span></a></section>
 </HolocronLayout>

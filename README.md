@@ -1,32 +1,35 @@
 # Holocron
 
-Holocron shares text and selected UTF-8 context files with ChatGPT and can copy requested literal text to your Mac clipboard. You paste it yourself and decide whether to run it. Shares are explicit immutable snapshots, with no clipboard watcher, automatic paste, command execution, remote live clipboard read or arbitrary filesystem access.
+Share selected context with an agent on another computer, and privately provide the API keys it asks for. You choose the clipboard text or UTF-8 file. You approve each key request in a native Mac prompt.
 
-Start with the [Holocron setup guide](https://holocron.ashray.xyz/docs/getting-started), or the offline `docs/getting-started.md` guide. The [one-command installer](docs/operations.md#one-command-cli-installation) uses existing authenticated GitHub CLI access to the private release, verifies GitHub-recorded SHA-256 and installs a convenient `holocron` executable. After publication/deployment: `curl -fsSL https://holocron.ashray.xyz/install.sh | sh`. It requires Node 24.21.0 and reads no existing runtime config/state. Link an existing setup explicitly with `holocron link --local-config /absolute/private/local.json`, then `holocron copy` to share your copied text once. The complete [private Secure MCP Tunnel guide](docs/secure-mcp-tunnel.md) covers owner-only config, direct STDIO launch and your existing tunnel. No external OAuth provider is needed for that private transport.
+[Install Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Installation requires **Node 24.21.0** and your own authenticated GitHub CLI access to the **private `amxv/holocron` repository**. The private 0.2.0 release, hosted installer and encrypted secret relay are live.
 
-`holocron copy` shares a snapshot; normal Paste on the connected computer requires a separate explicit, digest-verified [Wayland helper operation](docs/cloud-clipboard.md#mac-to-cloud) in that viewed session. A connection alone does not deliver an OS clipboard. Historical `shared-clipboard` commands and the independent cloud helper remain available.
+| Task | Guide |
+| --- | --- |
+| Authenticate/pair a receiving agent and request keys | [Private API key requests](docs/secret-requests.md) |
+| Approve pairing and run the Mac secret service | [Mac pairing and service](docs/secret-operations.md) |
+| Share copied text or selected files through MCP | [Text](docs/text-bridge.md) · [Context files](docs/context-files.md) |
+| Share with a Mac shortcut | [Raycast](docs/raycast.md) |
+| Connect the Mac's private MCP endpoint | [Secure MCP Tunnel](docs/secure-mcp-tunnel.md) |
+| Deliberately fill a remote Wayland clipboard | [Clipboard helper](docs/cloud-clipboard.md) |
 
-For API keys, [private secret requests](docs/secret-requests.md#receiving-agent-handoff) use one blocking `holocron ask` on the receiving computer and a native secure Mac prompt. Receiver credentials originate and stay on that computer; setup exchanges a signed public descriptor, encrypted enrollment and explicitly compared fingerprints. A dedicated encrypted relay and native Mac pairing approval are required. Values go directly into short-lived private receiving-computer files, never ordinary snapshots or MCP/model-visible results. Private 0.2.0 publication, backend provisioning/deployment and actual remote acceptance remain pending operator work.
+`holocron copy` shares one immutable snapshot; it does not fill another computer's clipboard. There is no clipboard watcher or automatic paste. Private key requests require paired endpoints and native approval; values are delivered as short-lived private receiver files, outside chat, MCP results and ordinary snapshots.
 
-Every authorized private STDIO tunnel/workspace caller acts as the same fixed local owner. Restrict tunnel access to people authorized to read your chosen snapshots and request clipboard writes. The separate [OAuth HTTP setup](docs/phase1-setup.md) retains configured owner/resource/scopes on every protected request. [Operations](docs/operations.md), [text and receipts](docs/text-bridge.md), [context files](docs/context-files.md) and the independent [Linux Wayland cloud helper](docs/cloud-clipboard.md) cover the other boundaries.
+Keep the Mac awake and the relevant service running. Context snapshots are private local plaintext. Revocation prevents future access but cannot erase copies already received. Protect the endpoint OS accounts and keep credentials out of chat, arguments and logs.
 
-Text/clipboard limit: 256 KiB. Context file limit: 10 MiB. Aggregate snapshots: 100 MiB. Reads: at most 64 KiB of UTF-8 per page. Shares expire after 24 hours. Files are immutable captures with SHA-256, not ongoing path grants or native attachments. Unsupported, binary or oversize inputs fail without truncation.
+A production synthetic ciphertext/consume/replay/revoke probe passed. Actual intended receiver/native GUI acceptance and viewed Mac/cloud clipboard compatibility remain **deferred and unverified**. Test harmless values on your devices before real keys. [Commands and limits](docs/reference.md), [troubleshooting](docs/troubleshooting.md) and [operations](docs/operations.md) cover the details.
 
-The Mac must be awake and the companion/tunnel available. The bridge has no offline write queue. Completed request receipts prevent duplicate writes from replacing newer clipboard contents; interruption can leave an uncertain result that is never replayed automatically. Private local snapshots are plaintext. Revoke/clear cannot erase copies already returned to the dot or another application. Stop/disconnect leaves the current clipboard alone. [Recovery, removal and user-run live acceptance](docs/operations.md#recovery-and-disconnect) cover the remaining operational boundaries.
+## Develop
 
-Actual ChatGPT/Dots discovery, real tunnel and viewed Mac/cloud clipboard outcomes remain **deferred and unverified** until tested in the intended installation. Local gates use isolated state and injected clipboard adapters, never an existing OS clipboard or tunnel credentials.
-
-## Validate locally
+Source tooling uses **Bun 1.4.0**; installed CLI processes use **Node 24.21.0**. Each project has an independent frozen Bun lockfile. npm-format locks remain for audit compatibility.
 
 ```sh
-mise exec node@24.21.0 -- bun run ci:all
-mise exec node@24.21.0 -- bun audit
-HOLOCRON_TEST_REDIS_SERVER=/absolute/test/redis-server mise exec node@24.21.0 -- bun run check
+bun run ci:all
+HOLOCRON_TEST_REDIS_SERVER=/absolute/test/redis-server bun run check
+bun audit
 git diff --check
 ```
 
-The gate includes typecheck/build, OAuth security checks, official SDK STDIO subprocess tests, cancellation/failure/receipt recovery, 10 MiB file reconstruction, concurrent sharing/read/revoke stress, and a clean tarball installation without development dependencies. The package is private; public npm publishing is not part of installation.
+Root `check` covers CLI/security/package/installer checks, Raycast checks and Astro diagnostics. Scoped gates are `check:cli`, `check:raycast` and `check:site`; the site gate runs **Astro check only**. Build the root CLI before Raycast integration tests. Isolated fixtures use injected clipboard adapters and do not access live config, keys, clipboards or tunnel credentials.
 
-This private `amxv/holocron` monorepo contains the CLI in `src/`, canonical guides in `docs/`, the static website in `site/` and the [Raycast extension](https://github.com/amxv/holocron/blob/main/raycast/README.md) in `raycast/`. Each project has an independent Bun integrity lockfile; npm-format locks are retained for audit compatibility. `bun run ci:all` installs all three; root `bun run check` validates CLI packaging/installer, Raycast lint/build/tests and Astro diagnostics. Scoped checks are `check:cli`, `check:raycast` and `check:site`; the site gate runs only `astro check`. Build the CLI before Raycast integration tests. Distribution includes CLI production code/dependencies, guides, native AppKit source and the unmapped plugin scaffold, excluding website and Raycast sources/dependencies.
-
-The website consumes root `docs/` directly. Its Vercel root stays `site`, with `bunx bun@1.4.0 install --frozen-lockfile`, `bunx bun@1.4.0 run build`, output `dist` and outside-root source files enabled. See `site/README.md` for deployment settings. The canonical site is `https://holocron.ashray.xyz`.
+The monorepo contains CLI code in `src/`, canonical guides in `docs/`, the Astro/ZueDocs website in `site/` and the extension in `raycast/`. The private CLI package ships built code, canonical docs, native prompt source and an unmapped plugin scaffold. See [site development](site/README.md) and [Raycast development](raycast/README.md) for their local workflows. The known site audit baseline GHSA-ch52-4w7c-c8xp remains separate and unsuppressed.

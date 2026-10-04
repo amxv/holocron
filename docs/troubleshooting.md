@@ -1,11 +1,21 @@
 ---
 title: "Troubleshooting"
 description: "Resolve installation, connection, snapshot and clipboard ownership failures."
-order: 9
+order: 12
 category: "Reference"
 ---
 
 Start with local service health, then transport, then authorization. Each layer has its own lifecycle. Local status never proves intended-dot or viewed-desktop compatibility.
+
+## The installer cannot access the release
+
+Confirm `node --version` is `v24.21.0` and run `gh auth status --hostname github.com` on this computer. Its account needs read access to the private repository. An SSH clone key does not authenticate release downloads. Use the [receiving GitHub login options](secret-requests.md#authenticate-the-receiving-computer); never copy another endpoint's credentials.
+
+## Pairing or key requests fail
+
+Complete enrollment within 15 minutes with an independently confirmed Mac fingerprint. Existing destination files are refused. For incomplete provisioning or pending-file cleanup, use [pairing recovery](secret-operations.md#pairing-recovery).
+
+For a pending request, keep the Mac awake and `secrets serve` running for the same pairing. Confirm accurate clocks and relay HTTPS access. Requests expire after three minutes and pairing after seven days; Ctrl+C cancels the pending request. Do not print key files or send receiver/Mac configs to diagnose a failure. Revoke with acknowledgement before replacing a pairing.
 
 ## The companion is unavailable
 
@@ -19,7 +29,7 @@ cd "$SC_INSTALL"
 "$SC_NODE" "$SC_CLI" status --local-config "$SC_LOCAL"
 ```
 
-Check Node `24.21.0` and Bun `1.4.0`, private config/state permissions, and whether the official tunnel client is still running with the installed `stdio --local-config` command. The tunnel launches the STDIO companion; stop and deliberately restart its dedicated runtime when needed. Keep the Mac awake. For the alternative HTTP route, use its `--config`, foreground `start` or explicitly managed login job; a login file alone does not prove current service health.
+Check Node `24.21.0`, private config/state permissions, and whether the official tunnel client is still running with the installed `stdio --local-config` command. The tunnel launches the STDIO companion; stop and deliberately restart its dedicated runtime when needed. Keep the Mac awake. For the alternative HTTP route, use its `--config`, foreground `start` or explicitly managed login job; a login file alone does not prove current service health.
 
 Do not kill an unknown/reused PID or delete the database to bypass the runtime lease. Inspect conflicts before changing them. See [startup at login](operations.md#optional-startup-at-login).
 
@@ -72,7 +82,7 @@ File snapshots may be 10 MiB, but clipboard transfers still stop at 256 KiB. See
 
 `clipboard_busy` means a different write is in progress. There is no write queue. `failed` or `uncertain` is never automatically replayed. A write handed to the OS before interruption may have changed the clipboard. Inspect it yourself, then make a deliberate new request with a fresh ID/deadline if wanted.
 
-Exact retries of completed requests return the old receipt without replacing newer clipboard text. Reusing an ID with different text/deadline fails. A digest mismatch fails before mutation. See [text receipts](text-bridge.md#receipts-and-interruption).
+Exact retries of completed requests return the old receipt without replacing newer clipboard text. Reusing an ID with different text/deadline fails. A digest mismatch fails before mutation. See [text copy receipts](text-bridge.md#paste-a-reply-on-your-mac).
 
 ## The cloud helper is unavailable
 

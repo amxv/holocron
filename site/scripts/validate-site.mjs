@@ -63,7 +63,7 @@ for (const [path, html] of documents) {
 }
 
 const names = (await readdir(content)).filter((name) => name.endsWith('.md')).sort();
-assert.equal(names.length, 11, 'Unexpected canonical guide count; update this validation when adding a guide');
+assert.equal(names.length, 13, 'Unexpected canonical guide count; update this validation when adding a guide');
 for (const name of names) {
   const source = await readFile(join(content, name), 'utf8');
   const slug = name.slice(0, -3);

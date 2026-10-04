@@ -1,7 +1,7 @@
 ---
 title: "Commands and limits"
 description: "The public CLI, MCP tools and exact limits in one place."
-order: 10
+order: 13
 category: "Reference"
 ---
 
@@ -9,7 +9,7 @@ Holocron is the product and canonical executable. The private package is `@amxv/
 
 ## Mac CLI
 
-Run with Node `24.21.0` and Bun `1.4.0`. For the primary private STDIO route, explicit local management uses `--local-config` with the strict private `{ "transport": "stdio", "stateDirectory": "/absolute/private/state" }` JSON. The alternative OAuth HTTP route uses `--config` with its separate operator JSON. Do not mix identities/state or config flags. With a dedicated install, use the recorded absolute `"$SC_NODE" "$SC_CLI"` invocation.
+Installed CLI processes require Node `24.21.0`; Bun `1.4.0` is source tooling only. For the primary private STDIO route, explicit local management uses `--local-config` with the strict private `{ "transport": "stdio", "stateDirectory": "/absolute/private/state" }` JSON. The alternative OAuth HTTP route uses `--config` with its separate operator JSON. Do not mix identities/state or config flags. With a dedicated install, use the recorded absolute `"$SC_NODE" "$SC_CLI"` invocation.
 
 For direct `dist/cli.js` invocation and historical `shared-clipboard` commands that open state, the working directory must not be the state directory or any ancestor of it. Use `cd "$SC_INSTALL"` with the installed package prefix separate from state, and set the same directory for tunnel/native supervision. The `holocron` wrapper anchors to installed code automatically. `check-config` validates configuration without opening state. See [setup](getting-started.md).
 
@@ -96,7 +96,7 @@ The [one-command installer](operations.md#one-command-cli-installation) places t
 
 For sharing/status/STDIO commands, config selection is `--local-config ABS_JSON`, then `HOLOCRON_LOCAL_CONFIG`, then legacy `BOARD_LOCAL_CONFIG`, then the saved link. Profile selection is `HOLOCRON_CLI_HOME`, then legacy `BOARD_CLI_HOME`, then `~/.config/holocron` if present, otherwise an existing `~/.config/board`, otherwise a new `~/.config/holocron`. Existing profiles are used in place without copying secrets. Cloud and secret operations do not read ordinary profiles or Mac clipboard config. Relative selected data paths are resolved before anchoring to installed code; state beneath that code directory remains forbidden.
 
-Secret setup/serve/revoke/cleanup outputs JSON containing paths, public metadata or acknowledgements. `ask` success outputs just its private directory path; failures output a fixed safe code to stderr with no values or paths. Values exist only in `0600` files under that `0700` directory. One to eight distinct uppercase names, 4,096 UTF-8 bytes per value, 500-character non-secret purpose, 15-minute enrollment, seven-day pairing, three-minute request and five-minute files. A dedicated encrypted relay and explicit pairing are required. No existing private transfer channel is needed, and no receiver private credentials leave that computer. See the [receiving-agent handoff and operator prerequisites](secret-requests.md).
+Secret setup/serve/revoke/cleanup outputs JSON containing paths, public metadata or acknowledgements. `ask` success outputs just its private directory path; failures output a fixed safe code to stderr with no values or paths. Values exist only in `0600` files under that `0700` directory. One to eight distinct uppercase names, 4,096 UTF-8 bytes per value, 500-character non-secret purpose, 15-minute enrollment, seven-day pairing, three-minute request and five-minute files. A dedicated encrypted relay and explicit pairing are required. No existing private transfer channel is needed, and no receiver private credentials leave that computer. See the [receiving-agent setup](secret-requests.md) and [Mac service reference](secret-operations.md).
 
 Shortcut contract: invoke an **absolute executable with literal argv**, e.g. `holocron copy --name "Raycast clipboard" --local-config ABS_JSON`. `copy`, `share` and `share-file` emit one JSON line with exactly `id`, `name`, `kind`, `byteCount`, `sha256`, `createdAt`, `expiresAt`. IDs are UUIDv4, digest is 64 lowercase hexadecimal SHA-256, times are canonical UTC with milliseconds, and expiry is 24 hours after capture. `copy`/`share` always return `kind: "text"`; `share-file` returns `"file"`. Empty text/files are valid. Labels are 1–80 ASCII characters: first alphanumeric, subsequent alphanumeric, spaces, dot, underscore or hyphen, with no trailing space. Output contains metadata only, never snapshot contents, source paths or credentials.
 

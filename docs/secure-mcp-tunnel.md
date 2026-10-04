@@ -1,8 +1,8 @@
 ---
 title: Secure MCP Tunnel
 description: Connect Holocron directly to an existing private OpenAI tunnel over STDIO.
-order: 3
-category: Start
+order: 8
+category: Reference
 ---
 
 Holocron can be launched directly by your existing OpenAI Secure MCP Tunnel as a local STDIO MCP subprocess. This private transport needs no external OAuth provider. Holocron opens no HTTP listener in this mode. Shared text, selected UTF-8 files and literal Mac clipboard writes use the same bounds and durable receipts as the OAuth HTTP companion.
@@ -17,29 +17,9 @@ The distinct `--config` HTTP transport retains its OAuth JWT owner/resource/scop
 
 ## Install the Holocron CLI
 
-The [one-command installer](operations.md#one-command-cli-installation) downloads a fixed private release with your existing authenticated `gh` access and verifies its GitHub-recorded SHA-256. It installs `~/.local/bin/holocron`, with an absolute pinned Node executable, without inspecting config/state or changing a live runtime. Explicitly select an existing configuration with `holocron link --local-config /absolute/private/Holocron/local.json`, or use `holocron init` for a new setup. New config/link files live in the private `~/.config/holocron` directory. Do not run `init` to replace an existing setup.
+Follow [installation](getting-started.md#install-holocron) with Node **24.21.0** and your own private GitHub access. Link an existing local config explicitly, or use `holocron init` for a fresh setup. The installed wrapper is `~/.local/bin/holocron`.
 
-For an installer-managed CLI, the tunnel's direct command can be:
-
-```text
-"/absolute/home/.local/bin/holocron" stdio
-```
-
-You can instead supply `--local-config "/absolute/private/Holocron/local.json"` explicitly. The `holocron` wrapper changes into installed code before opening state and resolves selected file paths against the caller's directory. The private-state guard and config ownership requirements still apply. You do not need to change terminal directories for normal `holocron copy`, `holocron share-file`, `holocron list` or `holocron status` commands. Leave an already-running tunnel on its existing paths until an intentional operator reconnect; installation never restarts it.
-
-## Install the private package
-
-Activate Node `24.21.0` and Bun `1.4.0`. From a checked-out Holocron repository:
-
-```sh
-bun run ci:all
-bun run check
-bun pm pack --destination /absolute/private/artifacts
-bun install --cwd /absolute/private/holocron --production --ignore-scripts \
-  /absolute/private/artifacts/amxv-holocron-0.2.0.tgz
-```
-
-Create the artifact/install directories first. This package is private; use the local tarball, not public npm publication. The installed CLI is `/absolute/private/holocron/node_modules/@amxv/holocron/dist/cli.js`. Pin an absolute Node executable so a managed tunnel does not depend on an interactive shell or a version manager shim. The executable `holocron` is also installed under the prefix's `node_modules/.bin`.
+For a new config created by `init`, the tunnel command is your actual absolute executable followed by `stdio`. Use the existing config explicitly for a linked installation. [Source-prefix installation](operations.md#pack-and-install-the-mac-companion) is an alternative; direct CLI paths retain the working-directory rules below.
 
 ## Configure Holocron
 
@@ -169,4 +149,4 @@ EOF, SIGINT, SIGTERM and owner-only `stop --local-config ...` cancel in-flight w
 
 Local SDK subprocess and clean installed-package tests establish framing, sharing, metadata, bounds, restart/idempotency and failure behavior. Actual ChatGPT/tunnel discovery, intended Dots, sleep/wake and viewed Mac/cloud clipboard operations remain **deferred and unverified** until observed in the real installation.
 
-Sources: [OpenAI Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels), [official tunnel onholocroning](https://github.com/openai/tunnel-client/blob/master/docs/onholocroning.md), [configuration and STDIO deployment limits](https://github.com/openai/tunnel-client/blob/master/docs/configuration.md), [MCP STDIO framing and shutdown](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio), [MCP authorization transport boundary](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization), and [official SDK release lines](https://github.com/modelcontextprotocol/typescript-sdk). Checked alongside installed tunnel-client `0.0.14` help on October 4, 2026.
+See the [official Secure MCP Tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) and your installed tunnel client's help for supported options.

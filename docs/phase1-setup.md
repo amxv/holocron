@@ -1,26 +1,17 @@
 ---
 title: OAuth HTTP connection
 description: Configure the separate OAuth-protected HTTP connection and provider.
-order: 5
-category: Start
+order: 11
+category: Reference
 ---
 
 This guide is the alternative OAuth-protected HTTP connection. For an existing private OpenAI Secure MCP Tunnel, use [direct STDIO setup](secure-mcp-tunnel.md) with `--local-config`; no external OAuth provider is required for that transport. HTTP keeps its owner/resource/scope checks and accepts only `--config`.
 
 Actual provider/OAuth, intended Dots/plugin discovery, tunnel forwarding and viewed clipboard compatibility remain **deferred and unverified** until checked in the real installation. Local tests establish implementation behavior only.
 
-## Install and check
+## Install
 
-Start with [Private installation and operation](operations.md) for the clean local tarball install, absolute installed CLI paths, optional login startup, restart/recovery/removal and complete user-run acceptance. This document configures the external connection separately. Neither package install nor config validation creates a provider, tunnel, account or connection.
-
-The runtime is pinned to Node `24.21.0` (LTS), Bun `1.4.0`, the official `@modelcontextprotocol/sdk` `1.32.0`, `jose` `6.2.12`, and Zod `4.6.5`. TypeScript is `7.0.2`. Versions were checked against current package manifests and [Node releases](https://nodejs.org/en/about/previous-releases). The lockfile pins transitive dependencies.
-
-```sh
-mise exec node@24.21.0 -- bun run ci:all
-mise exec node@24.21.0 -- bun run check
-```
-
-Without mise, activate exactly the pinned runtime first. `check` performs typecheck, build, security/protocol/text/file/lifecycle tests, and a clean temporary package installation with authenticated/unauthorized text and bounded file reconstruction/digest smoke calls using injected clipboard adapters. No actual clipboard operations occur in checks. The package has an explicit distribution allowlist. Synthetic signing keys exist only in memory during tests; no test authorization server or production authentication bypass is shipped.
+Use the [verified CLI installer](getting-started.md#install-holocron) or [source-prefix route](operations.md#pack-and-install-the-mac-companion). Installed CLI processes require Node **24.21.0**; Bun **1.4.0** is source tooling only. Installation/config validation does not create a provider, account or connection.
 
 ## Provider configuration boundary
 
@@ -77,7 +68,7 @@ tunnel-client init --sample sample_mcp_with_dcr --profile holocron \
 ```
 
 Add only the actual canonical resource/metadata origin and external provider discovery origins to `mcp.oauth_trusted_origins` in this new profile before running `doctor --profile holocron --profile-dir /absolute/path/to/new-private-profile-directory --explain` and `run` with the same profile/directory. Current client discovery otherwise trusts only the configured loopback MCP origin. The runtime also exposes repeatable `--mcp.oauth-trusted-origin` flags for those exact origins. Keep unsafe raw HTTP logging, payload capture, remote admin UI, generic proxy/Harpoon targets, and static MCP Authorization overrides disabled. User bearer tokens must reach the probe intact; no shared static bearer token substitutes for owner OAuth. No unrelated profile or configuration is changed.
-4. Keep the probe and tunnel client running. With GG, launch long-lived services using managed processes. The tunnel runtime key is only for the tunnel client; it is not a user bearer token for this MCP server.
+4. Keep the companion and tunnel client running under your chosen process supervision. The tunnel runtime key is only for the tunnel client; it is not a user bearer token for this MCP server.
 5. Add the developer connection at ChatGPT Plugins, choose Tunnel, select the actual tunnel, and review discovered tools. Establish the canonical resource identifier used by this connection/provider and verify OAuth discovery through the tunnel. Do not invent an endpoint or assume the tunnel's forwarding of Host/Origin/token headers works before the live test.
 6. Copy the **exact** OAuth redirect URI displayed on the connection's management page into the provider allowlist. Current docs describe stable redirects only for providers satisfying issuer identification; others use a callback-specific URI. Record the actual URI, registration mode, public discovery URLs, resource/audience, scopes, and algorithm/type that succeeded. Do not preselect a callback by guessing from documentation.
 7. After successful registration, copy the technical ID beginning `plugin_asdk_app_`. Generate a new private package outside this checkout:

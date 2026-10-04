@@ -36,7 +36,7 @@ try {
   assert.ok(paths.includes('plugins/holocron/.app.json'));
   const allowed = new Set(['README.md', 'package.json', 'native/HolocronSecrets.swift', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
     ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel',
-      'overview', 'getting-started', 'reference', 'troubleshooting', 'secret-requests'].map((name) => `docs/${name}.md`),
+      'overview', 'getting-started', 'reference', 'troubleshooting', 'secret-requests', 'secret-operations', 'raycast'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
   assert.deepEqual(new Set(paths), allowed);
   for (const path of paths) {
