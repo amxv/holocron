@@ -17,7 +17,7 @@ The distinct `--config` HTTP transport retains its OAuth JWT owner/resource/scop
 
 ## Install the Holocron CLI
 
-Follow [installation](getting-started.md#install-holocron) with Node **24.21.0** and your own private GitHub access. Link an existing local config explicitly, or use `holocron init` for a fresh setup. The installed wrapper is `~/.local/bin/holocron`.
+Follow [installation](getting-started.md#install-holocron) with Node **24.21.0**; the CLI release is public and needs no GitHub login. Link an existing local config explicitly, or use `holocron init` for a fresh setup. The installed wrapper is `~/.local/bin/holocron`.
 
 For a new config created by `init`, the tunnel command is your actual absolute executable followed by `stdio`. Use the existing config explicitly for a linked installation. [Source-prefix installation](operations.md#pack-and-install-the-mac-companion) is an alternative; direct CLI paths retain the working-directory rules below.
 

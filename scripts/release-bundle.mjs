@@ -10,7 +10,7 @@ if (process.version !== 'v24.21.0') throw new Error('Activate Node 24.21.0');
 const temporary = await mkdtemp(join(await realpath('/tmp'), 'holocron-release-'));
 try {
   const bundle = join(temporary, 'package'); await mkdir(bundle, { mode: 0o700 });
-  for (const name of ['package.json', 'package-lock.json', 'bun.lock', 'README.md', 'dist', 'docs', 'plugins', 'native']) {
+  for (const name of ['package.json', 'package-lock.json', 'bun.lock', 'LICENSE', 'README.md', 'dist', 'docs', 'plugins', 'native']) {
     await cp(join(root, name), join(bundle, name), { recursive: true });
   }
   // Bun uses the committed integrity lock with production dependencies only.

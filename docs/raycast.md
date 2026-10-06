@@ -9,9 +9,9 @@ Press a shortcut to share your copied Mac text once. Your connected agent reads 
 
 ## Install the commands
 
-You need macOS, Raycast, Node **24.21.0**, Bun **1.4.0** for source tooling, and private GitHub repository access. [Install and link Holocron](getting-started.md#connect-your-mac-for-context) first. The extension uses `~/.local/bin/holocron` by default and starts no server or tunnel.
+You need macOS, Raycast, Node **24.21.0** and Bun **1.4.0** for source tooling. [Install and link Holocron](getting-started.md#connect-your-mac-for-context) first. The extension uses `~/.local/bin/holocron` by default and starts no server or tunnel.
 
-Clone the private monorepo, or use your existing checkout:
+Clone the public monorepo, or use your existing checkout:
 
 ```sh
 git clone https://github.com/amxv/holocron.git

@@ -20,6 +20,7 @@
     "dist",
     "plugins/holocron",
     "docs",
+    "LICENSE",
     "README.md",
     "native"
   ],
@@ -55,5 +56,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/amxv/holocron.git"
-  }
+  },
+  "license": "Apache-2.0"
 }

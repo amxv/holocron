@@ -7,13 +7,11 @@ category: Use Holocron
 
 Run `holocron ask` on the computer that needs the keys. Approve each request in a native Mac prompt. The command returns only a private temporary directory path containing one file per named key. The authorized program reads those files directly; values stay out of chat, model/MCP responses and clipboard snapshots.
 
-This guide targets **0.3.2**. Publish that private release and update the existing relay before using the new flow. Actual receiver/native GUI acceptance remains pending. The Mac owner follows [Mac setup](secret-operations.md).
+This guide targets **0.3.2** and its public GitHub release. Actual receiver/native GUI acceptance remains pending. The Mac owner follows [Mac setup](secret-operations.md).
 
-## Authenticate the receiving computer
+## Receiving computer prerequisites
 
-The receiver needs its own GitHub account with read access to the private `amxv/holocron` repository. Setup installs missing pinned Node and GitHub CLI in a private user directory. It reuses an available Node **24.21.0**. Bun and sudo are unnecessary. Linux must support the official Node binary and its glibc requirements; unsupported systems fail without changing system packages.
-
-When GitHub authorization is missing, setup offers device login in a human terminal. On a headless agent it prints the exact local `gh auth login --hostname github.com --git-protocol https --web` command for the device owner and exits. Complete that necessary login and repeat setup. Use this computer's account; never copy the Mac's login or put tokens in chat. An SSH clone key alone cannot authorize private release downloads.
+Setup downloads the public `amxv/holocron` release anonymously and installs missing pinned Node in a private user directory. It reuses an available Node **24.21.0**. Bun, GitHub authentication and sudo are unnecessary. Linux must support the official Node binary and its glibc requirements; unsupported systems fail without changing system packages.
 
 ## Install and pair with one command
 
@@ -85,7 +83,7 @@ Existing `ask --pairing-file /absolute/private/receiver.json -m PURPOSE NAME` an
 ## Copyable agent task
 
 ```text
-Use this computer's own GitHub access to set up Holocron:
+Set up Holocron from its public release:
 curl -fsSL https://holocron.ashray.xyz/setup.sh | sh -s -- receiver --code MAC_PAIRING_CODE
 Send me only the printed eight-digit verification number.
 Keep receiver credentials local. Test a harmless value first.
@@ -95,4 +93,4 @@ Never put values in chat, model tools, argv, URLs or logs.
 Clean up the returned directory. Later requests reuse saved pairing.
 ```
 
-Reference: [GitHub CLI device login](https://cli.github.com/manual/gh_auth_login), [Node platform requirements](https://github.com/nodejs/node/blob/main/BUILDING.md#platform-list).
+Reference: [Node platform requirements](https://github.com/nodejs/node/blob/main/BUILDING.md#platform-list).

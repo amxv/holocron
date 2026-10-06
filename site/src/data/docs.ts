@@ -11,7 +11,7 @@ export const siteConfig = {
   footerSections: [
     { title: "Holocron", text: "Selected context. Approved keys. The decision stays with you." },
     { title: "Start here", linkHref: "/docs/getting-started", linkLabel: "Install Holocron", text: "Install, connect and test your first handoff." },
-    { title: "Built with ZueDocs", linkHref: "https://github.com/amxv/zuedocs", linkLabel: "Documentation framework", text: "Open source · Private companion" }
+    { title: "Built with ZueDocs", linkHref: "https://github.com/amxv/zuedocs", linkLabel: "Documentation framework", text: "Open source · Explicit sharing" }
   ]
 } satisfies SiteConfig;
 

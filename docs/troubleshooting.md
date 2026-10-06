@@ -9,7 +9,7 @@ Start with local service health, then transport, then authorization. Each layer 
 
 ## The installer cannot access the release
 
-Confirm `node --version` is `v24.21.0` and run `gh auth status --hostname github.com` on this computer. Its account needs read access to the private repository. An SSH clone key does not authenticate release downloads. Use the [receiving GitHub login options](secret-requests.md#authenticate-the-receiving-computer); never copy another endpoint's credentials.
+Confirm `node --version` is `v24.21.0`, `curl` can reach GitHub over HTTPS, and the requested Holocron version is published. Normal installation downloads the public release anonymously and needs no GitHub account. If you explicitly use `--attestation`, verify that `gh` is installed and authenticated as required by `gh release verify-asset`.
 
 ## Pairing or key requests fail
 
@@ -21,7 +21,7 @@ Keep the Mac awake with `holocron start` running; `secrets serve --mac-config FI
 
 ## The companion is unavailable
 
-With the friendly CLI, run `holocron check-config` and `holocron status` from any directory. If configuration is unavailable, explicitly select the existing private STDIO config with `holocron link --local-config /absolute/private/local.json`. Do not run `holocron init` to replace a running setup. The executable pins its installed absolute Node path; if you remove that Node installation, reactivate Node `24.21.0` and repeat the installer. For installation failures, check existing `gh` private-repository access, the published version, asset SHA-256 and conflicting/edited executable/prefix errors in [installation](operations.md#one-command-cli-installation).
+With the friendly CLI, run `holocron check-config` and `holocron status` from any directory. If configuration is unavailable, explicitly select the existing private STDIO config with `holocron link --local-config /absolute/private/local.json`. Do not run `holocron init` to replace a running setup. The executable pins its installed absolute Node path; if you remove that Node installation, reactivate Node `24.21.0` and repeat the installer. For installation failures, check network access to the public release, the published version, asset SHA-256 and conflicting/edited executable/prefix errors in [installation](operations.md#one-command-cli-installation).
 
 Restore the absolute paths recorded in [Mac installation](operations.md), then run:
 

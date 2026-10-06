@@ -11,7 +11,7 @@ for (const path of code) {
   const text = await readFile(path, 'utf8');
   assert.ok(text.split('\n').length <= 1001, `${path} exceeds 1000 lines`);
 }
-const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), ...await files('native'), 'README.md', 'package.json', 'package-lock.json'];
+const maintained = [...await files('src'), ...await files('docs'), ...await files('plugins'), ...await files('native'), 'LICENSE', 'README.md', 'package.json', 'package-lock.json'];
 for (const path of (await files('native')).filter(path => path.endsWith('.swift'))) assert.ok((await readFile(path, 'utf8')).split('\n').length <= 1001, `${path} exceeds 1000 lines`);
 assert.deepEqual(await readFile('native/HolocronIcon.svg'), await readFile('site/public/favicon.svg'));
 assert.deepEqual((await readFile('native/HolocronIcon.png')).subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
@@ -35,10 +35,12 @@ assert.equal(packageManifest.name, '@amxv/holocron');
 assert.equal(manifest.name, 'holocron'); assert.equal(manifest.version, packageManifest.version);
 assert.equal(packageManifest.bin.holocron, 'dist/holocron.js');
 assert.equal(packageManifest.bin.board, 'dist/board.js');
-assert.deepEqual(packageManifest.files, ['dist', 'plugins/holocron', 'docs', 'README.md', 'native']);
+assert.deepEqual(packageManifest.files, ['dist', 'plugins/holocron', 'docs', 'LICENSE', 'README.md', 'native']);
+assert.equal(packageManifest.license, 'Apache-2.0');
 const raycast = JSON.parse(await readFile('raycast/package.json', 'utf8'));
 assert.equal(raycast.name, 'holocron'); assert.equal(raycast.title, 'Holocron');
 assert.equal(raycast.owner, 'zue-ai'); assert.equal(raycast.access, 'private');
+assert.equal(raycast.license, 'Apache-2.0');
 assert.equal(raycast.icon, 'icon.png');
 assert.deepEqual(raycast.commands.map(({ name }) => name), ['share-clipboard', 'share-finder-file']);
 assert.equal(packageManifest.private, true);

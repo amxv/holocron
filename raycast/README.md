@@ -27,4 +27,4 @@ bun run build
 bun run test
 ```
 
-Tests use temporary mock CLIs and isolated production-CLI state with an injected clipboard adapter. They do not read live clipboard, config or credentials. The extension retains its private manifest access and original license; source history is preserved in its original repository.
+Tests use temporary mock CLIs and isolated production-CLI state with an injected clipboard adapter. They do not read live clipboard, config or credentials. The extension retains its private Raycast manifest access; this monorepo and the extension are licensed under Apache-2.0.

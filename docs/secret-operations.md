@@ -7,18 +7,18 @@ category: Reference
 
 Set up once, pair each receiver with a temporary code and native approval, then use `holocron start`, `status` and `stop`.
 
-This guide targets **0.3.2**, requiring private release publication and an update to the existing relay. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
+This guide targets **0.3.2** and its public GitHub release. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
 
 ## Mac setup
 
-Use your existing dedicated relay admin token file: canonical absolute path, `0600`, under a `0700` parent. Supply its value through your trusted local credential workflow, such as Fidelius. No Mac GitHub, tunnel or relay credential goes to the receiver.
+Use your existing dedicated relay admin token file: canonical absolute path, `0600`, under a `0700` parent. Supply its value through your trusted local credential workflow, such as Fidelius. No Mac tunnel or relay credential goes to the receiver.
 
 ```sh
 curl -fsSL https://holocron.ashray.xyz/setup.sh | sh -s -- \
   --admin-file /absolute/private/relay-admin-token
 ```
 
-Setup installs missing pinned Node/GitHub CLI locally, verifies the private release, builds the AppKit approval helper and reuses your linked Holocron or Board config. Fresh setup creates a private STDIO config. It starts no service. Complete the native Command Line Tools installer or GitHub device login when required, then repeat setup.
+Setup installs missing pinned Node locally, verifies the public GitHub release, builds the AppKit approval helper and reuses your linked Holocron or Board config. Fresh setup creates a private STDIO config. It starts no service. Complete the native Command Line Tools installer when required, then repeat setup.
 
 Add `~/.local/bin` to PATH, or use `$HOME/.local/bin/holocron`. Repeating `holocron setup` retains the saved setup and refreshes an older owned helper while the operator is stopped. Existing permissions, unrelated jobs and old profiles are not silently migrated.
 
@@ -35,7 +35,7 @@ For an existing unlinked Board config, add `--local-config /absolute/private/loc
 
 ## Upgrade a saved Mac setup
 
-Publish the new private release and deploy the updated relay first. Stop the existing owned supervisor, then install and rebuild from 0.3.2:
+Publish the new release and deploy any required relay update first. Stop the existing owned supervisor, then install and rebuild from 0.3.2:
 
 ```sh
 holocron stop
@@ -103,7 +103,7 @@ Failures preserve completed pairings. Uncertain provisioning retains the new Mac
 
 ## Relay operator reference
 
-Reuse the configured Vercel/Upstash backend. The function needs `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` and the dedicated `HOLOCRON_SECRETS_ADMIN_TOKEN`. [Release operations](operations.md#publish-the-private-cli-release-and-installer) cover publication; preserve earlier tags/assets.
+Reuse the configured Vercel/Upstash backend. The function needs `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` and the dedicated `HOLOCRON_SECRETS_ADMIN_TOKEN`. [Release operations](operations.md#publish-the-cli-release-and-installer) cover publication; preserve earlier tags/assets.
 
 POST JSON rejects browser Origins/query strings, uses no-store responses and sanitizes backend failures. Stored state contains public commitments/keys, credential hashes, metadata and ciphertext. Disable external payload/header capture and redact Authorization.
 

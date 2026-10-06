@@ -34,9 +34,10 @@ try {
   assert.ok(paths.includes('native/HolocronIcon.png'));
   assert.ok(paths.includes('native/HolocronIcon.svg'));
   assert.ok(paths.includes('docs/secret-requests.md'));
+  assert.ok(paths.includes('LICENSE'));
   assert.ok(paths.includes('plugins/holocron/plugin.json'));
   assert.ok(paths.includes('plugins/holocron/.app.json'));
-  const allowed = new Set(['README.md', 'package.json', 'native/HolocronSecrets.swift', 'native/HolocronIcon.png', 'native/HolocronIcon.svg', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
+  const allowed = new Set(['LICENSE', 'README.md', 'package.json', 'native/HolocronSecrets.swift', 'native/HolocronIcon.png', 'native/HolocronIcon.svg', 'plugins/holocron/plugin.json', 'plugins/holocron/.app.json',
     ...['phase1-setup', 'text-bridge', 'context-files', 'cloud-clipboard', 'operations', 'secure-mcp-tunnel',
       'overview', 'getting-started', 'reference', 'troubleshooting', 'secret-requests', 'secret-operations', 'raycast'].map((name) => `docs/${name}.md`),
     ...(await readdir('src')).filter((name) => name.endsWith('.ts')).map((name) => 'dist/' + name.replace(/\.ts$/, '.js'))]);
@@ -373,7 +374,7 @@ process.exitCode = await runCli(process.argv.slice(2), { stdin: process.stdin, o
   await assert.rejects(stat(installed));
   assert.equal(await readFile(existingSettings, 'utf8'), 'unrelated-setting = true\n');
   assert.deepEqual(await readFile(cloudData), Buffer.from(text));
-  console.log(`Clean private package install/removal, all three bins/version/help, official SDK installed STDIO subprocess discovery/sharing/literal writes/restart receipts, isolated login generation/status/remove, Mac start/status/stop/restart, synthetic reconnect/auth/expiry/clear, immutable file reconstruction/digest/revoke, independent helper literal read/write/digest/foreground ownership, and cloud-to-Mac receipt/restart/scope checks passed (${paths.length} distribution files). Injected clipboard boundaries only; real Dots/provider/tunnel/login and viewed OS clipboards remain deferred.`);
+  console.log(`Clean release package install/removal, all three bins/version/help, official SDK installed STDIO subprocess discovery/sharing/literal writes/restart receipts, isolated login generation/status/remove, Mac start/status/stop/restart, synthetic reconnect/auth/expiry/clear, immutable file reconstruction/digest/revoke, independent helper literal read/write/digest/foreground ownership, and cloud-to-Mac receipt/restart/scope checks passed (${paths.length} distribution files). Injected clipboard boundaries only; real Dots/provider/tunnel/login and viewed OS clipboards remain deferred.`);
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

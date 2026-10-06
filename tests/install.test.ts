@@ -69,22 +69,27 @@ test('conflicts, edited launchers, symlinks, shared directories and partial bund
   assert.equal(await readFile(join(locked, '.install-lock'), 'utf8'), 'preserved lock');
 });
 
-test('public bootstrap checks authenticated fixed-tag origin and GitHub SHA-256, fails closed, and cleans downloads', async (t) => {
+test('public bootstrap checks anonymous fixed-tag origin and GitHub SHA-256, fails closed, and cleans downloads', async (t) => {
   const f = await fixture(t); const asset = join(f.root, 'holocron-0.1.1.tgz');
   await run('tar', ['-czf', asset, '-C', f.root, 'package']);
   const fakeBin = join(f.root, 'tools'); await mkdir(fakeBin); const downloads = join(f.root, 'downloads'); await mkdir(downloads);
   const events = join(f.root, 'events');
-  await writeFile(join(fakeBin, 'gh'), `#!/usr/bin/env node
-import { appendFileSync, copyFileSync, readFileSync } from 'node:fs';
+  await writeFile(join(fakeBin, 'curl'), `#!/usr/bin/env node
+import { appendFileSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
 const args = process.argv.slice(2); appendFileSync(process.env.TEST_EVENTS, JSON.stringify(args) + '\\n');
-if (process.env.TEST_GH_FAIL === '1') process.exit(1);
+if (process.env.TEST_CURL_FAIL === '1') process.exit(1);
 const bytes = readFileSync(process.env.TEST_ASSET); const digest = createHash('sha256').update(bytes).digest('hex');
-if (args[0] === 'api') console.log(JSON.stringify({ tag_name: process.env.TEST_BAD_TAG ? 'other' : 'holocron-v0.1.1', draft: Boolean(process.env.TEST_DRAFT), assets: [{name:'holocron-0.1.1.tgz', size: bytes.length + (process.env.TEST_BAD_SIZE ? 1 : 0), digest: process.env.TEST_MISSING_DIGEST ? null : 'sha256:' + (process.env.TEST_BAD_DIGEST ? '0'.repeat(64) : digest)}]}));
-else if (args[1] === 'download') copyFileSync(process.env.TEST_ASSET, join(args[args.indexOf('--dir') + 1], 'holocron-0.1.1.tgz'));
-else if (args[1] === 'verify-asset') process.exit(process.env.TEST_ATTESTATION_FAIL ? 1 : 0);
+const output = args[args.indexOf('-o') + 1]; const url = args.find(value => value.startsWith('https://'));
+if (url?.includes('api.github.com/repos/amxv/holocron/releases/tags/holocron-v0.1.1')) writeFileSync(output, JSON.stringify({ tag_name: process.env.TEST_BAD_TAG ? 'other' : 'holocron-v0.1.1', draft: Boolean(process.env.TEST_DRAFT), assets: [{name:'holocron-0.1.1.tgz', size: bytes.length + (process.env.TEST_BAD_SIZE ? 1 : 0), digest: process.env.TEST_MISSING_DIGEST ? null : 'sha256:' + (process.env.TEST_BAD_DIGEST ? '0'.repeat(64) : digest)}]}));
+else if (url?.includes('github.com/amxv/holocron/releases/download/holocron-v0.1.1/holocron-0.1.1.tgz')) copyFileSync(process.env.TEST_ASSET, output);
 else process.exit(1);
+`, { mode: 0o755 });
+  await writeFile(join(fakeBin, 'gh'), `#!/usr/bin/env node
+import { appendFileSync } from 'node:fs';
+const args = process.argv.slice(2); appendFileSync(process.env.TEST_EVENTS, JSON.stringify(args) + '\\n');
+if (args[0] === 'release' && args[1] === 'verify-asset') process.exit(process.env.TEST_ATTESTATION_FAIL ? 1 : 0);
+process.exit(1);
 `, { mode: 0o755 });
   const env = { ...process.env, PATH: fakeBin + ':' + process.env.PATH, TMPDIR: downloads,
     TEST_ASSET: asset, TEST_EVENTS: events };
@@ -94,7 +99,7 @@ else process.exit(1);
   const args = [shell, "--version", "0.1.1", '--prefix', f.options.prefix, '--bin-dir', f.options.bin];
   assert.match((await run('sh', args, { env, cwd: '/' })).stdout, /Holocron 0.1.1 installed/);
   assert.match((await run('sh', args, { env, cwd: '/' })).stdout, /already installed/);
-  for (const extra of [{ TEST_BAD_DIGEST: '1' }, { TEST_GH_FAIL: '1' }, { TEST_BAD_SIZE: '1' }, { TEST_BAD_TAG: '1' }, { TEST_DRAFT: '1' }, { TEST_MISSING_DIGEST: '1' }]) {
+  for (const extra of [{ TEST_BAD_DIGEST: '1' }, { TEST_CURL_FAIL: '1' }, { TEST_BAD_SIZE: '1' }, { TEST_BAD_TAG: '1' }, { TEST_DRAFT: '1' }, { TEST_MISSING_DIGEST: '1' }]) {
     await assert.rejects(run('sh', args, { env: { ...env, ...extra } }), /integrity|Release unavailable/);
   }
   await assert.rejects(run('sh', [...args, '--attestation'], { env: { ...env, TEST_ATTESTATION_FAIL: '1' } }), /attestation/);
@@ -103,7 +108,8 @@ else process.exit(1);
   await assert.rejects(run('sh', args, { env: { ...env, TEST_ASSET: unsafe } }), /Unsafe archive entry types/);
   assert.deepEqual(await readdir(downloads), []);
   const calls = (await readFile(events, 'utf8')).trim().split('\n').map(value => JSON.parse(value));
-  assert.deepEqual(calls[0], ['api', '--hostname', 'github.com', 'repos/amxv/holocron/releases/tags/holocron-v0.1.1']);
-  assert.equal(calls.some(value => value.includes('--repo') && value.includes('github.com/amxv/holocron')), true);
+  assert.equal(calls.some(value => value.includes('https://api.github.com/repos/amxv/holocron/releases/tags/holocron-v0.1.1')), true);
+  assert.equal(calls.some(value => value.includes('https://github.com/amxv/holocron/releases/download/holocron-v0.1.1/holocron-0.1.1.tgz')), true);
+  assert.equal(calls.some(value => value.includes('verify-asset') && value.includes('github.com/amxv/holocron')), true);
   assert.equal((await readdir(f.options.prefix)).includes('.install-lock'), false);
 });

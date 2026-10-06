@@ -9,18 +9,9 @@ Holocron helps an agent on another computer use the context and API keys you cho
 
 ## Install Holocron
 
-Use the automated [Mac setup](secret-operations.md#mac-setup) or [single receiver command](secret-requests.md#install-and-pair-with-one-command). Setup installs missing pinned prerequisites locally, uses this computer's own private GitHub authorization and saves pairing/config references. Bun is only needed for source development. Existing user directories and services are preserved.
+Use the automated [Mac setup](secret-operations.md#mac-setup) or [single receiver command](secret-requests.md#install-and-pair-with-one-command). Setup installs missing pinned prerequisites locally, downloads the public GitHub release anonymously and saves pairing/config references. Bun is only needed for source development. Existing user directories and services are preserved.
 
-For CLI-only installation, the lower-level installer below requires **Node 24.21.0**, GitHub CLI (`gh`), `curl`, `tar`, `mktemp` and read access to the **private `amxv/holocron` repository**.
-
-Authenticate GitHub on this computer. Have its human owner complete the browser/device flow:
-
-```sh
-gh auth login --hostname github.com --git-protocol https --web
-gh auth status --hostname github.com
-```
-
-Use your own account's access. Do not copy another computer's GitHub login or put a token in chat. [Headless and credential-manager options](secret-requests.md#authenticate-the-receiving-computer) are available.
+For CLI-only installation, the lower-level installer requires **Node 24.21.0**, `curl`, `tar` and `mktemp`. GitHub CLI (`gh`) is optional and used only when you explicitly request release-attestation verification.
 
 Download and run the installer:
 
@@ -35,7 +26,7 @@ rm "$hc_bootstrap"
 "$HOME/.local/bin/holocron" --version   # must be 0.3.2
 ```
 
-This guide targets 0.3.2; publish its new private release and update the existing relay before using the new flow. The installer verifies GitHub-recorded SHA-256 and installs `~/.local/bin/holocron`, pinned to your absolute Node executable. Add `~/.local/bin` to PATH, or use that full path. CLI-only installation starts no service and pairs no endpoints. [Installation reference](operations.md#one-command-cli-installation) covers custom paths, upgrades and removal.
+This guide targets 0.3.2. The installer downloads its public GitHub release, verifies the GitHub-recorded SHA-256 and installs `~/.local/bin/holocron`, pinned to your absolute Node executable. Add `~/.local/bin` to PATH, or use that full path. CLI-only installation starts no service and pairs no endpoints. [Installation reference](operations.md#one-command-cli-installation) covers custom paths, upgrades and removal.
 
 ## Choose your workflow
 

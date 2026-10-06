@@ -22,14 +22,13 @@ try {
   const oldLauncher = '#!/bin/sh\n# Existing pinned Board launcher, preserve exactly.\n';
   await writeFile(join(oldPrefix, '.board-install.json'), oldMarker, { mode: 0o600 });
   await writeFile(oldBin, oldLauncher, { mode: 0o755 });
-  // Authenticated-origin transport is injected; never call the real gh or inspect credentials.
-  await writeFile(join(tools, 'gh'), `#!/usr/bin/env node
-import { copyFileSync } from 'node:fs';
-import { join } from 'node:path';
-const args = process.argv.slice(2);
-if (args[0] === 'auth') process.exit(process.env.HOLOCRON_FIXTURE_AUTH_FAIL ? 1 : 0);
-else if (args[0] === 'api') console.log(JSON.stringify({tag_name:'holocron-v${manifest.version}',draft:false,assets:[{name:${JSON.stringify(name)},size:${bytes.length},digest:'sha256:${digest}'}]}));
-else if (args[1] === 'download') copyFileSync(${JSON.stringify(asset)}, join(args[args.indexOf('--dir') + 1], ${JSON.stringify(name)}));
+  // Public release transport is injected; never call the real network.
+  await writeFile(join(tools, 'curl'), `#!/usr/bin/env node
+import { copyFileSync, writeFileSync } from 'node:fs';
+const args = process.argv.slice(2); const output = args[args.indexOf('-o') + 1];
+const url = args.find(value => value.startsWith('https://'));
+if (url?.includes('api.github.com/repos/amxv/holocron/releases/tags/holocron-v${manifest.version}')) writeFileSync(output, JSON.stringify({tag_name:'holocron-v${manifest.version}',draft:false,assets:[{name:${JSON.stringify(name)},size:${bytes.length},digest:'sha256:${digest}'}]}));
+else if (url?.includes('github.com/amxv/holocron/releases/download/holocron-v${manifest.version}/${name}')) copyFileSync(${JSON.stringify(asset)}, output);
 else process.exit(1);
 `, { mode: 0o755 });
   const env = { PATH: tools + ':' + process.env.PATH, HOME: home, TMPDIR: temporary };
@@ -127,16 +126,17 @@ else process.exit(1);
   await writeFile(join(tools, 'stat'), `#!${process.execPath}\nimport {statSync} from 'node:fs';const s=statSync(process.argv.at(-1));console.log(s.uid+' '+(s.mode&0o777).toString(8));\n`, { mode: 0o755 });
   await writeFile(join(tools, 'curl'), `#!${process.execPath}
 import {copyFileSync,writeFileSync} from 'node:fs';
-const a=process.argv.slice(2);const output=a[a.indexOf('-o')+1];
-if(a.includes('https://holocron.ashray.xyz/install.sh')) copyFileSync(${JSON.stringify(resolve('site/public/install.sh'))},output);
-else if(a.some(v=>v.startsWith('https://nodejs.org/dist/v24.21.0/'))) writeFileSync(output,'synthetic bad digest');
+const a=process.argv.slice(2);const output=a[a.indexOf('-o')+1];const url=a.find(v=>v.startsWith('https://'));
+if(url==='https://holocron.ashray.xyz/install.sh') copyFileSync(${JSON.stringify(resolve('site/public/install.sh'))},output);
+else if(url?.startsWith('https://nodejs.org/dist/v24.21.0/')) writeFileSync(output,'synthetic bad digest');
+else if(url?.includes('api.github.com/repos/amxv/holocron/releases/tags/holocron-v${manifest.version}')) writeFileSync(output,JSON.stringify({tag_name:'holocron-v${manifest.version}',draft:false,assets:[{name:${JSON.stringify(name)},size:${bytes.length},digest:'sha256:${digest}'}]}));
+else if(url?.includes('github.com/amxv/holocron/releases/download/holocron-v${manifest.version}/${name}')) copyFileSync(${JSON.stringify(asset)},output);
 else process.exit(1);
 `, { mode: 0o755 });
   const setupEnv = { ...env, HOLOCRON_CLI_HOME: receiverProfile };
   const bootstrap = (extra = {}) => execFileSync('sh', [resolve('site/public/setup.sh'), 'receiver', '--code', 'IGNORED_SAVED_PAIRING'], { cwd: '/', env: { ...setupEnv, ...extra }, encoding: 'utf8' });
   assert.match(bootstrap(), /Receiver already paired/); assert.match(bootstrap(), /Receiver already paired/);
   assert.equal(await readFile(join(receiverProfile, 'setup.json'), 'utf8'), setupBytes);
-  assert.throws(() => bootstrap({ HOLOCRON_FIXTURE_AUTH_FAIL: '1' }), /device owner run/);
   await writeFile(join(tools, 'node'), `#!/bin/sh\nif [ "$1" = --version ]; then echo v0.0.0; else exec '${process.execPath.replaceAll("'", "'\\''")}' "$@"; fi\n`, { mode: 0o755 });
   assert.throws(() => bootstrap(), /Node integrity check failed/);
   const unrecognized = join(home, '.local/share/holocron-tools/node-24.21.0');
@@ -149,6 +149,6 @@ else process.exit(1);
   assert.equal((await readdir(temporary)).some(entry => entry.startsWith('holocron-setup.') || entry.startsWith('holocron-install.')), false);
   assert.equal(await readFile(join(oldPrefix, '.board-install.json'), 'utf8'), oldMarker);
   assert.equal(await readFile(oldBin, 'utf8'), oldLauncher);
-  console.log('Linux-branch public setup regressions passed: saved pairing, reentry, device-login boundary, failed prerequisite integrity, cleanup and retained Board state. Actual Linux execution requires a reachable Linux host.');
+  console.log('Linux-branch public setup regressions passed: saved pairing, anonymous release install, reentry, failed prerequisite integrity, cleanup and retained Board state. Actual Linux execution requires a reachable Linux host.');
   console.log('Verified production-bundle installation smoke passed: no-op reinstall, isolated init/link, exact stdin/file digests, metadata/revoke/clear, retained aliases and no development dependencies.');
 } finally { await rm(temporary, { recursive: true, force: true }); }

@@ -2,7 +2,7 @@
 
 Share selected context with an agent on another computer, and privately provide the API keys it asks for. You choose the clipboard text or UTF-8 file. You approve each key request in a native Mac prompt.
 
-[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node/GitHub CLI locally and uses this computer's own access to the **private `amxv/holocron` repository**. The 0.3.2 workflow requires publishing its new private release and updating the existing relay; earlier published releases stay immutable.
+[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node locally and downloads the public `amxv/holocron` GitHub release anonymously. The 0.3.2 workflow uses the published release and existing relay; earlier published releases stay immutable.
 
 Set up the Mac once, then use `holocron pair`, `holocron start`, `holocron status` and `holocron stop`. The receiver installs and pairs with one command:
 
@@ -40,4 +40,8 @@ git diff --check
 
 Root `check` covers CLI/security/package/installer checks, Raycast checks and Astro diagnostics. Scoped gates are `check:cli`, `check:raycast` and `check:site`; the site gate runs **Astro check only**. Build the root CLI before Raycast integration tests. Isolated fixtures use injected clipboard adapters and do not access live config, keys, clipboards or tunnel credentials.
 
-The monorepo contains CLI code in `src/`, canonical guides in `docs/`, the Astro/ZueDocs website in `site/` and the extension in `raycast/`. The private CLI package ships built code, canonical docs, native prompt source and an unmapped plugin scaffold. See [site development](site/README.md) and [Raycast development](raycast/README.md) for their local workflows. The known site audit baseline GHSA-ch52-4w7c-c8xp remains separate and unsuppressed.
+The monorepo contains CLI code in `src/`, canonical guides in `docs/`, the Astro/ZueDocs website in `site/` and the extension in `raycast/`. The npm manifest remains `private: true` to prevent accidental registry publication; public GitHub release bundles ship built code, canonical docs, native prompt source and an unmapped plugin scaffold. See [site development](site/README.md) and [Raycast development](raycast/README.md) for their local workflows. The known site audit baseline GHSA-ch52-4w7c-c8xp remains separate and unsuppressed.
+
+## License
+
+Holocron is licensed under the Apache License 2.0. See [LICENSE](LICENSE).

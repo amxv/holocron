@@ -8,7 +8,7 @@
   "author": "amxv",
   "owner": "zue-ai",
   "access": "private",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "platforms": [
     "macOS"
   ],

@@ -9,7 +9,7 @@ For daily setup, use [getting started](getting-started.md). The private context 
 
 ## One-command CLI installation
 
-For automated prerequisites and saved setup, use [Mac setup](secret-operations.md#mac-setup) or the [one receiver command](secret-requests.md#install-and-pair-with-one-command). The CLI-only installer below requires Node **24.21.0**, `gh`, `curl`, `tar` and `mktemp`, as an unprivileged user. Authenticate GitHub on this computer with read access to private `amxv/holocron`. The 0.3.2 pin requires a new private release; no public npm package or anonymous release access is available.
+For automated prerequisites and saved setup, use [Mac setup](secret-operations.md#mac-setup) or the [one receiver command](secret-requests.md#install-and-pair-with-one-command). The CLI-only installer below requires Node **24.21.0**, `curl`, `tar` and `mktemp`, as an unprivileged user. It downloads public `amxv/holocron` release metadata and assets anonymously. GitHub CLI (`gh`) is needed only for optional `--attestation` verification or maintainer release operations; there is intentionally no public npm package.
 
 ```sh
 set -eu
@@ -21,11 +21,11 @@ sh "$hc_bootstrap" --version 0.3.2 \
 rm "$hc_bootstrap"
 ```
 
-The bootstrap downloads the private production bundle through authenticated `gh`. It checks GitHub-recorded SHA-256/size, rejects unsafe archive paths/types and installs already-built production dependencies without npm lifecycle scripts. This establishes authenticated origin/content integrity, not an independent publisher signature.
+The bootstrap downloads the public production bundle and release metadata over HTTPS. It checks GitHub-recorded SHA-256/size, rejects unsafe archive paths/types and installs already-built production dependencies without npm lifecycle scripts. This establishes published GitHub release identity/content integrity, not an independent publisher signature.
 
 Defaults are `~/.local/share/holocron-cli` and `~/.local/bin/holocron`. The executable pins your absolute Node path; keep it available. Custom paths must be canonical absolute paths. The installer starts nothing and does not edit your shell, config, state, tunnel, login jobs or clipboard.
 
-An optional `--attestation` requires a signed immutable-release attestation through `gh release verify-asset` and fails if unavailable. Normal installation supports existing release settings. An unrelated/edited executable or unrecognized nonempty prefix is refused.
+An optional `--attestation` requires GitHub CLI plus any authentication it needs for `gh release verify-asset`, and fails closed if unavailable. Normal installation does not require a GitHub account. An unrelated/edited executable or unrecognized nonempty prefix is refused.
 
 ## Upgrades and install recovery
 
@@ -50,7 +50,7 @@ For [Raycast](raycast.md), record old preferences and clear its old hotkey befor
 
 ## Pack and install the Mac companion
 
-The authenticated release installer is the normal route. For an explicitly provided source tarball, use Node **24.21.0** and Bun **1.4.0**. From a validated source checkout:
+The public release installer is the normal route. For an explicitly provided source tarball, use Node **24.21.0** and Bun **1.4.0**. From a validated source checkout:
 
 ```sh
 umask 077
@@ -64,13 +64,13 @@ bun install --cwd "$SC_INSTALL" --production --ignore-scripts \
   "$SC_PRIVATE/amxv-holocron-0.3.2.tgz"
 ```
 
-Create the parent first if missing, and use fresh dedicated directories. Record the actual absolute Node and installed CLI paths. The artifact includes `dist`, canonical docs, native prompt source and the unmapped plugin scaffold, not tests, website/Raycast source, runtime state or credentials. The private package is `@amxv/holocron` version `0.3.2`; [legacy bins](reference.md) remain supported.
+Create the parent first if missing, and use fresh dedicated directories. Record the actual absolute Node and installed CLI paths. The artifact includes `dist`, canonical docs, native prompt source and the unmapped plugin scaffold, not tests, website/Raycast source, runtime state or credentials. The `@amxv/holocron` manifest stays `private: true` to prevent accidental npm publication; its GitHub release artifact is public. [Legacy bins](reference.md) remain supported.
 
 For direct `dist/cli.js`/historical CLI commands, launch from the installed package directory with state outside that directory and its ancestors. The friendly `holocron` wrapper anchors automatically. `check-config` alone does not exercise the state/working-directory guard. Use [STDIO setup](secure-mcp-tunnel.md) or the separate [HTTP configuration](phase1-setup.md) for their exact runtime contract.
 
-## Publish the private CLI release and installer
+## Publish the CLI release and installer
 
-**0.3.1 is already published.** Publish 0.3.2 as a new release using these steps. Keep the repository private and every published tag/asset unchanged. Build from a clean release commit with pinned Node/Bun after updating the version consistently:
+For future versions, keep every published tag/asset immutable. Build from a clean release commit with pinned Node/Bun after updating the version consistently:
 
 ```sh
 bun run ci:all
@@ -92,9 +92,9 @@ gh release create holocron-vX.Y.Z \
   --notes-file tmp/gg/release-notes.md
 ```
 
-Verify GitHub's asset digest against `SHA256SUMS`, then exercise authenticated installation in a fresh isolated prefix/bin. Website deployment uses `site` as root, outside-root source inclusion, Node 24.x, Bun 1.4.0 and output `dist`; `site/README.md` carries the complete settings. The required local site gate is **Astro check only**; the production build runs during deployment. Keep the known unsuppressed site audit baseline GHSA-ch52-4w7c-c8xp separate.
+Verify GitHub's asset digest against `SHA256SUMS`, then exercise anonymous installation in a fresh isolated prefix/bin. Website deployment uses `site` as root, outside-root source inclusion, Node 24.x, Bun 1.4.0 and output `dist`; `site/README.md` carries the complete settings. The required local site gate is **Astro check only**; the production build runs during deployment. Keep the known unsuppressed site audit baseline GHSA-ch52-4w7c-c8xp separate.
 
-The site publishes docs and the public-safe installer, plus the separate ciphertext-only `/api/secrets` function. It never publishes the private CLI bundle/source. [Relay operator reference](secret-operations.md#relay-operator-reference) covers private variables. Compare fetched installer bytes to source and run its `--help` after deployment. Accounts, release publication and deployment remain explicit operator actions.
+The site publishes docs and the public-safe installer, plus the separate ciphertext-only `/api/secrets` function. The static site does not duplicate the CLI bundle or repository source into its public assets; release artifacts stay on GitHub. [Relay operator reference](secret-operations.md#relay-operator-reference) covers private variables. Compare fetched installer bytes to source and run its `--help` after deployment. Accounts, release publication and deployment remain explicit operator actions.
 
 ## Optional startup at login
 

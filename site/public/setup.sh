@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fixed public prerequisite bootstrap; private Holocron release uses this device's gh login.
+# Fixed public prerequisite bootstrap; Holocron itself is fetched from a public GitHub release.
 set +x
 set -eu
 umask 077
@@ -7,8 +7,8 @@ fail() { printf 'Holocron setup: %s\n' "$1" >&2; exit 1; }
 [ "$(id -u)" != 0 ] || fail 'Run as your regular OS user, without sudo.'
 for hc_tool in curl tar mktemp; do command -v "$hc_tool" >/dev/null 2>&1 || fail "Install $hc_tool first."; done
 hc_os=$(uname -s)
-case "$hc_os" in Darwin) hc_platform=darwin; hc_gh_platform=macOS;; Linux) hc_platform=linux; hc_gh_platform=linux;; *) fail 'Only macOS and Linux are supported.';; esac
-case "$(uname -m)" in arm64|aarch64) hc_arch=arm64; hc_gh_arch=arm64;; x86_64|amd64) hc_arch=x64; hc_gh_arch=amd64;; *) fail 'Unsupported CPU architecture.';; esac
+case "$hc_os" in Darwin) hc_platform=darwin;; Linux) hc_platform=linux;; *) fail 'Only macOS and Linux are supported.';; esac
+case "$(uname -m)" in arm64|aarch64) hc_arch=arm64;; x86_64|amd64) hc_arch=x64;; *) fail 'Unsupported CPU architecture.';; esac
 hc_home=$(cd "${HOME:?HOME is required}" && pwd -P)
 hc_tools=$hc_home/.local/share/holocron-tools
 hc_temp=$(mktemp -d "${TMPDIR:-/tmp}/holocron-setup.XXXXXXXX")
@@ -78,46 +78,6 @@ if ! command -v node >/dev/null 2>&1 || [ "$(node --version 2>/dev/null || true)
   PATH=$hc_node_root/bin:$PATH; export PATH
 fi
 [ "$(node --version)" = v24.21.0 ] || fail 'Managed Node is incomplete; inspect its private directory.'
-if ! command -v gh >/dev/null 2>&1; then
-  # Node now validates paths and ownership before touching this dedicated tools root.
-  node --input-type=module - "$hc_tools" <<'JS'
-import { lstatSync, mkdirSync } from 'node:fs';
-import { parse, join } from 'node:path';
-let part = parse(process.argv[2]).root;
-for (const name of process.argv[2].slice(part.length).split('/')) {
-  part = join(part, name); if (!name) continue;
-  try { mkdirSync(part, {mode:0o700}); } catch (e) { if(e.code !== 'EEXIST') throw e; }
-  const s=lstatSync(part);
-  if(!s.isDirectory() || s.isSymbolicLink() || (s.mode & 0o022) && !(s.uid===0 && s.mode & 0o1000) || part===process.argv[2] && (s.uid!==process.getuid() || (s.mode & 0o777)!==0o700)) process.exit(1);
-}
-JS
-  hc_gh_root=$hc_tools/gh-2.102.0
-  if [ ! -e "$hc_gh_root" ]; then
-    case "$hc_platform-$hc_arch" in
-      linux-x64) hc_digest=bb766f710eef8ede859c18578c72c327597cd4c8a85b06001b1f3843c6019386;;
-      linux-arm64) hc_digest=7862c86c72f43df3a2d93ddde6f473285b4e2af61b494849846827e513ef6484;;
-      darwin-x64) hc_digest=b245f24eb2bf5f75b426b4c26da3651a107f8d5b6f4fddfbfccc5679041378b3;;
-      darwin-arm64) hc_digest=da922c20d1792e5b2cbf375593d7a658acf034c12c84e007e71c76ef959c337e;;
-    esac
-    hc_name=gh_2.102.0_${hc_gh_platform}_${hc_gh_arch}
-    hc_extension=tar.gz; [ "$hc_os" != Darwin ] || hc_extension=zip
-    hc_fetch "https://github.com/cli/cli/releases/download/v2.102.0/$hc_name.$hc_extension" "$hc_temp/gh.$hc_extension"
-    [ "$(hc_hash "$hc_temp/gh.$hc_extension")" = "$hc_digest" ] || fail 'GitHub CLI integrity check failed.'
-    if [ "$hc_os" = Darwin ]; then
-      command -v unzip >/dev/null 2>&1 || fail 'Install unzip first.'
-      unzip -q "$hc_temp/gh.zip" "$hc_name/bin/gh" -d "$hc_temp"
-    else tar -xzf "$hc_temp/gh.tar.gz" -C "$hc_temp" "$hc_name/bin/gh"; fi
-    hc_publish_binary "$hc_gh_root" "$hc_temp/$hc_name/bin/gh" gh
-  fi
-  hc_private "$hc_gh_root"; hc_private "$hc_gh_root/bin"
-  hc_verify_binary "$hc_gh_root" gh
-  PATH=$hc_gh_root/bin:$PATH; export PATH
-fi
-if ! gh auth status --hostname github.com >/dev/null 2>&1; then
-  printf '%s\n' 'This computer needs its own GitHub account with read access to the private amxv/holocron repository.' >&2
-  if ( : </dev/tty ) 2>/dev/null; then gh auth login --hostname github.com --git-protocol https --web </dev/tty >/dev/tty 2>&1;
-  else printf 'Have the device owner run: %s auth login --hostname github.com --git-protocol https --web\nThen repeat this setup command.\n' "$(command -v gh)" >&2; exit 1; fi
-fi
 hc_fetch https://holocron.ashray.xyz/install.sh "$hc_temp/install.sh"
 sh "$hc_temp/install.sh" --version 0.3.2
 if [ "$hc_os" = Darwin ] && [ "${1:-}" != receiver ] && ! /usr/bin/xcrun --find swiftc >/dev/null 2>&1; then

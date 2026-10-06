@@ -4,7 +4,7 @@ import { siteConfig } from "../data/docs";
 import "../styles/landing.css";
 
 const tasks = [
-  { number: "01", title: "Set up once", text: "Install with one command and this computer’s own GitHub access. Setup handles the pinned runtime.", href: "/docs/getting-started#install-holocron", label: "Setup guide" },
+  { number: "01", title: "Set up once", text: "Install with one command from the public GitHub release. Setup handles the pinned runtime.", href: "/docs/getting-started#install-holocron", label: "Setup guide" },
   { number: "02", title: "Connect the right endpoint", text: "Pair the receiving agent for keys. Connect the Mac’s private MCP tunnel for context.", href: "/docs/getting-started#choose-your-workflow", label: "Choose your workflow" },
   { number: "03", title: "Share with intention", text: "Approve a key request on your Mac, or share the clipboard text and files you select.", href: "/docs/secret-requests", label: "Request your first key" }
 ];
@@ -20,7 +20,7 @@ const tasks = [
         <a class="button button--solid" href="/docs/getting-started">Install Holocron <span aria-hidden="true">↗</span></a>
         <a class="hc-link" href="/docs/secret-requests">Pair your agent <span aria-hidden="true">→</span></a>
       </div>
-      <p class="hc-prerequisite">Private GitHub access · Automated setup · macOS + receiving computer</p>
+      <p class="hc-prerequisite">Public GitHub release · Automated setup · macOS + receiving computer</p>
     </div>
 
     <div class="hc-exchange" role="group" aria-label="Two explicit workflows: selected context through MCP, and approved encrypted keys to a paired receiver">
@@ -79,6 +79,6 @@ const tasks = [
 
   <section class="hc-close shell" aria-labelledby="close-title">
     <div><p class="section-label">Keep the decision with you</p><h2 id="close-title">Useful context travels.<br /><em>You stay in control.</em></h2></div>
-    <div class="hc-close__copy"><p>No clipboard watcher or automatic paste. Pair with a temporary code, approve on your Mac, then reuse the saved connection. Start, inspect and stop with three short commands.</p><p class="hc-acceptance">The 0.3.2 setup flow requires the new private release and relay update. Test a harmless value on your intended receiver before real keys; receiver and native GUI acceptance remains pending.</p><a class="hc-link" href="/docs/secret-requests#test-the-connection">Test your connection <span aria-hidden="true">→</span></a></div>
+    <div class="hc-close__copy"><p>No clipboard watcher or automatic paste. Pair with a temporary code, approve on your Mac, then reuse the saved connection. Start, inspect and stop with three short commands.</p><p class="hc-acceptance">The 0.3.2 setup flow uses the public GitHub release and existing relay. Test a harmless value on your intended receiver before real keys; receiver and native GUI acceptance remains pending.</p><a class="hc-link" href="/docs/secret-requests#test-the-connection">Test your connection <span aria-hidden="true">→</span></a></div>
   </section>
 </HolocronLayout>

@@ -9,7 +9,7 @@ Sharing a Holocron snapshot does **not** fill the other computer's clipboard. Fo
 
 ## Install and check the session
 
-[Install Holocron](getting-started.md#install-holocron) on the receiving computer with Node **24.21.0** and its own private GitHub access. It needs no Mac config, tunnel key or relay admin credential. Run:
+[Install Holocron](getting-started.md#install-holocron) on the receiving computer with Node **24.21.0** from the public GitHub release. It needs no Mac config, tunnel key or relay admin credential. Run:
 
 ```sh
 holocron cloud probe
