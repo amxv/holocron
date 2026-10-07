@@ -27,3 +27,17 @@ export async function shareWithFeedback(share: () => Promise<SharedItem>, feedba
   // A HUD error after a successful share must never turn into a failed-share message.
   await feedback.success(receiptMessage(item));
 }
+
+export async function lifecycleWithFeedback(action: () => Promise<string>, feedback: ShareFeedback): Promise<void> {
+  await feedback.start();
+  let message: string;
+  try {
+    message = await action();
+  } catch (error) {
+    await feedback.failure(
+      error instanceof HolocronError ? error.message : "Could not control Holocron. Check its CLI and Mac setup.",
+    );
+    return;
+  }
+  await feedback.success(message);
+}

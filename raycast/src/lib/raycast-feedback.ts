@@ -1,7 +1,7 @@
 import { openExtensionPreferences, showHUD, showToast, Toast } from "@raycast/api";
 import { ShareFeedback } from "./feedback";
 
-export function raycastFeedback(title: string): ShareFeedback {
+export function raycastFeedback(title: string, failureTitle = "Could Not Share with Holocron"): ShareFeedback {
   let toast: Toast | undefined;
   return {
     async start() {
@@ -14,7 +14,7 @@ export function raycastFeedback(title: string): ShareFeedback {
     async failure(message) {
       const options: Toast.Options = {
         style: Toast.Style.Failure,
-        title: "Could Not Share with Holocron",
+        title: failureTitle,
         message,
         primaryAction: { title: "Open Holocron Preferences", onAction: () => openExtensionPreferences() },
       };

@@ -6,7 +6,7 @@ async function files(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   return (await Promise.all(entries.map((entry) => entry.isDirectory() ? files(join(directory, entry.name)) : [join(directory, entry.name)]))).flat();
 }
-const code = (await Promise.all(['src', 'tests', 'scripts', 'raycast/src', 'raycast/tests'].map(files))).flat().filter((path) => /\.(?:ts|mjs)$/.test(path));
+const code = (await Promise.all(['src', 'tests', 'scripts', 'raycast/src', 'raycast/tests'].map(files))).flat().filter((path) => /\.(?:tsx?|mjs)$/.test(path));
 for (const path of code) {
   const text = await readFile(path, 'utf8');
   assert.ok(text.split('\n').length <= 1001, `${path} exceeds 1000 lines`);
@@ -40,9 +40,9 @@ assert.equal(packageManifest.license, 'Apache-2.0');
 const raycast = JSON.parse(await readFile('raycast/package.json', 'utf8'));
 assert.equal(raycast.name, 'holocron'); assert.equal(raycast.title, 'Holocron');
 assert.equal(raycast.owner, 'zue-ai'); assert.equal(raycast.access, 'private');
-assert.equal(raycast.license, 'Apache-2.0');
+assert.equal(raycast.license, 'MIT'); // The extension is also available under the root Apache-2.0 license.
 assert.equal(raycast.icon, 'icon.png');
-assert.deepEqual(raycast.commands.map(({ name }) => name), ['share-clipboard', 'share-finder-file']);
+assert.deepEqual(raycast.commands.map(({ name }) => name), ['share-clipboard', 'share-finder-file', 'start-service', 'stop-service', 'service-status']);
 assert.equal(packageManifest.private, true);
 assert.equal(packageManifest.engines.node, '24.21.0');
 assert.equal(packageManifest.packageManager, 'bun@1.4.0');

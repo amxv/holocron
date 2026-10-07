@@ -2,7 +2,7 @@
 
 Share selected context with an agent on another computer, and privately provide the API keys it asks for. You choose the clipboard text or UTF-8 file. You approve each key request in a native Mac prompt.
 
-[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node locally and downloads the public `amxv/holocron` GitHub release anonymously. The 0.3.2 workflow uses the published release and existing relay; earlier published releases stay immutable.
+[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node locally and downloads the public `amxv/holocron` GitHub release anonymously. The 0.3.3 workflow uses the published release and existing relay; earlier published releases stay immutable.
 
 Set up the Mac once, then use `holocron pair`, `holocron start`, `holocron status` and `holocron stop`. The receiver installs and pairs with one command:
 
@@ -17,7 +17,7 @@ Give the printed eight-digit verification number to the Mac owner for native app
 | Authenticate/pair a receiving agent and request keys | [Private API key requests](docs/secret-requests.md) |
 | Approve pairing and run the Mac secret service | [Mac pairing and service](docs/secret-operations.md) |
 | Share copied text or selected files through MCP | [Text](docs/text-bridge.md) · [Context files](docs/context-files.md) |
-| Share with a Mac shortcut | [Raycast](docs/raycast.md) |
+| Share and control the Mac service from Raycast | [Raycast](docs/raycast.md) |
 | Connect the Mac's private MCP endpoint | [Secure MCP Tunnel](docs/secure-mcp-tunnel.md) |
 | Deliberately fill a remote Wayland clipboard | [Clipboard helper](docs/cloud-clipboard.md) |
 

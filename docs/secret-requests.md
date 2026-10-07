@@ -7,7 +7,7 @@ category: Use Holocron
 
 Run `holocron ask` on the computer that needs the keys. Approve each request in a native Mac prompt. The command returns only a private temporary directory path containing one file per named key. The authorized program reads those files directly; values stay out of chat, model/MCP responses and clipboard snapshots.
 
-This guide targets **0.3.2** and its public GitHub release. Actual receiver/native GUI acceptance remains pending. The Mac owner follows [Mac setup](secret-operations.md).
+This guide targets **0.3.3** and its public GitHub release. Actual receiver/native GUI acceptance remains pending. The Mac owner follows [Mac setup](secret-operations.md).
 
 ## Receiving computer prerequisites
 

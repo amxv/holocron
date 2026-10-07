@@ -7,7 +7,7 @@ category: Reference
 
 Set up once, pair each receiver with a temporary code and native approval, then use `holocron start`, `status` and `stop`.
 
-This guide targets **0.3.2** and its public GitHub release. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
+This guide targets **0.3.3** and its public GitHub release. Previous published releases remain immutable. Real device/native GUI acceptance is still pending.
 
 ## Mac setup
 
@@ -31,26 +31,26 @@ holocron setup --tunnel-profile /absolute/private/existing-tunnel.yaml \
 
 The private profile retains its existing tunnel identity, control-plane settings, workspace associations and credential references. Holocron supplies the installed STDIO main command internally for its owned run. It provisions no tunnel or account. The official tunnel client/profile must already be installed and authorized. Setup resolves package-manager executable aliases such as `/opt/homebrew/bin/tunnel-client` once and saves their guarded canonical target. If a package upgrade removes that target, repeat setup with the alias to bind the new executable. Stop a manually running tunnel through its existing owner before switching supervision.
 
-For an existing unlinked Board config, add `--local-config /absolute/private/local.json`. To reuse an existing secret pairing explicitly, add `--mac-config /absolute/private/mac.json`. `--prompt /absolute/private/helper` reuses an operator-managed helper; use the 0.3.2 helper for masked typing and Cmd+V. The default build supplies it and the existing green H app icon, rasterized from the site's favicon asset. Native Edit menu actions follow the focused AppKit field editor, as in Fidelius; secure fields retain native masking and copy/cut restrictions. [AppKit responder-chain behavior](https://developer.apple.com/videos/play/wwdc2022/10075/) explains this routing.
+For an existing unlinked Board config, add `--local-config /absolute/private/local.json`. To reuse an existing secret pairing explicitly, add `--mac-config /absolute/private/mac.json`. `--prompt /absolute/private/helper` reuses an operator-managed helper; use the 0.3.3 helper for masked typing and Cmd+V. The default build supplies it and the existing green H app icon, rasterized from the site's favicon asset. Native Edit menu actions follow the focused AppKit field editor, as in Fidelius; secure fields retain native masking and copy/cut restrictions. [AppKit responder-chain behavior](https://developer.apple.com/videos/play/wwdc2022/10075/) explains this routing.
 
 ## Upgrade a saved Mac setup
 
-Publish the new release and deploy any required relay update first. Stop the existing owned supervisor, then install and rebuild from 0.3.2:
+Publish the new release and deploy any required relay update first. Stop the existing owned supervisor, then install and rebuild from 0.3.3:
 
 ```sh
 holocron stop
 hc_bootstrap=$(mktemp)
 curl -fsSL https://holocron.ashray.xyz/install.sh -o "$hc_bootstrap"
-sh "$hc_bootstrap" --version 0.3.2
+sh "$hc_bootstrap" --version 0.3.3
 rm -f "$hc_bootstrap"
 "$HOME/.local/bin/holocron" --version
 "$HOME/.local/bin/holocron" setup --rebuild-prompt
 "$HOME/.local/bin/holocron" start
 ```
 
-The version check must print `0.3.2`. Keep the same `HOLOCRON_CLI_HOME` override, if your setup uses one. Setup builds in a fresh private versioned directory, copies its icon, and atomically saves the new helper reference only after success. It retains pairing credentials, expiry, pending recovery, Board state and tunnel references. Older helpers remain for existing explicit pairing-file commands. Build/save failures retain the previous setup and remove only the new owned helper. No fresh `pair` is needed. Ordinary `setup` also refreshes older generated helpers; external `--prompt` helpers stay operator-controlled until explicitly rebuilt. Setup refuses while the owned supervisor runs. Restarting makes the new code and helper effective for saved services.
+The version check must print `0.3.3`. Keep the same `HOLOCRON_CLI_HOME` override, if your setup uses one. Setup builds in a fresh private versioned directory, copies its icon, and atomically saves the new helper reference only after success. It retains pairing credentials, expiry, pending recovery, Board state and tunnel references. Older helpers remain for existing explicit pairing-file commands. Build/save failures retain the previous setup and remove only the new owned helper. No fresh `pair` is needed. Ordinary `setup` also refreshes older generated helpers; external `--prompt` helpers stay operator-controlled until explicitly rebuilt. Setup refuses while the owned supervisor runs. Restarting makes the new code and helper effective for saved services.
 
-Receivers should install 0.3.2 with the same installer command to obtain the full fifteen-minute request window. Existing saved pairings remain compatible. Earlier clients still use their earlier deadline limits; upgrade both endpoints before new code pairing.
+Receivers should install 0.3.3 with the same installer command to obtain the full fifteen-minute request window. Existing saved pairings remain compatible. Earlier clients still use their earlier deadline limits; upgrade both endpoints before new code pairing.
 
 ## Pair a receiving computer
 

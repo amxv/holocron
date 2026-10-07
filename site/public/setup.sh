@@ -79,7 +79,7 @@ if ! command -v node >/dev/null 2>&1 || [ "$(node --version 2>/dev/null || true)
 fi
 [ "$(node --version)" = v24.21.0 ] || fail 'Managed Node is incomplete; inspect its private directory.'
 hc_fetch https://holocron.ashray.xyz/install.sh "$hc_temp/install.sh"
-sh "$hc_temp/install.sh" --version 0.3.2
+sh "$hc_temp/install.sh" --version 0.3.3
 if [ "$hc_os" = Darwin ] && [ "${1:-}" != receiver ] && ! /usr/bin/xcrun --find swiftc >/dev/null 2>&1; then
   /usr/bin/xcode-select --install >/dev/null 2>&1 || true
   fail 'Complete the native Command Line Tools installation, then repeat this command.'

@@ -16,7 +16,7 @@ set -eu
 hc_bootstrap=$(mktemp)
 curl -fsSL https://holocron.ashray.xyz/install.sh -o "$hc_bootstrap"
 sh "$hc_bootstrap" --help
-sh "$hc_bootstrap" --version 0.3.2 \
+sh "$hc_bootstrap" --version 0.3.3 \
   --prefix "$HOME/.local/share/holocron-cli" --bin-dir "$HOME/.local/bin"
 rm "$hc_bootstrap"
 ```
@@ -29,7 +29,7 @@ An optional `--attestation` requires GitHub CLI plus any authentication it needs
 
 ## Upgrades and install recovery
 
-Repeating identical bytes/version is a no-op. To upgrade, deliberately select a **newly published** version with `--version X.Y.Z`. Previous release directories stay available for running processes. A different bundle for an installed version is refused. Never replace `board-v0.1.0`, `holocron-v0.1.1`, `holocron-v0.2.0`, `holocron-v0.3.0`, `holocron-v0.3.1` or any published release; publish 0.3.2 separately. Existing Mac setups must also [refresh their native helper and restart](secret-operations.md#upgrade-a-saved-mac-setup).
+Repeating identical bytes/version is a no-op. To upgrade, deliberately select a **newly published** version with `--version X.Y.Z`. Previous release directories stay available for running processes. A different bundle for an installed version is refused. Never replace `board-v0.1.0`, `holocron-v0.1.1`, `holocron-v0.2.0`, `holocron-v0.3.0`, `holocron-v0.3.1`, `holocron-v0.3.2` or any published release; publish 0.3.3 separately. Existing Mac setups must also [refresh their native helper and restart](secret-operations.md#upgrade-a-saved-mac-setup).
 
 Reconnect the known tunnel deliberately when you want its next subprocess to use the new CLI. Installation alone never restarts a runtime. Concurrent installs are refused; inspect a stale `.install-lock` only after confirming no installer is running. An interrupted install can leave a lock or unreferenced release. Inspect only the dedicated prefix; there is no force-overwrite or destructive uninstall flag.
 
@@ -59,9 +59,9 @@ SC_PRIVATE="$HOME/Library/Application Support/holocron-operator"
 mkdir "$SC_INSTALL" "$SC_PRIVATE"
 bun run ci:all
 HOLOCRON_TEST_REDIS_SERVER=/absolute/test/redis-server bun run check
-bun pm pack --ignore-scripts --filename "$SC_PRIVATE/amxv-holocron-0.3.2.tgz"
+bun pm pack --ignore-scripts --filename "$SC_PRIVATE/amxv-holocron-0.3.3.tgz"
 bun install --cwd "$SC_INSTALL" --production --ignore-scripts \
-  "$SC_PRIVATE/amxv-holocron-0.3.2.tgz"
+  "$SC_PRIVATE/amxv-holocron-0.3.3.tgz"
 ```
 
 Create the parent first if missing, and use fresh dedicated directories. Record the actual absolute Node and installed CLI paths. The artifact includes `dist`, canonical docs, native prompt source and the unmapped plugin scaffold, not tests, website/Raycast source, runtime state or credentials. The `@amxv/holocron` manifest stays `private: true` to prevent accidental npm publication; its GitHub release artifact is public. [Legacy bins](reference.md) remain supported.

@@ -1,14 +1,14 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "holocron",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "title": "Holocron",
-  "description": "Explicitly share a Mac clipboard snapshot or selected Finder file with Holocron for ChatGPT.",
+  "description": "Share Mac context with agents and control the Holocron secret-request service.",
   "icon": "icon.png",
   "author": "amxv",
   "owner": "zue-ai",
   "access": "private",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "platforms": [
     "macOS"
   ],
@@ -20,6 +20,8 @@
     "holocron",
     "clipboard",
     "share",
+    "service",
+    "secrets",
     "chatgpt",
     "shortcut"
   ],
@@ -66,6 +68,27 @@
       "subtitle": "Holocron",
       "description": "Explicitly share one selected Finder UTF-8 file up to 10 MiB with Holocron for ChatGPT.",
       "mode": "no-view"
+    },
+    {
+      "name": "start-service",
+      "title": "Start Holocron Service",
+      "subtitle": "Holocron",
+      "description": "Start the saved Mac secret-request and tunnel services in the background.",
+      "mode": "no-view"
+    },
+    {
+      "name": "stop-service",
+      "title": "Stop Holocron Service",
+      "subtitle": "Holocron",
+      "description": "Stop only the owned Holocron service and its managed tunnel.",
+      "mode": "no-view"
+    },
+    {
+      "name": "service-status",
+      "title": "Holocron Service Status",
+      "subtitle": "Holocron",
+      "description": "Inspect service, tunnel and secret-request health; start, stop or refresh.",
+      "mode": "view"
     }
   ],
   "dependencies": {
