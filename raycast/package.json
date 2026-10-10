@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "holocron",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "title": "Holocron",
   "description": "Share Mac context with agents and control the Holocron secret-request service.",
   "icon": "icon.png",

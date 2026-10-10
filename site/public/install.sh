@@ -2,7 +2,7 @@
 # Public bootstrap. The Holocron implementation is downloaded from its public GitHub release.
 set -eu
 umask 077
-holocron_version=0.3.3
+holocron_version=0.3.4
 holocron_prefix=${HOME:?HOME is required}/.local/share/holocron-cli
 holocron_bin=${HOME}/.local/bin
 holocron_attestation=false

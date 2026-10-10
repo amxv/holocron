@@ -1,6 +1,6 @@
 {
   "name": "@amxv/holocron",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "description": "Private owner-authenticated text and selected UTF-8 file sharing with literal Mac clipboard MCP writes",
   "type": "module",

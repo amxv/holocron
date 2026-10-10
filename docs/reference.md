@@ -5,7 +5,7 @@ order: 13
 category: "Reference"
 ---
 
-Holocron is the product and canonical executable. The `@amxv/holocron` `0.3.3` npm manifest is marked private to prevent registry publication. Its production release is `holocron-v0.3.3`, asset `holocron-0.3.3.tgz`, in the public `amxv/holocron` repository. The independent helper is available as `holocron cloud` or `holocron-cloud`. Intentional compatibility aliases are `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`.
+Holocron is the product and canonical executable. The `@amxv/holocron` `0.3.4` npm manifest is marked private to prevent registry publication. Its production release is `holocron-v0.3.4`, asset `holocron-0.3.4.tgz`, in the public `amxv/holocron` repository. The independent helper is available as `holocron cloud` or `holocron-cloud`. Intentional compatibility aliases are `board`, `shared-clipboard`, `shared-clipboard-probe` and `shared-clipboard-cloud`.
 
 ## Mac CLI
 

@@ -3,12 +3,12 @@ import { ed25519 } from '@noble/curves/ed25519.js';
 import nacl from 'tweetnacl';
 import { decode, encode } from './secret-crypto.ts';
 import type { SecretPairing } from './secret-pairing.ts';
-import { idPattern, parseEnvelope, SecretFailure } from './secret-shapes.ts';
+import { idPattern, parseEnvelope, SecretFailure, PAIRED_TEXT_TTL_MS } from './secret-shapes.ts';
 import type { SecretEnvelope } from './secret-shapes.ts';
 import { safeName, validUtf8 } from './text.ts';
 
 export const PAIRED_TEXT_LIMIT = 16 * 1024;
-export const PAIRED_TEXT_TTL_MS = 24 * 60 * 60 * 1000;
+export { PAIRED_TEXT_TTL_MS } from './secret-shapes.ts';
 
 // Old pairings already carry a Mac X25519 key and a receiver Ed25519 key.
 // Noble's standard Ed25519 -> X25519 conversion enables authenticated boxes

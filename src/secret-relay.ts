@@ -1,7 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { object, parseChannel, parseEnvelope, parseSecretRequest, SecretFailure, SECRET_WIRE_LIMIT, idPattern } from './secret-shapes.ts';
+import { object, parseChannel, parseEnvelope, parseSecretRequest, SecretFailure, SECRET_WIRE_LIMIT, PAIRED_TEXT_TTL_MS, idPattern } from './secret-shapes.ts';
 import { codeRelay } from './pairing-code-relay.ts';
-import { PAIRED_TEXT_TTL_MS } from './paired-text-wire.ts';
 
 export interface SecretRedis { eval(script: string, keys: string[], args: unknown[]): Promise<unknown> }
 // All state transitions, authorization, quotas, consumption and replay tombstones are atomic.

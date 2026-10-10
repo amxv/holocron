@@ -7,6 +7,7 @@ export const PAIRING_MS = 7 * 86_400_000;
 export const SECRET_WIRE_LIMIT = 64 * 1024;
 export const SECRET_PROMPT_LIMIT = 256 * 1024;
 export const SECRET_VALUE_LIMIT = 4096;
+export const PAIRED_TEXT_TTL_MS = 24 * 60 * 60 * 1000;
 export class SecretFailure extends Error {
   readonly code: string;
   constructor(code: string) { super(code); this.code = code; }

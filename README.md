@@ -12,7 +12,7 @@ holocron read MESSAGE_ID
 
 On a Mac with multiple paired receivers, select one with `holocron peers` and `--peer PEER_ID`. On the receiver, launch `holocron paired-mcp` to make the same operations available to an agent. The Mac STDIO MCP connection exposes the paired tools after restarting with matching saved setup. Messages are end-to-end encrypted, at most 16 KiB and retained for no longer than 24 hours. Neither clipboard is changed. See [paired text](docs/paired-text.md).
 
-[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node locally and downloads the public `amxv/holocron` GitHub release anonymously. The 0.3.3 workflow uses the published release and existing relay; earlier published releases stay immutable.
+[Set up Holocron](https://holocron.ashray.xyz/docs/getting-started) or use the offline [getting-started guide](docs/getting-started.md). Setup installs missing pinned Node locally and downloads the public `amxv/holocron` GitHub release anonymously. The 0.3.4 workflow uses the published release and existing relay; earlier published releases stay immutable.
 
 Set up the Mac once, then use `holocron pair`, `holocron start`, `holocron status` and `holocron stop`. The receiver installs and pairs with one command:
 
