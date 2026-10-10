@@ -61,3 +61,5 @@ holocron clear
 Replace `SHARE_ID` with the ID from your share or list. Shares expire after 24 hours. Revoke/clear prevents future reads and leaves the clipboard alone; it cannot remove text already read by an agent or copied elsewhere. Snapshots are private local plaintext.
 
 Sharing does **not** fill the receiving computer's clipboard. [Remote Paste](cloud-clipboard.md#mac-to-cloud) requires its own explicit receiving operation. Check discovery and paste with harmless text in your intended setup. Local fixtures never access an existing OS clipboard; they do not establish viewed-device acceptance.
+
+To exchange short messages **in both directions**, use the separate [paired text inbox](paired-text.md). It encrypts snippets and supports CLI and MCP on both devices without clipboard access. Raycast and the existing one-way snapshot workflow are unaffected.

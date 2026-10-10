@@ -8,12 +8,14 @@ import { makeLocalMcpServer } from './mcp.ts';
 import { currentUid } from './private-state.ts';
 import { BoundedStdioTransport } from './stdio-transport.ts';
 import { BridgeFailure } from './text.ts';
+import type { PairedTextService } from './paired-text.ts';
 
-export async function startStdio(bridge: ClipboardBridge, input: Readable, output: Writable, error: (line: string) => void) {
+export async function startStdio(bridge: ClipboardBridge, input: Readable, output: Writable, error: (line: string) => void,
+  paired?: PairedTextService) {
   const store = bridge.store;
   const operation = new AbortController();
   const transport = new BoundedStdioTransport(input, output);
-  const mcp = makeLocalMcpServer(bridge, operation.signal, (id) => transport.requestSignal(id));
+  const mcp = makeLocalMcpServer(bridge, operation.signal, (id) => transport.requestSignal(id), paired);
   const nonce = store.acquireRuntime();
   const path = join(store.directory, 'control.sock');
   let failed = false;

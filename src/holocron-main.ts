@@ -6,6 +6,8 @@ import type { ClipboardAdapter } from './clipboard.ts';
 import { macClipboard } from './clipboard.ts';
 import { holocronHome, initConfig, linkConfig, linkedConfig } from './holocron-profile.ts';
 import { runSecretCli } from './secret-cli.ts';
+import { runPairedCli } from './paired-cli.ts';
+import { startPairedMcp } from './paired-mcp.ts';
 import { VERSION } from './version.ts';
 import { runSetupCli } from './setup-cli.ts';
 import { exists } from './setup-profile.ts';
@@ -20,12 +22,19 @@ const help = `Usage: holocron copy [--name <label>] [--local-config <absolute pr
        holocron init
        holocron setup | pair | start | stop | status
        holocron ask [--pairing-file <private receiver.json>] -m <purpose> NAME [NAME...]
+       holocron peers | inbox [--peer PEER_ID]
+       holocron send [--peer PEER_ID] [--name LABEL] < UTF8_TEXT
+       holocron read MESSAGE_ID [--peer PEER_ID]
+       holocron delete MESSAGE_ID [--peer PEER_ID]
+       holocron paired-mcp
        holocron secrets --help
        holocron cloud <probe|read|write --sha256 <digest> [--file <literal data file>]>
        holocron <start|stop|status|check-config|capture|share-text|share-file|list|revoke|clear> --config <private HTTP JSON>
        holocron <login-install|login-status|login-remove> --config <private HTTP JSON>
        holocron prepare-plugin --connection-id <registered ID> --output <new directory>
 copy explicitly snapshots your Mac clipboard; share reads exact UTF-8 stdin to EOF.
+send delivers up to 16 KiB of encrypted text to a paired device; inbox and read work on either device.
+paired-mcp serves the same paired text tools to an agent over local STDIO, including on receivers.
 Snapshots do not populate another computer's clipboard. Ask connected ChatGPT to read them;
 explicit remote Wayland writes require the separately installed helper and original digest.
 link saves only a private config reference; init creates a new private STDIO config, without starting anything.
@@ -47,6 +56,20 @@ export async function runHolocronCli(args: string[], io: CliIO, adapter: Clipboa
   }
   if (command === 'ask' || command === 'secrets') {
     return runSecretCli(command === 'ask' ? args : args.slice(1), io, options.signal ?? new AbortController().signal, env);
+  }
+  if (['peers', 'send', 'inbox', 'read', 'delete'].includes(command ?? '')) {
+    if (args.includes('--config') || args.includes('--local-config')) { io.error('invalid_arguments'); return 2; }
+    return runPairedCli(args, io, options.signal ?? new AbortController().signal, env);
+  }
+  if (command === 'paired-mcp') {
+    if (args.length !== 1) { io.error('invalid_arguments'); return 2; }
+    try {
+      const service = await startPairedMcp(io.protocol?.input ?? process.stdin, io.protocol?.output ?? process.stdout, env);
+      const stop = () => { void service.stop(); };
+      options.signal?.addEventListener('abort', stop, { once: true });
+      try { await service.done; return 0; }
+      finally { options.signal?.removeEventListener('abort', stop); }
+    } catch { io.error('paired_mcp_unavailable'); return 1; }
   }
   if (command === 'cloud') {
     const cloudArgs = args.slice(1);

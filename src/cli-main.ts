@@ -15,6 +15,7 @@ import type { LoginEnvironment } from './login.ts';
 import type { Readable, Writable } from 'node:stream';
 import { loadLocalConfig, localOwnerId } from './local-config.ts';
 import { startStdio } from './stdio.ts';
+import { optionalPairedText } from './paired-text.ts';
 
 const help = `Usage: holocron <start|stop|status|check-config|capture|share-text|list|clear> --config <private JSON file>
        holocron <capture|share-text> --config <private JSON file> [--name <safe label>]
@@ -97,7 +98,8 @@ export async function runCli(args: string[], io: CliIO, adapter: ClipboardAdapte
       case 'status': print({ ...await localControl(directory, 'status'), ...store.counts() }); break;
       case 'stop': print(await localControl(directory, 'stop')); break;
       case 'stdio': {
-        const service = await startStdio(bridge, io.protocol?.input ?? process.stdin, io.protocol?.output ?? process.stdout, io.error);
+        const paired = await optionalPairedText(args[index + 1]!);
+        const service = await startStdio(bridge, io.protocol?.input ?? process.stdin, io.protocol?.output ?? process.stdout, io.error, paired);
         const stop = () => { void service.stop().catch(() => io.error('stdio_stop_failed')); };
         process.once('SIGINT', stop); process.once('SIGTERM', stop);
         try { return await service.done; }

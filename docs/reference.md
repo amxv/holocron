@@ -93,6 +93,12 @@ The [one-command installer](operations.md#one-command-cli-installation) places t
 | `holocron setup`, `pair`, `start`, `status`, `stop` | Save Mac setup/tunnel references, native code pairing and owned foreground lifecycle; explicit config flags retain companion compatibility |
 | `holocron setup receiver --code CODE` | Generate credentials locally, verify the Mac commitment, print eight digits for native approval and save receiver pairing |
 | `holocron ask [--pairing-file RECEIVER_JSON] -m PURPOSE NAME [NAME...]` | Use saved or explicit pairing, block for native approval and print only a private temporary directory path |
+| `holocron peers` | List paired recipients and their opaque IDs |
+| `holocron send [--peer PEER_ID] [--name LABEL]` | Encrypt up to 16 KiB of literal UTF-8 stdin and deliver it to a paired device |
+| `holocron inbox [--peer PEER_ID]` | List received paired messages, optionally for one peer |
+| `holocron read MESSAGE_ID [--peer PEER_ID]` | Decrypt a received message without consuming it |
+| `holocron delete MESSAGE_ID [--peer PEER_ID]` | Delete a received paired message |
+| `holocron paired-mcp` | Start a paired-text STDIO MCP server on a receiver or Mac |
 | `holocron secrets prepare`, `pair`, `complete` | Receiver-generated credentials, public descriptor exchange, explicit native Mac approval and fingerprint-verified encrypted enrollment |
 | `holocron secrets build-prompt`, `serve`, `revoke`, `cleanup` | Build the Mac UI, serve approved requests, revoke one pairing or remove a returned temporary session |
 
