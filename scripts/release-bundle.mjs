@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
+import { verifyReleaseArchive } from './release-archive.mjs';
 
 const root = process.cwd();
 const output = resolve(process.argv[2] ?? 'tmp/gg/releases');
@@ -33,7 +34,12 @@ try {
   const asset = `holocron-${manifest.version}.tgz`; const destination = join(output, asset);
   try { await lstat(destination); throw new Error('Release artifact already exists; choose a fresh output directory'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
-  execFileSync('tar', ['-czf', destination, '-C', temporary, 'package']);
+  // macOS bsdtar otherwise adds AppleDouble metadata outside package/,
+  // notably ._package, which the public installer correctly refuses.
+  execFileSync('tar', ['-czf', destination, '-C', temporary, 'package'], {
+    env: { ...process.env, COPYFILE_DISABLE: '1' },
+  });
+  verifyReleaseArchive(destination);
   const digest = createHash('sha256').update(await readFile(destination)).digest('hex');
   await writeFile(join(output, 'SHA256SUMS'), `${digest}  ${asset}\n`, { flag: 'wx' });
   console.log(`Production-only bundle: ${destination}\nSHA-256: ${digest}`);

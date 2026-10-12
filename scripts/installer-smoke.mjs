@@ -4,6 +4,7 @@ import { copyFile, mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile, s
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pairings } from '../tests/secret-fixtures.ts';
+import { assertArchiveEntries, assertArchiveTypes, verifyReleaseArchive } from './release-archive.mjs';
 
 const temporary = await mkdtemp(join(await realpath('/tmp'), 'holocron-installer-smoke-'));
 try {
@@ -11,6 +12,13 @@ try {
   execFileSync(process.execPath, ['scripts/release-bundle.mjs', output], { stdio: 'inherit' });
   const manifest = JSON.parse(await readFile('package.json', 'utf8'));
   const name = `holocron-${manifest.version}.tgz`; const asset = join(output, name);
+  const entries = verifyReleaseArchive(asset);
+  assert.ok(entries.includes('package/dist/holocron.js'));
+  assert.throws(() => assertArchiveEntries(['._package', 'package/dist/holocron.js']), /Unsafe archive paths/);
+  assert.throws(() => assertArchiveEntries(['package/', 'package/../escape']), /Unsafe archive paths/);
+  assert.throws(() => assertArchiveEntries(['package/', 'package/._hidden']), /Unsafe archive paths/);
+  assert.throws(() => assertArchiveEntries(['package/', 'package/__MACOSX/']), /Unsafe archive paths/);
+  assert.throws(() => assertArchiveTypes(['lrwxr-xr-x 0 0 example']), /Unsafe archive entry types/);
   const bytes = await readFile(asset); const digest = createHash('sha256').update(bytes).digest('hex');
   assert.equal(await readFile(join(output, 'SHA256SUMS'), 'utf8'), `${digest}  ${name}\n`);
   const home = join(temporary, 'home'); const tools = join(temporary, 'tools');

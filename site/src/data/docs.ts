@@ -21,5 +21,6 @@ export const primaryNav: PrimaryNavItem[] = [
   { href: "/docs/getting-started", label: "Get started" },
   { href: "/docs/secret-requests", label: "API keys" },
   { href: "/docs", label: "Docs" },
+  { href: "/docs/changelog", label: "Changelog" },
   { href: siteConfig.repoUrl, label: "GitHub", external: true }
 ];
